@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasa I - Jocuri Logice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #fff;
+      padding:px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    .exercise {
+      margin-bottom: 40px;
+    }
+
+    .sortable-list {
+      list-style-type: none;
+      padding: 0;
+      width: 200px;
+      margin: 0 auto 20px auto;
+    }
+
+    .sortable-list li {
+      background: #eee;
+      margin: 5px 0;
+      padding: 10px;
+      cursor: move;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: #ddd;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ccc;
+    }
+
+    .result {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<header>
+        <h1>Jocuri Logice</h1>
+	<h2>„Gândim jucându-ne, învățăm zâmbind!”</h2>
+        <nav>
+
+            <button class="menu-btn">☰ </button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+		<li><a href="clasa0.html">Clasa 0</a></li>
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+<body>
+<button id="back-button" onclick="history.back()">⬅ Înapoi</button>
+<div id="exercisesContainer"></div>
+
+  <h2>🔊 Sortează numerele în ordine crescătoare!</h2>
+  <div id="exercises"></div>
+
+  <script>
+    const exercises = [
+      [333, 3333, 3, 33333, 333333, 33],
+      [9, 99, 999, 9999, 99999],
+      [1, 100, 10, 1000, 10000],
+      [7, 77, 777, 7777, 77777],
+      [5, 50, 500, 5000, 50000]
+    ];
+
+    const container = document.getElementById("exercises");
+
+    let currentExercise = 0;
+
+    function showExercise(index) {
+      const exercise = exercises[index];
+      const sorted = [...exercise].sort((a, b) => a - b);
+      const shuffled = [...exercise].sort(() => Math.random() - 0.5);
+
+      const div = document.createElement("div");
+      div.className = "exercise";
+      div.id = `exercise-${index}`;
+
+      const ul = document.createElement("ul");
+      ul.className = "sortable-list";
+
+      shuffled.forEach(num => {
+        const li = document.createElement("li");
+        li.draggable = true;
+        li.textContent = num.toLocaleString();
+        ul.appendChild(li);
+      });
+
+      const button = document.createElement("button");
+      button.textContent = "Check";
+
+      const result = document.createElement("div");
+      result.className = "result";
+
+      button.addEventListener("click", () => {
+        const items = [...ul.children].map(li =>
+          parseInt(li.textContent.replace(/,/g, ""))
+        );
+        if (JSON.stringify(items) === JSON.stringify(sorted)) {
+          result.textContent = "✅ Corect!";
+          result.style.color = "green";
+
+          // După 1 secundă, arată următorul exercițiu
+          setTimeout(() => {
+            div.style.display = "none";
+            currentExercise++;
+            if (currentExercise < exercises.length) {
+              showExercise(currentExercise);
+            } else {
+              const done = document.createElement("div");
+              done.textContent = "🎉 Ai terminat toate exercițiile!";
+              done.style.fontWeight = "bold";
+              done.style.fontSize = "1.2em";
+              done.style.color = "blue";
+              container.appendChild(done);
+            }
+          }, 1000);
+        } else {
+          result.textContent = "❌ Mai încearcă!";
+          result.style.color = "red";
+        }
+      });
+
+      div.appendChild(ul);
+      div.appendChild(button);
+      div.appendChild(result);
+      container.appendChild(div);
+    }
+
+    // Inițial afișează doar primul exercițiu
+    showExercise(currentExercise);
+
+    // Drag and Drop logic
+    document.addEventListener("dragstart", function (e) {
+      if (e.target.tagName === "LI") {
+        e.dataTransfer.setData("text/plain", e.target.innerHTML);
+        e.target.classList.add("dragging");
+      }
+    });
+
+    document.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      const dragging = document.querySelector(".dragging");
+      const target = e.target.closest("li");
+      if (target && dragging && target !== dragging) {
+        const list = target.parentNode;
+        const next = dragging.compareDocumentPosition(target) & 4 ? target.nextSibling : target;
+        list.insertBefore(dragging, next);
+      }
+    });
+
+    document.addEventListener("dragend", function (e) {
+      if (e.target.tagName === "LI") {
+        e.target.classList.remove("dragging");
+      }
+    });
+  </script>
+</body>
+ <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>
+
+</body>
+</html>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adunări Distractive</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      padding: 10px 0;
+    }
+
+    .exercise-section {
+      margin: 40px auto;
+      padding: 20px;
+      max-width: 100%;
+    }
+
+    .exercise-box {
+      display: inline-block;
+      background-color: #ffebcd;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      font-size: 2.5em;
+      color: white;
+    }
+
+    .exercise {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: #4682b4;
+    }
+
+    #answer {
+      font-size: 1.5em;
+      padding: 10px;
+      border-radius: 5px;
+      border: 2px solid #4682b4;
+      margin-bottom: 10px;
+      width: 150px;
+    }
+
+    button {
+      font-size: 1.2em;
+      padding: 10px 20px;
+      color: white;
+      background-color: #32cd32;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #228b22;
+    }
+
+    .feedback {
+      font-size: 1.5em;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .error {
+      color: #ff4500;
+    }
+
+    .success {
+      color: #32cd32;
+    }
+
+    .celebrate {
+      font-size: 2em;
+      color: #ff1493;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Jocuri Logice</h1>
+    <nav>
+      <button class="menu-btn">☰</button>
+      <ul class="menu">
+        <li><a href="index.html">Acasă</a></li>
+        <li><a href="clasa0.html">Clasa 0</a></li>
+        <li><a href="clasa1.html">Clasa I</a></li>
+        <li><a href="clasa2.html">Clasa a II-a</a></li>
+        <li><a href="clasa3.html">Clasa a III-a</a></li>
+        <li><a href="clasa4.html">Clasa a IV-a</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="exercise-section">
+    <div class="exercise-box">
+      <h1>Adunări Distractive!</h1>
+      <div id="exercise" class="exercise"></div>
+      <input type="number" id="answer" placeholder="Introdu răspunsul aici" />
+      <br>
+      <button onclick="checkAnswer()">Verifică</button>
+      <div id="feedback" class="feedback"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+  </footer>
+
+  <script>
+    let currentExercise = 0;
+    let num1, num2, correctAnswer;
+
+    function generateExercise() {
+      num1 = Math.floor(Math.random() * 50) + 1;
+      num2 = Math.floor(Math.random() * 50) + 1;
+      correctAnswer = num1 + num2;
+      document.getElementById('exercise').textContent = `${num1} + ${num2} = ?`;
+      document.getElementById('answer').value = '';
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('feedback').classList.remove('error', 'success', 'celebrate');
+    }
+
+    function checkAnswer() {
+      const userAnswer = parseInt(document.getElementById('answer').value, 10);
+      const feedback = document.getElementById('feedback');
+
+      if (userAnswer === correctAnswer) {
+        feedback.textContent = 'Corect! Continuă așa!';
+        feedback.classList.add('success');
+        currentExercise++;
+        if (currentExercise < 10) {
+          setTimeout(generateExercise, 1000);
+        } else {
+          feedback.textContent = 'Felicitări! Ai terminat cele 10 exerciții! 🎉';
+          feedback.classList.add('celebrate');
+          document.getElementById('exercise').textContent = '';
+          document.getElementById('answer').style.display = 'none';
+          document.querySelector('button').style.display = 'none';
+        }
+      } else {
+        feedback.textContent = 'Răspuns greșit. Încearcă din nou!';
+        feedback.classList.add('error');
+      }
+    }
+
+    generateExercise();
+  </script>
+</body>
+</html>

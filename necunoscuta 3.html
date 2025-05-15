@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exerciții cu o Necunoscută - Clasa a III-a</title>
+    <link rel="stylesheet" href="style.css"> <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffe4b5;
+            padding: 20 px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: ;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .exercise {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #4682b4;
+        }
+        input[type="number"] {
+            font-size: 1.5em;
+            padding: 10px;
+            width: 100px;
+            margin: 0 10px;
+            border: 2px solid #4682b4;
+            border-radius: 5px;
+            text-align: center;
+        }
+        button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            background-color: #32cd32;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #228b22;
+        }
+        .feedback {
+            font-size: 1.5em;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .success {
+            color: #32cd32;
+        }
+        .error {
+            color: #ff4500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Jocuri Logice</h1>
+        <nav>
+            <button class="menu-btn">☰ Meniu</button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+                <li><a href="clasa0.html">Clasa 0</a></li>
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1>Exerciții cu o Necunoscută</h1>
+            <div id="exercise" class="exercise"></div>
+            <button onclick="checkAnswer()">Verifică</button>
+            <div id="feedback" class="feedback"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+
+    <script src="script.js"></script> <script>
+        let num1, num2, operation, correctAnswer;
+        let currentExercise = 0;
+
+        function generateExercise() {
+            const operations = ['+', '-', '*', '/'];
+            operation = operations[Math.floor(Math.random() * operations.length)];
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+
+            let exerciseText = '';
+            let inputElement = '<input type="number" id="answer" placeholder="?" />';
+
+            // Ajustăm pentru fiecare operație astfel încât să aibă soluție simplă și să punem input-ul în locul lui x
+            if (operation === '+') {
+                correctAnswer = num2;
+                exerciseText = `${inputElement} + ${num1} = ${num1 + num2}`;
+            } else if (operation === '-') {
+                correctAnswer = num2;
+                exerciseText = `${inputElement} - ${num1} = ${num2 - num1}`;
+            } else if (operation === '*') {
+                correctAnswer = num2;
+                exerciseText = `${inputElement} × ${num1} = ${num1 * num2}`;
+            } else if (operation === '/') {
+                // Ne asigurăm că împărțirea dă un rezultat întreg pentru clasa a III-a
+                correctAnswer = num2;
+                exerciseText = `${inputElement} ÷ ${num1} = ${Math.floor(num2 / num1)}`;
+            }
+
+            document.getElementById('exercise').innerHTML = exerciseText;
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').className = 'feedback';
+        }
+
+        function checkAnswer() {
+            const answerInput = document.getElementById('answer');
+            const userAnswer = parseInt(answerInput.value, 10);
+
+            if (isNaN(userAnswer)) {
+                document.getElementById('feedback').textContent = "Te rog introdu un număr!";
+                document.getElementById('feedback').classList.add('error');
+                return;
+            }
+
+            if (userAnswer === correctAnswer) {
+                document.getElementById('feedback').textContent = "Corect! Bravo!";
+                document.getElementById('feedback').classList.add('success');
+                currentExercise++;
+                setTimeout(generateExercise, 1500);
+            } else {
+                document.getElementById('feedback').textContent = `Răspuns greșit. Încearcă din nou! Răspunsul corect era ${correctAnswer}.`;
+                document.getElementById('feedback').classList.add('error');
+            }
+        }
+
+        // Inițializare
+        generateExercise();
+    </script>
+
+</body>
+</html>

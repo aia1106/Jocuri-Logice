@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasa I - Jocuri Logice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: px;
+      text-align: center;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      display: inline-block;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<header>
+        <h1>Jocuri Logice</h1>
+	<h2>„Gândim jucându-ne, învățăm zâmbind!”</h2>
+        <nav>
+	
+            <button class="menu-btn">☰ </button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+		<li><a href="clasa0.html">Clasa 0</a></li>
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+<body>
+<button id="back-button" onclick="history.back()">⬅ Înapoi</button>
+<div id="exercisesContainer"></div>
+
+  <div class="container">
+    <h2>🔢 Divizori comuni</h2>
+    <p>Introdu toți divizorii comuni pentru <span id="num1"></span> și <span id="num2"></span>, separați prin virgulă:</p>
+    
+    <input type="text" id="userInput" placeholder="ex: 1,2,4">
+    <br>
+    <button onclick="checkDivisors()">Verifică</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // Numerele pentru exercițiu
+    const a = 24;
+    const b = 36;
+
+    document.getElementById("num1").textContent = a;
+    document.getElementById("num2").textContent = b;
+
+    // Funcție pentru calcularea divizorilor comuni
+    function getCommonDivisors(x, y) {
+      const min = Math.min(x, y);
+      const divisors = [];
+      for (let i = 1; i <= min; i++) {
+        if (x % i === 0 && y % i === 0) {
+          divisors.push(i);
+        }
+      }
+      return divisors;
+    }
+
+    const correct = getCommonDivisors(a, b);
+
+    function checkDivisors() {
+      const input = document.getElementById("userInput").value;
+      const userValues = input.split(",").map(val => parseInt(val.trim())).filter(val => !isNaN(val));
+      userValues.sort((a, b) => a - b);
+      
+      const correctSorted = [...correct].sort((a, b) => a - b);
+      
+      const result = document.getElementById("result");
+
+      if (JSON.stringify(userValues) === JSON.stringify(correctSorted)) {
+        result.textContent = "✅ Corect!";
+        result.style.color = "green";
+      } else {
+        result.textContent = `❌ Greșit. Răspuns corect: ${correctSorted.join(", ")}`;
+        result.style.color = "red";
+      }
+    }
+  </script>
+</body>
+ <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

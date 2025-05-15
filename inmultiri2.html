@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clasa 0 - Jocuri Logice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Jocuri Logice</h1>
+	<h2>„Gândim jucându-ne, învățăm zâmbind!”</h2>
+        <nav>
+            <button class="menu-btn">☰ </button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+		<li><a href="clasa1.html">Clasa 0</a></li>	
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+<style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e6f7ff;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            color: ;
+            margin-bottom: 20px;
+        }
+        .exercise {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #ff4500;
+        }
+        input[type="number"] {
+            font-size: 1.5em;
+            padding: 10px;
+            border: 2px solid #1e90ff;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            width: 60%;
+            max-width: 200px;
+        }
+        button {
+            font-size: 1.5em;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #32cd32;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #228b22;
+        }
+        .feedback {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+        .feedback.correct {
+            color: #32cd32;
+        }
+        .feedback.error {
+            color: #ff4500;
+        }
+    </style>
+</head>
+<body>
+
+   
+    <!-- CONȚINUTUL paginii -->
+    <main>
+        <div class="container">
+            <h1>Înmulțiri</h1>
+            <div id="exercise" class="exercise"></div>
+            <input type="number" id="answer" placeholder="Introdu răspunsul aici" />
+            <button onclick="checkAnswer()">Verifică</button>
+            <div id="feedback" class="feedback"></div>
+        </div>
+    </main>
+
+    <!-- FOOTER standardizat -->
+    <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+
+    <script src="script.js"></script> <!-- dacă există script pentru meniul mobil -->
+    <script>
+        let currentExercise = 0;
+        let num1, num2, correctAnswer;
+
+        function generateExercise() {
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            correctAnswer = num1 * num2;
+            document.getElementById('exercise').textContent = `${num1} × ${num2} = ?`;
+            document.getElementById('answer').value = '';
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('feedback').classList.remove('correct', 'error');
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer').value, 10);
+            if (userAnswer === correctAnswer) {
+                document.getElementById('feedback').textContent = 'Corect! Continuă așa!';
+                document.getElementById('feedback').classList.add('correct');
+                document.getElementById('feedback').classList.remove('error');
+                currentExercise++;
+                if (currentExercise < 10) {
+                    setTimeout(generateExercise, 1000);
+                } else {
+                    document.getElementById('feedback').textContent = 'Felicitări! Ai terminat cele 10 exerciții! 🎉';
+                    document.getElementById('exercise').textContent = '';
+                    document.getElementById('answer').style.display = 'none';
+                    document.querySelector('button').style.display = 'none';
+                }
+            } else {
+                document.getElementById('feedback').textContent = 'Răspuns greșit. Încearcă din nou!';
+                document.getElementById('feedback').classList.add('error');
+                document.getElementById('feedback').classList.remove('correct');
+            }
+        }
+
+        // Inițializare exercițiu
+        generateExercise();
+    </script>
+
+</body>
+</html>

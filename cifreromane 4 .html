@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Numere Romane - Exerciții</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .exercise-container {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .roman-table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      font-size: 20px;
+    }
+
+    .roman-table th, .roman-table td {
+      border: 1px solid #aaa;
+      padding: 10px 20px;
+    }
+
+    .options {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .option-btn {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #eee;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .option-btn:hover {
+      background-color: #cce7ff;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    main {
+      padding-bottom: 60px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Jocuri Logice</h1>
+    <h2>„Gândim jucându-ne, învățăm zâmbind!”</h2>
+    <nav>
+      <button class="menu-btn">☰</button>
+      <ul class="menu">
+        <li><a href="index.html">Acasă</a></li>
+        <li><a href="clasa0.html">Clasa 0</a></li>
+        <li><a href="clasa1.html">Clasa I</a></li>
+        <li><a href="clasa2.html">Clasa a II-a</a></li>
+        <li><a href="clasa3.html">Clasa a III-a</a></li>
+        <li><a href="clasa4.html">Clasa a IV-a</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="exercise-container">
+      <table class="roman-table">
+        <tr><th>Roman</th><th>Arab</th></tr>
+        <tr><td>I</td><td>1</td></tr>
+        <tr><td>V</td><td>5</td></tr>
+        <tr><td>X</td><td>10</td></tr>
+      </table>
+
+      <div id="exercise-area"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+  </footer>
+
+  <script>
+    const exercises = [
+      { roman: "XXXVIII", correct: 38, options: [28, 83, 38] },
+      { roman: "XV", correct: 15, options: [10, 14, 15] },
+      { roman: "XXIV", correct: 24, options: [26, 24, 42] },
+      { roman: "IX", correct: 9, options: [6, 9, 11] },
+      { roman: "XII", correct: 12, options: [13, 12, 21] }
+    ];
+
+    let currentExercise = 0;
+    const container = document.getElementById("exercise-area");
+
+    function showExercise(index) {
+      const ex = exercises[index];
+      container.innerHTML = `
+        <h3>Alege numărul corect pentru: <strong>${ex.roman}</strong></h3>
+        <div class="options">
+          ${ex.options.map(num => `<button class="option-btn" onclick="checkAnswer(${num})">${num}</button>`).join("")}
+        </div>
+      `;
+    }
+
+    function checkAnswer(selected) {
+      const ex = exercises[currentExercise];
+      if (selected === ex.correct) {
+        currentExercise++;
+        if (currentExercise < exercises.length) {
+          showExercise(currentExercise);
+        } else {
+          container.innerHTML = "<h3>Bravo! Ai terminat toate exercițiile corect!</h3>";
+        }
+      } else {
+        alert("Mai încearcă!");
+      }
+    }
+
+    showExercise(currentExercise);
+  </script>
+
+</body>
+</html>

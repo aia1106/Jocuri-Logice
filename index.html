@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jocuri Logice</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Jocuri Logice</h1>
+	<h2>„Gândim jucându-ne, învățăm zâmbind!”</h2>
+        <nav>
+            <button class="menu-btn">☰ </button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+		<li><a href="clasa0.html">Clasa 0</a></li>
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <section id="intro">
+        <h2>Bine ai venit!</h2>
+        <p>Suntem bucuroși să vă invităm să explorați și să vă bucurați de minunata lumea jocurilor logice. Aici, copiii vor descoperi distracția și provocările gândirii logice , matematice și creative.</p>
+        
+    <!-- Adăugarea butoanelor -->
+
+    <div class="buttons">
+
+        <a href="de_ce.html" class="button">De ce Jocurile Logice?</a>
+
+        <a href="ce_oferim.html" class="button">Ce oferim</a>
+
+        <button class="button" id="select-class-btn">Să începem explorarea!</button>
+
+    </div>
+
+    <div id="class-selection-popup" class="popup">
+        <div class="popup-content">
+            <span class="close-popup">&times;</span>
+            <h2>Alegeți Clasa</h2>
+            <div class="class-buttons">
+		<button class="class-button" onclick="navigateToClass('0')">0</button>
+                <button class="class-button" onclick="navigateToClass('1')">1</button>
+                <button class="class-button" onclick="navigateToClass('2')">2</button>
+                <button class="class-button" onclick="navigateToClass('3')">3</button>
+                <button class="class-button" onclick="navigateToClass('4')">4</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adăugarea logo-urilor -->
+
+    <div class="logos">
+
+        <img src="LOGO.png" alt="Logo 1" class="logo">
+
+        <img src="logo-palat.png" alt="Logo 2" class="logo">
+    
+    </div>
+    </section>
+    
+    <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercițiu Piramidă Matematică</title>
+    <link rel="stylesheet" href="style.css"> <!-- pentru stilizarea header și footer -->
+    <style>
+        /* Stilizare generală */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .piramida {
+            display: inline-block;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .num {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            margin: 0 5px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER din de_ce.html -->
+    <header>
+        <h1>Jocuri Logice</h1>
+        <nav>
+            <button class="menu-btn">☰</button>
+            <ul class="menu">
+                <li><a href="index.html">Acasă</a></li>
+                <li><a href="clasa0.html">Clasa 0</a></li>
+                <li><a href="clasa1.html">Clasa I</a></li>
+                <li><a href="clasa2.html">Clasa a II-a</a></li>
+                <li><a href="clasa3.html">Clasa a III-a</a></li>
+                <li><a href="clasa4.html">Clasa a IV-a</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="piramida" id="piramida">
+            <!-- Piramida va fi generată dinamic -->
+        </section>
+        <button onclick="verifica()">Verifică Răspunsurile</button>
+        <p id="feedback"></p>
+    </main>
+
+    <!-- FOOTER din de_ce.html -->
+    <footer>
+        <p>&copy; 2025 Cercul de Jocuri Logice - Palatul Copiilor Arad</p>
+    </footer>
+
+    <script src="script.js"></script> <!-- pentru meniul responsive dacă ai scriptul -->
+    <script>
+        // Functie care generează fie 1, fie 2, la întâmplare
+        function genereazaRandom1Sau2() {
+            return Math.floor(Math.random() * 2) + 1;
+        }
+
+        function genereazaPiramida() {
+            const container = document.getElementById('piramida');
+            container.innerHTML = '';
+
+            const lastRow = [genereazaRandom1Sau2(), genereazaRandom1Sau2(), genereazaRandom1Sau2()];
+            const rows = [
+                [null],
+                [null, null],
+                [...lastRow]
+            ];
+
+            for (let i = rows.length - 2; i >= 0; i--) {
+                for (let j = 0; j < rows[i].length; j++) {
+                    rows[i][j] = rows[i + 1][j] + rows[i + 1][j + 1];
+                }
+            }
+
+            rows.forEach((row, rowIndex) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.classList.add('row');
+                row.forEach((num, index) => {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.classList.add('num');
+                    input.id = `r${rowIndex + 1}c${index + 1}`;
+                    if (rowIndex === rows.length - 1) {
+                        input.value = num;
+                        input.disabled = true;
+                    }
+                    rowDiv.appendChild(input);
+                });
+                container.appendChild(rowDiv);
+            });
+
+            container.setAttribute('data-correct-values', JSON.stringify(rows));
+        }
+
+        function verifica() {
+            const correctValues = JSON.parse(document.getElementById('piramida').getAttribute('data-correct-values'));
+            let isCorrect = true;
+
+            correctValues.slice(0, -1).forEach((row, rowIndex) => {
+                row.forEach((correctValue, colIndex) => {
+                    const userValue = document.getElementById(`r${rowIndex + 1}c${colIndex + 1}`).value;
+                    if (parseInt(userValue) !== correctValue) {
+                        isCorrect = false;
+                    }
+                });
+            });
+
+            if (isCorrect) {
+                document.getElementById('feedback').innerText = 'Răspuns corect! Vrei să încerci din nou?';
+                if (confirm('Răspuns corect! Vrei să încerci din nou?')) {
+                    genereazaPiramida();
+                    document.getElementById('feedback').innerText = '';
+                }
+            } else {
+                document.getElementById('feedback').innerText = 'Răspuns incorect. Încearcă din nou.';
+            }
+        }
+
+        // Inițializare
+        genereazaPiramida();
+    </script>
+
+</body>
+</html>
