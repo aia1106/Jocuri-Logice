@@ -52,7 +52,7 @@ header h2 {
     font-style: italic;
 text-shadow: 1px 1px 3px rgba(0,0,0,0.5); 
     color: white;
- line-height: 0.5;
+ line-height: 1;
 }
 
 .menu-btn {
@@ -288,3 +288,40 @@ footer {
     color: white;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.icon {
+    font-size: 30px;
+    color: white;
+    background-color: #333;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.icon.facebook {
+    background-color: #3b5998;
+}
+
+.icon.whatsapp {
+    background-color: #25D366;
+}
+
+.icon:hover {
+    transform: scale(1.2);
+}
+.contact-info a {
+    color: white;
+    text-decoration: underline;
+}
+
