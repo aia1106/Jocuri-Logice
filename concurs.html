@@ -16,7 +16,7 @@
     h1 {
       color: #333;
     }
-    select, button {
+    button {
       margin: 5px;
       padding: 10px;
       font-size: 16px;
@@ -46,29 +46,35 @@
       margin-top: 15px;
       font-weight: bold;
     }
-    #timer {
+    /* Cronometrul pentru limita de timp a nivelului (roșu) */
+    #timer { 
       margin-top: 10px;
       font-size: 18px;
       font-weight: bold;
-      color: #d9534f;
+      color: #d9534f; /* Roșu */
+    }
+    /* Noul cronometru pentru timpul total (verde) */
+    #total-timer { 
+        margin-bottom: 15px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #5cb85c; /* Verde */
+        border: 2px solid #5cb85c;
+        padding: 5px 10px;
+        border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <h1>Sudoku Mic</h1>
-  <label for="size">Alege dimensiunea:</label>
-  <select id="size">
-    <option value="3">3x3</option>
-    <option value="4">4x4</option>
-    <option value="5">5x5</option>
-  </select>
+  <div id="total-timer">Timp Total: 00:00:00</div>
+  
   <div id="board"></div>
   <div id="below-board">
     <button onclick="checkSolution()">Verifică</button>
   </div>
   <div id="controls">
-    <button onclick="newGame()">Joc Nou</button>
-    <button onclick="showSolution()">Arată Soluția</button>
+    <button onclick="newGame(true)">Joc Nou (Start de la 3x3)</button>
     <button onclick="clearMistakes()">Șterge Greșeli</button>
   </div>
   <div id="timer">Timp: 00:00</div>
@@ -76,9 +82,12 @@
 
   <script>
     let solution = [];
-    let size = 3;
+    let size = 3; 
     let timerInterval;
     let timeLeft;
+    // Variabile noi pentru cronometrul total
+    let totalTimeSeconds = 0;
+    let totalTimerInterval;
 
     function generateLatinSquare(n) {
       let grid = Array.from({ length: n }, () => Array(n).fill(0));
@@ -143,11 +152,17 @@
       });
     }
 
-    function newGame() {
-      size = parseInt(document.getElementById("size").value);
+    // Am adăugat un parametru pentru a reseta cronometrul total la un joc nou complet
+    function newGame(resetTotalTimer = false) {
+      if (resetTotalTimer) {
+          size = 3; // Începe mereu de la 3x3
+          totalTimeSeconds = 0;
+          startTotalTimer();
+          document.getElementById("message").innerText = "";
+      }
+
       let puzzle = generatePuzzle(size);
       renderBoard(puzzle);
-      document.getElementById("message").innerText = "";
       startTimer();
     }
 
@@ -156,24 +171,27 @@
       for (let input of inputs) {
         let r = input.dataset.row;
         let c = input.dataset.col;
-        if (parseInt(input.value) !== solution[r][c]) {
+        // Verifică și dacă câmpul e completat
+        if (!input.value || parseInt(input.value) !== solution[r][c]) { 
           document.getElementById("message").innerText = "Mai încearcă!";
           return;
         }
       }
-      document.getElementById("message").innerText = "Bravo! Ai rezolvat!";
+      // Soluția este corectă
       clearInterval(timerInterval);
-      setTimeout(newGame, 2000);
-    }
 
-    function showSolution() {
-      let inputs = document.querySelectorAll(".cell");
-      for (let input of inputs) {
-        let r = input.dataset.row;
-        let c = input.dataset.col;
-        input.value = solution[r][c];
+      if (size === 3) {
+        document.getElementById("message").innerText = "Bravo! Acum treci la 4x4!";
+        size = 4;
+        setTimeout(() => newGame(false), 2000);
+      } else if (size === 4) {
+        document.getElementById("message").innerText = "Super! Acum treci la 5x5!";
+        size = 5;
+        setTimeout(() => newGame(false), 2000);
+      } else if (size === 5) {
+        stopTotalTimer(); // Oprește cronometrul total
+        document.getElementById("message").innerText = `Felicitări! Ai terminat toate nivelurile în ${formatTotalTime(totalTimeSeconds)}!`;
       }
-      clearInterval(timerInterval);
     }
 
     function clearMistakes() {
@@ -181,12 +199,15 @@
       for (let input of inputs) {
         let r = input.dataset.row;
         let c = input.dataset.col;
+        // Șterge doar greșelile din celulele editabile
         if (!input.disabled && input.value && parseInt(input.value) !== solution[r][c]) {
           input.value = "";
         }
       }
+      document.getElementById("message").innerText = "";
     }
 
+    // Funcția pentru cronometrul cu limită de timp per nivel
     function startTimer() {
       clearInterval(timerInterval);
       if (size === 3) timeLeft = 60;
@@ -198,7 +219,8 @@
         updateTimerDisplay();
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
-          document.getElementById("message").innerText = "Timp expirat!";
+          stopTotalTimer(); // Oprește și cronometrul total la expirarea timpului
+          document.getElementById("message").innerText = "Timp expirat! Încearcă din nou.";
         }
       }, 1000);
     }
@@ -210,7 +232,33 @@
         `Timp: ${min.toString().padStart(2, "0")}:${sec.toString().padStart(2, "0")}`;
     }
 
-    newGame();
+    // Funcții pentru cronometrul total (Total Time)
+    function startTotalTimer() {
+        clearInterval(totalTimerInterval);
+        totalTimerInterval = setInterval(() => {
+            totalTimeSeconds++;
+            updateTotalTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTotalTimer() {
+        clearInterval(totalTimerInterval);
+    }
+
+    function formatTotalTime(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateTotalTimerDisplay() {
+        document.getElementById("total-timer").innerText = `Timp Total: ${formatTotalTime(totalTimeSeconds)}`;
+    }
+
+    // Inițializare: pornirea jocului și a cronometrului total
+    newGame(true);
   </script>
 </body>
 </html>
