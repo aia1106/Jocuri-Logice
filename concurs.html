@@ -1,263 +1,185 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Concurs Sudoku</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      background: #f4f6fb;
-    }
-    h1 { color: #333; }
-
-    input, select, button {
-      margin: 5px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    #board {
-      display: grid;
-      margin: 20px 0;
-      gap: 3px;
-    }
-
-    .cell {
-      width: 40px;
-      height: 40px;
-      text-align: center;
-      font-size: 18px;
-      border: 1px solid #999;
-      background: #fff;
-    }
-
-    #controls {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-
-    #timer {
-      margin-top: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #d9534f;
-    }
-
-    #message {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concurs Sudoku</title>
+<style>
+body { font-family: Arial; display:flex; flex-direction:column; align-items:center; padding:20px; background:#f4f6fb; }
+h1 { color:#333; }
+input, button { margin:5px; padding:10px; font-size:16px; border-radius:6px; border:1px solid #ccc; }
+#board { display:grid; margin:20px 0; gap:8px; }
+.cell { width:50px; height:50px; text-align:center; font-size:18px; border:1px solid #999; background:#fff; box-sizing:border-box; }
+#controls { display:flex; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+#timer { margin-top:10px; font-size:18px; font-weight:bold; color:#d9534f; }
+#message { margin-top:15px; font-weight:bold; text-align:center; }
+</style>
 </head>
-
 <body>
 
-  <h1>Concurs Sudoku</h1>
-
-  <input
-    type="text"
-    id="username"
-    placeholder="Nume concurent"
-  />
-
-  <label>Alege nivel:</label>
-  <select id="size">
-    <option value="3">3x3</option>
-    <option value="4">4x4</option>
-    <option value="5">5x5</option>
-  </select>
-
-  <div id="board"></div>
-
-  <button onclick="checkSolution()">Verifică</button>
-
-  <div id="controls">
-    <button onclick="newGame()">Joc Nou</button>
-    <button onclick="clearMistakes()">Șterge Greșeli</button>
-  </div>
-
-  <div id="timer">Timp: 00:00</div>
-  <div id="message"></div>
+<h1>Concurs Sudoku</h1>
+<input type="text" id="username" placeholder="Nume concurent" />
+<div id="board"></div>
+<button onclick="checkSolution()">Verifică</button>
+<div id="controls">
+<button onclick="newGame()">Joc Nou</button>
+<button onclick="clearMistakes()">Șterge Greșeli</button>
+</div>
+<div id="timer">Timp: 00:00</div>
+<div id="message"></div>
 
 <script>
-/* 🔴 LINK-UL TĂU GOOGLE SCRIPT */
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbztYOOBv77P5xf3ZbKtZxJ-u1f0Ee30XoG985sx0oBIEYAFSMyzWMY6rnBAaNuz52rX/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwNWT1H5acOAAff0vTNqmF9y3-D2iiNkRIpuOEkKl5eSgX89bccVFzNM96n74v0AmEA/exec";
 
-let solution = [];
-let size = 3;
-let timerInterval;
-let timeLeft;
-let startTime;
+let solution=[], size=3, timerInterval, timeLeft, startTime;
+let totalStartTime; // start timer total
+let levelSequence=[3,3,4,5];
+let currentLevelIndex = 0;
 
-/* ===== SUDOKU LOGIC ===== */
-
-function generateLatinSquare(n) {
-  let grid = Array.from({ length: n }, () => Array(n).fill(0));
-
-  function canPlace(row, col, num) {
-    for (let i = 0; i < n; i++) {
-      if (grid[row][i] === num || grid[i][col] === num) return false;
+function generateLatinSquare(n){
+    let grid = Array.from({length:n}, ()=>Array(n).fill(0));
+    function canPlace(r,c,num){
+        for(let i=0;i<n;i++) if(grid[r][i]===num || grid[i][c]===num) return false;
+        return true;
     }
-    return true;
-  }
-
-  function solve(cell = 0) {
-    if (cell === n * n) return true;
-    let r = Math.floor(cell / n);
-    let c = cell % n;
-    let nums = [...Array(n).keys()].map(x => x + 1).sort(() => Math.random() - 0.5);
-
-    for (let num of nums) {
-      if (canPlace(r, c, num)) {
-        grid[r][c] = num;
-        if (solve(cell + 1)) return true;
-        grid[r][c] = 0;
-      }
+    function solve(cell=0){
+        if(cell===n*n) return true;
+        let r=Math.floor(cell/n), c=cell%n;
+        let nums=[...Array(n).keys()].map(x=>x+1).sort(()=>Math.random()-0.5);
+        for(let num of nums){
+            if(canPlace(r,c,num)){
+                grid[r][c]=num;
+                if(solve(cell+1)) return true;
+                grid[r][c]=0;
+            }
+        }
+        return false;
     }
-    return false;
-  }
-
-  solve();
-  return grid;
+    solve();
+    return grid;
 }
 
-function generatePuzzle(n) {
-  let grid = generateLatinSquare(n);
-  solution = grid.map(r => [...r]);
-  let puzzle = grid.map(r => [...r]);
-
-  let empties = Math.floor(n * n * 0.4);
-  while (empties > 0) {
-    let r = Math.floor(Math.random() * n);
-    let c = Math.floor(Math.random() * n);
-    if (puzzle[r][c] !== 0) {
-      puzzle[r][c] = 0;
-      empties--;
+function generatePuzzle(n){
+    let grid=generateLatinSquare(n);
+    solution=grid.map(r=>[...r]);
+    let puzzle=grid.map(r=>[...r]);
+    let empties=Math.floor(n*n*0.4);
+    while(empties>0){
+        let r=Math.floor(Math.random()*n);
+        let c=Math.floor(Math.random()*n);
+        if(puzzle[r][c]!==0){ puzzle[r][c]=0; empties--; }
     }
-  }
-  return puzzle;
+    return puzzle;
 }
 
-function renderBoard(puzzle) {
-  const board = document.getElementById("board");
-  board.innerHTML = "";
-  board.style.gridTemplateColumns = `repeat(${size}, 40px)`;
-
-  puzzle.forEach((row, r) => {
-    row.forEach((val, c) => {
-      let input = document.createElement("input");
-      input.maxLength = 1;
-      input.className = "cell";
-      input.dataset.row = r;
-      input.dataset.col = c;
-      input.inputMode = "numeric";
-
-      if (val !== 0) {
-        input.value = val;
-        input.disabled = true;
-      }
-
-      board.appendChild(input);
+function renderBoard(puzzle){
+    const board=document.getElementById("board");
+    board.innerHTML="";
+    board.style.gridTemplateColumns=`repeat(${puzzle.length},50px)`;
+    puzzle.forEach((row,r)=>{
+        row.forEach((val,c)=>{
+            let input=document.createElement("input");
+            input.maxLength=1;
+            input.className="cell";
+            input.dataset.row=r;
+            input.dataset.col=c;
+            input.inputMode="numeric";
+            if(val!==0){ input.value=val; input.disabled=true; }
+            board.appendChild(input);
+        });
     });
-  });
 }
 
-/* ===== GAME ===== */
+function newGame(){
+    const name=document.getElementById("username").value.trim();
+    if(!name){ alert("Introdu numele concurentului!"); return; }
+    
+    if(currentLevelIndex >= levelSequence.length){ 
+        // calculăm timpul final
+        const totalTimeSec = Math.floor((Date.now() - totalStartTime)/1000);
+        const minutes = Math.floor(totalTimeSec / 60);
+        const seconds = totalTimeSec % 60;
+        const totalTimeFormatted = `${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 
-function newGame() {
-  const name = document.getElementById("username").value.trim();
-  if (!name) {
-    alert("Introdu numele concurentului!");
-    return;
-  }
+        // afișăm mesajul final
+        document.getElementById("message").innerText = `Concurs terminat! Timp final: ${totalTimeFormatted}`;
 
-  size = parseInt(document.getElementById("size").value);
-  let puzzle = generatePuzzle(size);
-  renderBoard(puzzle);
-  document.getElementById("message").innerText = "";
-  startTimer();
+        // trimitem timpul către Excel
+        sendFinalTime(totalTimeFormatted); 
+        return; 
+    }
+
+    if(currentLevelIndex===0) totalStartTime = Date.now();
+
+    size=levelSequence[currentLevelIndex];
+    let puzzle=generatePuzzle(size);
+    renderBoard(puzzle);
+    document.getElementById("message").innerText="";
+    startTimer();
 }
 
-function startTimer() {
-  clearInterval(timerInterval);
-  startTime = Date.now();
+function startTimer(){
+    clearInterval(timerInterval);
+    startTime=Date.now();
+    if(size===3) timeLeft=30;
+    else if(size===4) timeLeft=60;
+    else if(size===5) timeLeft=120;
 
-  if (size === 3) timeLeft = 60;
-  else if (size === 4) timeLeft = 120;
-  else timeLeft = 180;
-
-  updateTimer();
-
-  timerInterval = setInterval(() => {
-    timeLeft--;
     updateTimer();
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      document.getElementById("message").innerText = "Timp expirat!";
+    timerInterval=setInterval(()=>{
+        timeLeft--;
+        updateTimer();
+        if(timeLeft<=0){
+            clearInterval(timerInterval);
+            document.getElementById("message").innerText="Timp expirat!";
+        }
+    },1000);
+}
+
+function updateTimer(){
+    let min=Math.floor(timeLeft/60);
+    let sec=timeLeft%60;
+    document.getElementById("timer").innerText=`Timp rămas: ${min.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
+}
+
+function checkSolution(){
+    let inputs=document.querySelectorAll(".cell");
+    for(let input of inputs){
+        let r=input.dataset.row;
+        let c=input.dataset.col;
+        if(parseInt(input.value)!==solution[r][c]){
+            document.getElementById("message").innerText="Mai încearcă!";
+            return;
+        }
     }
-  }, 1000);
+
+    clearInterval(timerInterval);
+    document.getElementById("message").innerText=`Felicitări! Ai rezolvat nivelul ${size}x${size}!`;
+    
+    currentLevelIndex++;
+    setTimeout(newGame,2000);
 }
 
-function updateTimer() {
-  let min = Math.floor(timeLeft / 60);
-  let sec = timeLeft % 60;
-  document.getElementById("timer").innerText =
-    `Timp: ${min.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
-}
-
-function checkSolution() {
-  let inputs = document.querySelectorAll(".cell");
-
-  for (let input of inputs) {
-    let r = input.dataset.row;
-    let c = input.dataset.col;
-    if (parseInt(input.value) !== solution[r][c]) {
-      document.getElementById("message").innerText = "Mai încearcă!";
-      return;
+function clearMistakes(){
+    let inputs=document.querySelectorAll(".cell");
+    for(let input of inputs){
+        let r=input.dataset.row;
+        let c=input.dataset.col;
+        if(!input.disabled && input.value && parseInt(input.value)!==solution[r][c]){
+            input.value="";
+        }
     }
-  }
-
-  clearInterval(timerInterval);
-
-  const name = document.getElementById("username").value.trim();
-  const timeUsed = Math.floor((Date.now() - startTime) / 1000);
-
-  fetch(GOOGLE_SHEET_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      name: name,
-      time: timeUsed,
-      level: size + "x" + size
-    })
-  });
-
-  document.getElementById("message").innerText =
-    `Felicitări! Rezolvat în ${timeUsed} secunde!`;
-
-  setTimeout(newGame, 2000);
 }
 
-function clearMistakes() {
-  let inputs = document.querySelectorAll(".cell");
-  for (let input of inputs) {
-    let r = input.dataset.row;
-    let c = input.dataset.col;
-    if (!input.disabled && input.value && parseInt(input.value) !== solution[r][c]) {
-      input.value = "";
-    }
-  }
+function sendFinalTime(formattedTime){
+    const name = document.getElementById("username").value.trim();
+
+    fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({name: name, time: formattedTime})
+    });
 }
+
 </script>
-
 </body>
 </html>
