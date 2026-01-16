@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Arrow Maze Multi-Level PRO</title>
+<style>
+body { background:#304320; color:white; text-align:center; font-family:Arial; }
+#maze { display:grid; grid-template-columns:repeat(8,50px); gap:4px; justify-content:center; margin:20px; }
+.cell {
+    width:50px; height:50px;
+    background:#222; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; cursor:pointer;
+}
+.start { background:#0a7; }
+.exit { background:#a00; }
+.player { background:#09f; }
+.wall { background:#6B8269; cursor:default; }
+.loop { background:#f00; cursor:default; }
+</style>
+</head>
+<body>
+
+<h1>Arrow Maze </h1>
+<p>Întăi roteste săgețile albe apoi apasă START pentru a porni mișcarea. Loop → zid roșu</p>
+
+
+<div id="maze"></div>
+<button id="startBtn">START</button>
+<p id="info"></p>
+<p id="timer"></p>
+<h3>Leaderboard Local</h3>
+<ol id="leaderboard"></ol>
+
+<script>
+const arrows = ["→","↓","←","↑"];
+let level = 0;
+
+// Niveluri multiple
+let levels = [
+    // Nivel 1 - Easy
+    [
+        ["→","→","→","→","↓","→","→","→"],
+        [" "," ","↓"," "," "," ","→","→"],
+        ["→","→","→","→","↓"," ","→","→"],
+        ["→"," "," "," ","→"," ","↓","→"],
+        ["→","↓","→","→","→","→"," "," "],
+        ["→"," ","→"," "," ","→","→","→"],
+        ["→","→","→"," ","→","→","↓"," "],
+        [" "," ","→","→","→"," ","→","E"]
+    ],
+    // Nivel 2 - Medium
+    [
+        ["↓"," ","→","→","↓","→","→"," "],
+        ["→"," ","↓"," ","↓"," ","→"," "],
+        ["→","→","→"," "," ","→","→","→"],
+        ["→"," "," "," ","→"," ","↓","→"],
+        ["→","↓","→","→","→"," ","↓"," "],
+        ["→"," ","→"," ","→","→"," ","→"],
+        ["→","→","→","→"," ","→","↓"," "],
+        [" "," "," "," "," "," ","→","E"]
+    ],
+    // Nivel 3 - Hard
+    [
+        ["↓"," ","→"," ","↓"," ","→"," "],
+        ["→","↓"," ","→","↓"," ","→"," "],
+        [" ","→","→","→","↓","→"," ","→"],
+        ["→"," "," "," ","→"," ","↓","→"],
+        ["→","↓","→","→","→"," ","↓","→"],
+        ["→"," ","→"," "," ","→","→","→"],
+        ["→","→"," ","→","→","→","↓"," "],
+        [" ","→","→","→"," "," ","→","E"]
+    ]
+];
+
+let maze, player, visited;
+let startTime, timerInterval;
+
+// Leaderboard local
+function loadLeaderboard() {
+    let scores = JSON.parse(localStorage.getItem("arrowMazeScores")||"[]");
+    const lb = document.getElementById("leaderboard");
+    lb.innerHTML="";
+    scores.forEach(s=> {
+        let li = document.createElement("li");
+        li.textContent = `Nivel ${s.level+1}: ${s.time} sec`;
+        lb.appendChild(li);
+    });
+}
+function saveScore(level,time){
+    let scores = JSON.parse(localStorage.getItem("arrowMazeScores")||"[]");
+    scores.push({level,time,date:new Date().toISOString()});
+    localStorage.setItem("arrowMazeScores",JSON.stringify(scores));
+    loadLeaderboard();
+}
+
+// Init maze
+function initMaze(){
+    maze = JSON.parse(JSON.stringify(levels[level]));
+    player = {x:0,y:0};
+    visited = [];
+    draw();
+    document.getElementById("info").innerText = "";
+    document.getElementById("timer").innerText = "";
+}
+
+function draw(){
+    const m = document.getElementById("maze");
+    m.innerHTML="";
+    for(let y=0;y<8;y++){
+        for(let x=0;x<8;x++){
+            let cell = maze[y][x];
+            let d = document.createElement("div");
+            d.className="cell";
+            if(cell==" ") d.classList.add("wall");
+            if(cell=="L") d.classList.add("loop");
+            if(cell=="E") d.classList.add("exit");
+            if(x==0 && y==0) d.classList.add("start");
+            if(player.x==x && player.y==y) d.classList.add("player");
+            d.textContent = (cell=="L")?"":cell;
+            if(cell!==" " && cell!=="E" && cell!=="L") d.onclick=()=>rotate(x,y);
+            m.appendChild(d);
+        }
+    }
+}
+
+// Roteste sageata
+function rotate(x,y){
+    let i = arrows.indexOf(maze[y][x]);
+    maze[y][x] = arrows[(i+1)%4];
+    draw();
+}
+
+// START
+function start(){
+    visited = [];
+    startTime = Date.now();
+    clearInterval(timerInterval);
+    timerInterval = setInterval(()=>{
+        let t = Math.floor((Date.now()-startTime)/1000);
+        document.getElementById("timer").innerText = `Timp: ${t} sec`;
+    },1000);
+    move();
+}
+
+// Miscare player
+function move(){
+    let key = player.x+","+player.y;
+
+    if(visited.includes(key)){
+        maze[player.y][player.x] = "L";
+        document.getElementById("info").innerText="❌ Loop detectat! Săgeata devine zid roșu.";
+        draw();
+        return;
+    }
+
+    visited.push(key);
+
+    let c = maze[player.y][player.x];
+    if(c=="E"){
+        clearInterval(timerInterval);
+        let time = Math.floor((Date.now()-startTime)/1000);
+        document.getElementById("info").innerText = `🎉 Nivel ${level+1} terminat în ${time} sec!`;
+        saveScore(level,time);
+        level++;
+        if(level>=levels.length){
+            alert("🏆 Ai terminat toate nivelele!");
+            level=0;
+        }
+        initMaze();
+        return;
+    }
+
+    if(c==" " || c=="L"){
+        document.getElementById("info").innerText="❌ Ai lovit un zid!";
+        draw();
+        return;
+    }
+
+    if(c=="→") player.x++;
+    if(c=="←") player.x--;
+    if(c=="↑") player.y--;
+    if(c=="↓") player.y++;
+
+    draw();
+    setTimeout(move,350);
+}
+
+// Evenimente
+document.getElementById("startBtn").addEventListener("click", start);
+
+// Init pagina
+loadLeaderboard();
+initMaze();
+</script>
+
+</body>
+</html>
