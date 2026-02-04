@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Joc de Echilibru - Ultimate Fix</title>
+<style>
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #2c3e50;
+    font-family: sans-serif;
+    touch-action: none; 
+    overflow: hidden;
+  }
+
+  #gameArea {
+    position: relative;
+    width: 95vw;
+    max-width: 600px;
+    height: 75vh;
+    background: #87CEEB;
+    border: 4px solid #34495e;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  #platform {
+    position: absolute;
+    bottom: 15%; 
+    height: 15px;
+    background: #222;
+    border-radius: 10px;
+    transition: width 0.3s, background 0.3s;
+  }
+
+  #ball {
+    position: absolute;
+    background: #FF4500;
+    border-radius: 50%;
+    z-index: 5;
+    transition: width 0.3s, height 0.3s, clip-path 0.3s;
+  }
+
+  #ball.star-mode {
+    background: #FFD700;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    border-radius: 0%;
+  }
+
+  #squareObstacle {
+    position: absolute;
+    width: 40px; height: 40px;
+    background: #2c3e50;
+    top: 45%; /* COBORÂT PENTRU A FI ATINS MAI UȘOR */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    border-radius: 4px;
+    transition: background 0.1s;
+  }
+
+  /* Efectul de flash */
+  .flash-green {
+    background: #2ecc71 !important;
+    animation: blink 0.1s infinite;
+  }
+
+  @keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  .obstacle-long {
+    position: absolute;
+    background: #2c3e50;
+    height: 12px; width: 90px;
+    border-radius: 6px;
+    display: none;
+  }
+
+  #score {
+    position: absolute;
+    top: 15px; left: 15px;
+    font-weight: bold;
+    font-size: 1.4rem;
+    z-index: 10;
+  }
+
+  #countdown, #gameOverScreen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    z-index: 100;
+  }
+
+  #countdown { background: rgba(0,0,0,0.6); color: white; font-size: 30px; cursor: pointer; text-align: center; }
+  #gameOverScreen { background: rgba(44, 62, 80, 0.9); color: white; display: none; }
+
+  .btn-retry {
+    margin-top: 20px; padding: 15px 40px;
+    font-size: 1.2rem; background: #27ae60;
+    color: white; border: none; border-radius: 50px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+  <div id="score">Scor: 0</div>
+  <div id="platform"></div>
+  <div id="ball"></div>
+  <div id="squareObstacle"></div>
+  <div id="obs1" class="obstacle-long" style="top: 30%; left: 10%;"></div>
+  <div id="obs2" class="obstacle-long" style="top: 40%; right: 10%;"></div>
+  
+  <div id="countdown">APASĂ START</div>
+
+  <div id="gameOverScreen">
+    <h1>GAME OVER</h1>
+    <div id="finalScore">Scor Final: 0</div>
+    <button class="btn-retry" onclick="resetGame()">JOACĂ DIN NOU</button>
+  </div>
+</div>
+
+<script>
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+function playSound(freq, type, duration) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+const gameArea = document.getElementById('gameArea');
+const platform = document.getElementById('platform');
+const ball = document.getElementById('ball');
+const scoreDisplay = document.getElementById('score');
+const countdownEl = document.getElementById('countdown');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const squareObs = document.getElementById('squareObstacle');
+const longObs = document.querySelectorAll('.obstacle-long');
+
+let areaWidth, areaHeight, platformX, currentBallSize, score, gameOver, gameStarted = false;
+let ballX, ballY, ballVX, ballVY, jumpForce = -9;
+const gravity = 0.35;
+
+function initDimensions() {
+  areaWidth = gameArea.offsetWidth;
+  areaHeight = gameArea.offsetHeight;
+  platformX = (areaWidth - (areaWidth * 0.25)) / 2;
+  currentBallSize = Math.min(areaWidth * 0.06, 30);
+  platform.style.width = (areaWidth * 0.25) + 'px';
+  ball.style.width = ball.style.height = currentBallSize + 'px';
+}
+
+function resetGame() {
+  initDimensions();
+  score = 0;
+  ballX = areaWidth / 2;
+  ballY = 50;
+  ballVX = areaWidth * 0.005;
+  ballVY = 2;
+  jumpForce = -9;
+  gameOver = false;
+  gameStarted = false;
+  scoreDisplay.textContent = 'Scor: 0';
+  ball.classList.remove('star-mode');
+  ball.style.background = '#FF4500';
+  platform.style.background = '#222';
+  squareObs.style.display = 'none';
+  squareObs.classList.remove('flash-green');
+  longObs.forEach(o => o.style.display = 'none');
+  gameOverScreen.style.display = 'none';
+  countdownEl.style.display = 'flex';
+  countdownEl.textContent = "APASĂ START";
+}
+
+countdownEl.addEventListener('click', () => {
+    if (gameStarted) return;
+    initAudio();
+    let count = 3;
+    countdownEl.textContent = count;
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) countdownEl.textContent = count;
+        else {
+            clearInterval(timer);
+            countdownEl.textContent = "START!";
+            setTimeout(() => { countdownEl.style.display = 'none'; gameStarted = true; }, 500);
+        }
+    }, 1000);
+});
+
+function movePlatform(clientX) {
+  const rect = gameArea.getBoundingClientRect();
+  let targetX = clientX - rect.left - platform.offsetWidth / 2;
+  targetX = Math.max(0, Math.min(targetX, areaWidth - platform.offsetWidth));
+  platformX = targetX;
+  platform.style.left = platformX + 'px';
+}
+
+gameArea.addEventListener('mousemove', e => movePlatform(e.clientX));
+gameArea.addEventListener('touchmove', e => { e.preventDefault(); movePlatform(e.touches[0].clientX); }, { passive: false });
+
+function update() {
+  if (!gameOver && gameStarted) {
+    ballVY += gravity;
+    ballX += ballVX;
+    ballY += ballVY;
+
+    if (ballX <= 0 || ballX >= areaWidth - currentBallSize) {
+      ballVX *= -1;
+      ballX = ballX <= 0 ? 0 : areaWidth - currentBallSize;
+      playSound(200, 'sine', 0.1);
+    }
+    if (ballY <= 0) { ballVY *= -0.8; ballY = 0; }
+
+    // Coliziune Pătrat cu Flash
+    if (score >= 25) {
+      let sl = squareObs.offsetLeft, st = squareObs.offsetTop;
+      if (ballX + currentBallSize > sl && ballX < sl + 40 && ballY + currentBallSize > st && ballY < st + 40) {
+        ballVY *= -1; 
+        playSound(300, 'square', 0.05);
+        
+        // Aplica flash verde
+        squareObs.classList.add('flash-green');
+        setTimeout(() => squareObs.classList.remove('flash-green'), 500);
+      }
+    }
+
+    // Coliziune Obstacole Lungi
+    if (score >= 40) {
+      longObs.forEach(obs => {
+        if (ballX + currentBallSize > obs.offsetLeft && ballX < obs.offsetLeft + obs.offsetWidth &&
+            ballY + currentBallSize > obs.offsetTop && ballY < obs.offsetTop + obs.offsetHeight) {
+          ballVY *= -1; playSound(400, 'square', 0.05);
+        }
+      });
+    }
+
+    let pTop = platform.offsetTop;
+    if (ballY + currentBallSize >= pTop && ballY + currentBallSize <= pTop + 20 &&
+        ballX + currentBallSize > platformX && ballX < platformX + platform.offsetWidth && ballVY > 0) {
+      ballY = pTop - currentBallSize;
+      ballVY = jumpForce;
+      score++;
+      scoreDisplay.textContent = 'Scor: ' + score;
+      playSound(600, 'triangle', 0.1);
+      
+      if (score === 15) { platform.style.width = (platform.offsetWidth * 0.8) + 'px'; platform.style.background = '#e74c3c'; }
+      if (score === 20) jumpForce = -11;
+      if (score === 25) squareObs.style.display = 'block';
+      if (score === 30) { ballVX *= 2; currentBallSize *= 1.2; ball.style.width = ball.style.height = currentBallSize + 'px'; }
+      if (score === 40) {
+        ballVX *= 0.8; currentBallSize *= 1.2;
+        ball.style.width = ball.style.height = currentBallSize + 'px';
+        ball.classList.add('star-mode');
+        platform.style.background = '#7f8c8d';
+        platform.style.width = (platform.offsetWidth * 0.7) + 'px';
+        jumpForce = -14;
+        longObs.forEach(o => o.style.display = 'block');
+      }
+      if (score >= 50 && score % 5 === 0) { ballVX *= 1.1; ballVY *= 1.1; }
+    }
+
+    if (ballY > areaHeight) {
+      gameOver = true;
+      playSound(100, 'sawtooth', 0.4);
+      document.getElementById('finalScore').textContent = 'Scor Final: ' + score;
+      gameOverScreen.style.display = 'flex';
+    }
+  }
+
+  ball.style.left = ballX + 'px';
+  ball.style.top = ballY + 'px';
+  requestAnimationFrame(update);
+}
+
+initDimensions();
+resetGame();
+update();
+</script>
+</body>
+</html>

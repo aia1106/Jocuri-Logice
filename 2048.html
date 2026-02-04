@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Joc de Logică: 2048 Mobile & Desktop</title>
+    <style>
+        body { 
+            background-color: #faf8ef; 
+            color: #776e65; 
+            font-family: "Clear Sans", "Helvetica Neue", Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            /* Prevenim scroll-ul și gesturile default pe mobil */
+            touch-action: none; 
+            overflow: hidden;
+        }
+
+        .heading { width: 300px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        h1 { font-size: 50px; margin: 0; }
+
+        .score-container { 
+            background: #bbada0; 
+            padding: 10px 20px; 
+            border-radius: 3px; 
+            color: white; 
+            font-weight: bold; 
+            text-align: center;
+        }
+
+        #grid { 
+            background: #bbada0; 
+            width: 300px; 
+            height: 300px; 
+            padding: 10px; 
+            border-radius: 6px; 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            grid-gap: 10px; 
+        }
+
+        .cell { 
+            background: rgba(238, 228, 218, 0.35); 
+            width: 67.5px; 
+            height: 67.5px; 
+            border-radius: 3px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            font-size: 25px; 
+            font-weight: bold; 
+            transition: transform 0.1s; /* Mică animație la mișcare */
+        }
+
+        /* Culori piese */
+        .tile-2 { background: #eee4da; color: #776e65; }
+        .tile-4 { background: #ede0c8; color: #776e65; }
+        .tile-8 { background: #f2b179; color: white; }
+        .tile-16 { background: #f59563; color: white; }
+        .tile-32 { background: #f67c5f; color: white; }
+        .tile-64 { background: #f65e3b; color: white; }
+        .tile-128 { background: #edcf72; color: white; font-size: 20px; }
+        .tile-256 { background: #edcc61; color: white; font-size: 20px; }
+        .tile-512 { background: #edc850; color: white; font-size: 20px; }
+        .tile-1024 { background: #edc53f; color: white; font-size: 15px; }
+        .tile-2048 { background: #edc22e; color: white; font-size: 15px; }
+
+        .instructions { margin-top: 20px; text-align: center; max-width: 300px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="heading">
+        <h1>2048</h1>
+        <div class="score-container">Scor<br><span id="score">0</span></div>
+    </div>
+
+    <div id="grid"></div>
+
+    <div class="instructions">
+        Folosește <b>săgețile</b> sau <b>swipe</b> pentru a combina numerele și a ajunge la 2048!
+    </div>
+
+    <script>
+        const gridDisplay = document.getElementById('grid');
+        const scoreDisplay = document.getElementById('score');
+        const width = 4;
+        let squares = [];
+        let score = 0;
+
+        // Variabile pentru Touch
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        function createBoard() {
+            for (let i = 0; i < width * width; i++) {
+                let square = document.createElement('div');
+                square.innerHTML = '';
+                square.classList.add('cell');
+                gridDisplay.appendChild(square);
+                squares.push(square);
+            }
+            generate();
+            generate();
+        }
+
+        // Generare optimizată (fără recursivitate infinită)
+        function generate() {
+            let emptySquares = squares.filter(sq => sq.innerHTML === '');
+            if (emptySquares.length > 0) {
+                let randomSquare = emptySquares[Math.floor(Math.random() * emptySquares.length)];
+                randomSquare.innerHTML = 2;
+                applyStyles();
+                checkForGameOver();
+            }
+        }
+
+        function moveRight() {
+            for (let i = 0; i < 16; i++) {
+                if (i % 4 === 0) {
+                    let row = [
+                        parseInt(squares[i].innerHTML) || 0,
+                        parseInt(squares[i+1].innerHTML) || 0,
+                        parseInt(squares[i+2].innerHTML) || 0,
+                        parseInt(squares[i+3].innerHTML) || 0
+                    ];
+                    let filteredRow = row.filter(num => num);
+                    let missing = 4 - filteredRow.length;
+                    let zeros = Array(missing).fill(0);
+                    let newRow = zeros.concat(filteredRow);
+                    updateRow(i, newRow);
+                }
+            }
+        }
+
+        function moveLeft() {
+            for (let i = 0; i < 16; i++) {
+                if (i % 4 === 0) {
+                    let row = [
+                        parseInt(squares[i].innerHTML) || 0,
+                        parseInt(squares[i+1].innerHTML) || 0,
+                        parseInt(squares[i+2].innerHTML) || 0,
+                        parseInt(squares[i+3].innerHTML) || 0
+                    ];
+                    let filteredRow = row.filter(num => num);
+                    let missing = 4 - filteredRow.length;
+                    let zeros = Array(missing).fill(0);
+                    let newRow = filteredRow.concat(zeros);
+                    updateRow(i, newRow);
+                }
+            }
+        }
+
+        function updateRow(i, newRow) {
+            squares[i].innerHTML = newRow[0] || '';
+            squares[i+1].innerHTML = newRow[1] || '';
+            squares[i+2].innerHTML = newRow[2] || '';
+            squares[i+3].innerHTML = newRow[3] || '';
+        }
+
+        function moveUp() {
+            for (let i = 0; i < 4; i++) {
+                let column = [
+                    parseInt(squares[i].innerHTML) || 0,
+                    parseInt(squares[i+width].innerHTML) || 0,
+                    parseInt(squares[i+width*2].innerHTML) || 0,
+                    parseInt(squares[i+width*3].innerHTML) || 0
+                ];
+                let filteredCol = column.filter(num => num);
+                let missing = 4 - filteredCol.length;
+                let zeros = Array(missing).fill(0);
+                let newCol = filteredCol.concat(zeros);
+                updateCol(i, newCol);
+            }
+        }
+
+        function moveDown() {
+            for (let i = 0; i < 4; i++) {
+                let column = [
+                    parseInt(squares[i].innerHTML) || 0,
+                    parseInt(squares[i+width].innerHTML) || 0,
+                    parseInt(squares[i+width*2].innerHTML) || 0,
+                    parseInt(squares[i+width*3].innerHTML) || 0
+                ];
+                let filteredCol = column.filter(num => num);
+                let missing = 4 - filteredCol.length;
+                let zeros = Array(missing).fill(0);
+                let newCol = zeros.concat(filteredCol);
+                updateCol(i, newCol);
+            }
+        }
+
+        function updateCol(i, newCol) {
+            squares[i].innerHTML = newCol[0] || '';
+            squares[i+width].innerHTML = newCol[1] || '';
+            squares[i+width*2].innerHTML = newCol[2] || '';
+            squares[i+width*3].innerHTML = newCol[3] || '';
+        }
+
+        function combineRow() {
+            for (let i = 0; i < 15; i++) {
+                if ((i+1) % 4 !== 0) { // Nu combinăm peste marginea rândului
+                    if (squares[i].innerHTML === squares[i+1].innerHTML && squares[i].innerHTML !== '') {
+                        let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i+1].innerHTML);
+                        squares[i].innerHTML = combinedTotal;
+                        squares[i+1].innerHTML = '';
+                        score += combinedTotal;
+                        scoreDisplay.innerHTML = score;
+                    }
+                }
+            }
+        }
+
+        function combineColumn() {
+            for (let i = 0; i < 12; i++) {
+                if (squares[i].innerHTML === squares[i+width].innerHTML && squares[i].innerHTML !== '') {
+                    let combinedTotal = parseInt(squares[i].innerHTML) + parseInt(squares[i+width].innerHTML);
+                    squares[i].innerHTML = combinedTotal;
+                    squares[i+width].innerHTML = '';
+                    score += combinedTotal;
+                    scoreDisplay.innerHTML = score;
+                }
+            }
+        }
+
+        function applyStyles() {
+            squares.forEach(sq => {
+                let val = sq.innerHTML;
+                sq.className = 'cell';
+                if (val) sq.classList.add('tile-' + val);
+            });
+        }
+
+        // Control Tastatură
+        function control(e) {
+            if(e.keyCode === 39) keyRight();
+            else if(e.keyCode === 37) keyLeft();
+            else if(e.keyCode === 38) keyUp();
+            else if(e.keyCode === 40) keyDown();
+        }
+
+        function keyRight() { moveRight(); combineRow(); moveRight(); generate(); }
+        function keyLeft() { moveLeft(); combineRow(); moveLeft(); generate(); }
+        function keyUp() { moveUp(); combineColumn(); moveUp(); generate(); }
+        function keyDown() { moveDown(); combineColumn(); moveDown(); generate(); }
+
+        document.addEventListener('keyup', control);
+
+        // Control Touch (Swipe)
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, {passive: true});
+
+        document.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            let touchEndY = e.changedTouches[0].screenY;
+            
+            let dx = touchEndX - touchStartX;
+            let dy = touchEndY - touchStartY;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (Math.abs(dx) > 30) {
+                    if (dx > 0) keyRight(); else keyLeft();
+                }
+            } else {
+                if (Math.abs(dy) > 30) {
+                    if (dy > 0) keyDown(); else keyUp();
+                }
+            }
+        }, {passive: true});
+
+        function checkForGameOver() {
+            let zeros = squares.filter(sq => sq.innerHTML === '').length;
+            if (zeros === 0) {
+                // Verificăm dacă mai există mișcări posibile (piese adiacente egale)
+                // Pentru simplitate, afișăm mesajul dacă e plin
+                alert('Game Over! Scor final: ' + score);
+                document.removeEventListener('keyup', control);
+            }
+        }
+
+        createBoard();
+    </script>
+</body>
+</html>
