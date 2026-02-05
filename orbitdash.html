@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orbit Link - Compact</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: #000; color: white; 
+            font-family: sans-serif; overflow: hidden; 
+            display: flex; justify-content: center; align-items: center; height: 100vh; 
+        }
+        canvas { display: block; touch-action: none; }
+        #overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 100; text-align: center;
+        }
+        .btn {
+            padding: 15px 40px; font-size: 1.5rem; background: #7000ff; color: white; 
+            border: none; border-radius: 50px; font-weight: bold; margin-top: 20px; cursor: pointer;
+        }
+        #scoreUI { 
+            position: absolute; top: 40px; width: 100%; text-align: center; 
+            font-size: 3rem; font-weight: bold; pointer-events: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="scoreUI">0</div>
+
+<div id="overlay">
+    <h1 id="statusTitle">ORBIT LINK</h1>
+    <p id="statusDesc">Ține apăsat pentru a strânge orbita.<br>Ferește-te de roșu!</p>
+    <button class="btn" id="startBtn">START</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreUI = document.getElementById('scoreUI');
+const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
+
+let score = 0, gameActive = false, attracting = false, obstacles = [];
+let angle = 0, distance = 100, scale = 1;
+
+function setup() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    scale = Math.min(canvas.width, canvas.height) / 400;
+}
+
+window.addEventListener('resize', setup);
+setup();
+
+function initGame() {
+    score = 0;
+    scoreUI.textContent = "0";
+    obstacles = [];
+    angle = 0;
+    // Distanța inițială redusă
+    distance = 100 * scale;
+    gameActive = true;
+    overlay.style.display = 'none';
+    spawn();
+    draw();
+}
+
+function spawn() {
+    if(!gameActive) return;
+    const radius = (8 + Math.random() * 9) * scale;
+    const side = Math.random() > 0.5;
+    
+    obstacles.push({
+        x: side ? -radius : canvas.width + radius,
+        y: Math.random() * canvas.height,
+        vx: (side ? 1 : -1) * (2 + Math.random() * 2.5) * scale,
+        vy: (Math.random() - 0.5) * 1.5 * scale,
+        r: radius
+    });
+    
+    setTimeout(spawn, Math.max(300, 1000 - (score * 8)));
+}
+
+function draw() {
+    if(!gameActive) return;
+
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // ORBITA REDUSĂ CU 20% (de la 50-130 la 40-105)
+    const targetDist = attracting ? 40 * scale : 105 * scale;
+    distance += (targetDist - distance) * 0.12;
+    angle += 0.055; // Puțin mai rapidă rotația pentru a compensa orbita mică
+
+    const px = centerX + Math.cos(angle) * distance;
+    const py = centerY + Math.sin(angle) * distance;
+
+    // Nucleu
+    ctx.shadowBlur = 10 * scale;
+    ctx.shadowColor = "#7000ff";
+    ctx.fillStyle = "#7000ff";
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 14 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Planetă
+    ctx.shadowBlur = 12 * scale;
+    ctx.shadowColor = "#00f2ff";
+    ctx.fillStyle = "#00f2ff";
+    ctx.beginPath();
+    ctx.arc(px, py, 7 * scale, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Obstacole
+    ctx.shadowBlur = 0;
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        let o = obstacles[i];
+        o.x += o.vx;
+        o.y += o.vy;
+
+        ctx.fillStyle = "#ff0055";
+        ctx.beginPath();
+        ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        const d = Math.hypot(px - o.x, py - o.y);
+        if(d < o.r + 7 * scale) endGame();
+
+        if(o.x < -100 || o.x > canvas.width + 100) {
+            obstacles.splice(i, 1);
+            score++;
+            scoreUI.textContent = score;
+        }
+    }
+
+    requestAnimationFrame(draw);
+}
+
+function endGame() {
+    gameActive = false;
+    overlay.style.display = 'flex';
+    document.getElementById('statusTitle').textContent = "IMPACT!";
+    document.getElementById('statusDesc').textContent = "Scor: " + score;
+    startBtn.textContent = "DIN NOU";
+}
+
+startBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    initGame();
+});
+
+const down = () => attracting = true;
+const up = () => attracting = false;
+
+window.addEventListener('touchstart', (e) => { if(gameActive) down(); }, {passive: false});
+window.addEventListener('touchend', up);
+window.addEventListener('mousedown', down);
+window.addEventListener('mouseup', up);
+
+</script>
+</body>
+</html>

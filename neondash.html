@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Dash - Runner</title>
+    <style>
+        body {
+            margin: 0; background: #0a0a0a; color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden; touch-action: none;
+        }
+        #canvas {
+            border-bottom: 4px solid #00f2ff;
+            background: linear-gradient(to bottom, #111, #050505);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+        #ui {
+            position: absolute; top: 20px; width: 100%;
+            text-align: center; pointer-events: none;
+        }
+        #score { font-size: 2rem; font-weight: bold; color: #00f2ff; text-shadow: 0 0 10px #00f2ff; }
+        #msg { font-size: 1.2rem; color: #fff; opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div id="score">0</div>
+    <div id="msg">APASĂ PENTRU SĂRITURĂ</div>
+</div>
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+
+// Configurare ecran
+canvas.width = window.innerWidth > 600 ? 600 : window.innerWidth;
+canvas.height = 300;
+
+// Variabile joc
+let score = 0;
+let gameActive = false;
+let gameSpeed = 5;
+let gravity = 0.8;
+let obstacles = [];
+let particles = [];
+
+const player = {
+    x: 50,
+    y: canvas.height - 40,
+    w: 30,
+    h: 30,
+    color: '#00f2ff',
+    dy: 0,
+    jumpForce: -12,
+    grounded: true,
+    rotation: 0
+};
+
+// Funcție pentru a crea obstacole
+function spawnObstacle() {
+    let size = 20 + Math.random() * 30;
+    obstacles.push({
+        x: canvas.width,
+        y: canvas.height - size,
+        w: size,
+        h: size,
+        color: '#ff0055'
+    });
+    
+    // Programează următorul obstacol (intervalul scade pe măsură ce viteza crește)
+    let nextSpawn = 1000 + Math.random() * 2000 - (gameSpeed * 50);
+    if(gameActive) setTimeout(spawnObstacle, Math.max(500, nextSpawn));
+}
+
+// Control
+function handleJump() {
+    if (!gameActive) {
+        resetGame();
+        return;
+    }
+    if (player.grounded) {
+        player.dy = player.jumpForce;
+        player.grounded = false;
+    }
+}
+
+window.addEventListener('mousedown', handleJump);
+window.addEventListener('touchstart', (e) => { e.preventDefault(); handleJump(); });
+
+function resetGame() {
+    score = 0;
+    gameSpeed = 5;
+    obstacles = [];
+    particles = [];
+    player.y = canvas.height - 40;
+    player.dy = 0;
+    player.rotation = 0;
+    gameActive = true;
+    document.getElementById('msg').style.display = 'none';
+    spawnObstacle();
+    update();
+}
+
+function createParticles(x, y) {
+    for(let i=0; i<5; i++) {
+        particles.push({
+            x: x, y: y,
+            dx: (Math.random() - 0.5) * 4,
+            dy: (Math.random() - 0.5) * 4,
+            life: 1.0
+        });
+    }
+}
+
+function update() {
+    if (!gameActive) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Fizică Jucător
+    player.dy += gravity;
+    player.y += player.dy;
+
+    if (player.y + player.h > canvas.height) {
+        if (!player.grounded) createParticles(player.x + 15, canvas.height);
+        player.y = canvas.height - player.h;
+        player.dy = 0;
+        player.grounded = true;
+        player.rotation = 0;
+    } else {
+        player.rotation += 0.1; // Se rotește în aer
+    }
+
+    // Desenare Jucător cu efect de Glow
+    ctx.save();
+    ctx.translate(player.x + player.w/2, player.y + player.h/2);
+    ctx.rotate(player.rotation);
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = player.color;
+    ctx.fillStyle = player.color;
+    ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
+    ctx.restore();
+
+    // Gestionare Particule
+    particles.forEach((p, index) => {
+        p.x += p.dx; p.y += p.dy; p.life -= 0.02;
+        ctx.fillStyle = `rgba(0, 242, 255, ${p.life})`;
+        ctx.fillRect(p.x, p.y, 3, 3);
+        if(p.life <= 0) particles.splice(index, 1);
+    });
+
+    // Gestionare Obstacole
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+        let o = obstacles[i];
+        o.x -= gameSpeed;
+
+        // Desenare Triunghi (Obstacol)
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = o.color;
+        ctx.fillStyle = o.color;
+        ctx.beginPath();
+        ctx.moveTo(o.x, o.y + o.h);
+        ctx.lineTo(o.x + o.w / 2, o.y);
+        ctx.lineTo(o.x + o.w, o.y + o.h);
+        ctx.fill();
+
+        // Coliziune
+        if (player.x < o.x + o.w &&
+            player.x + player.w > o.x &&
+            player.y < o.y + o.h &&
+            player.y + player.h > o.y) {
+            gameOver();
+        }
+
+        // Ștergere obstacole ieșite din ecran și scor
+        if (o.x + o.w < 0) {
+            obstacles.splice(i, 1);
+            score++;
+            scoreEl.textContent = score;
+            gameSpeed += 0.1; // Crește viteza
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+function gameOver() {
+    gameActive = false;
+    document.getElementById('msg').style.display = 'block';
+    document.getElementById('msg').innerHTML = "GAME OVER<br>APASĂ PENTRU RESTART";
+}
+
+// Mesaj inițial
+ctx.fillStyle = "white";
+ctx.textAlign = "center";
+ctx.fillText("APASĂ START", canvas.width/2, canvas.height/2);
+
+</script>
+</body>
+</html>
