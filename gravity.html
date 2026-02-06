@@ -3,36 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gravity Flip - Big Spikes</title>
+    <title>Gravity Flip - Mobile Pro</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
             margin: 0; background: #000; color: white; 
             font-family: sans-serif; overflow: hidden; 
-            display: flex; justify-content: center; align-items: center; height: 100vh; 
+            touch-action: none; display: flex; justify-content: center; align-items: center; height: 100vh; 
         }
-        canvas { display: block; touch-action: none; border-top: 3px solid #00ff88; border-bottom: 3px solid #00ff88; }
-        #ui { position: absolute; top: 5%; text-align: center; pointer-events: none; width: 100%; z-index: 10; }
-        #score { font-size: 3.5rem; font-weight: 900; color: #00ff88; text-shadow: 0 0 20px #00ff88; }
+        canvas { display: block; background: #050505; border-top: 4px solid #00ff88; border-bottom: 4px solid #00ff88; }
+        #scoreUI { position: absolute; top: 10%; font-size: 3.5rem; font-weight: 900; color: #00ff88; z-index: 10; pointer-events: none; }
         #overlay { 
-            position: absolute; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); display: flex; flex-direction: column; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
             justify-content: center; align-items: center; z-index: 100;
         }
         .btn {
-            padding: 15px 45px; font-size: 1.6rem; background: #00ff88; color: #000; 
-            border: none; border-radius: 12px; font-weight: bold; cursor: pointer;
+            padding: 20px 50px; font-size: 1.8rem; background: #00ff88; color: #000; 
+            border: none; border-radius: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
         }
     </style>
 </head>
 <body>
 
-<div id="ui"><div id="score">0</div></div>
+<div id="scoreUI">0</div>
 
-<div id="overlay" onclick="startGame()">
-    <h1 style="color:#00ff88; font-size: 2.5rem; margin-bottom: 0;">GRAVITY FLIP</h1>
-    <p style="margin-bottom: 25px;">MAI MARI, MAI GREI!</p>
-    <button class="btn">START</button>
+<div id="overlay">
+    <h1 style="color:#00ff88; margin-bottom: 5px;">GRAVITY FLIP</h1>
+    <p style="margin-bottom: 30px;">Apasă pentru a schimba gravitația!</p>
+    <button class="btn" id="startBtn">START JOC</button>
 </div>
 
 <canvas id="gameCanvas"></canvas>
@@ -40,32 +40,27 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const scoreUI = document.getElementById('score');
+const scoreUI = document.getElementById('scoreUI');
 const overlay = document.getElementById('overlay');
+const startBtn = document.getElementById('startBtn');
 
-let score = 0, gameActive = false, obstacles = [], gameSpeed = 5, scale = 1;
-
-const player = {
-    x: 50, y: 0, w: 30, h: 30,
-    gravity: 0.75, // Gravitație puțin mai puternică pentru control rapid
-    dy: 0,
-    onCeiling: false,
-    color: '#00ff88'
-};
+let score = 0, gameActive = false, obstacles = [], gameSpeed, scale;
+const player = { x: 0, y: 0, w: 0, h: 0, dy: 0, gravity: 0.9, onCeiling: false };
 
 function setup() {
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight * 0.7; // Zona de joc mai mare
+    canvas.height = window.innerHeight * 0.7;
     scale = canvas.height / 400;
-    player.w = 28 * scale;
-    player.h = 28 * scale;
+    player.w = 30 * scale;
+    player.h = 30 * scale;
     player.x = 60 * scale;
 }
 
 window.addEventListener('resize', setup);
 setup();
 
-function startGame() {
+// FUNCTIA DE START - Activată de buton
+function init() {
     score = 0; scoreUI.textContent = "0";
     obstacles = []; gameSpeed = 5 * scale;
     player.y = canvas.height - player.h;
@@ -73,103 +68,97 @@ function startGame() {
     player.onCeiling = false;
     gameActive = true;
     overlay.style.display = 'none';
+    
     spawn();
-    draw();
+    requestAnimationFrame(update);
 }
+
+function flip(e) {
+    if (!gameActive) return;
+    if (e) e.preventDefault(); // Oprește scroll-ul pe mobil
+    player.onCeiling = !player.onCeiling;
+}
+
+// EVENIMENTE - Varianta sigură pentru mobil
+startBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    init();
+});
+
+// Aici e secretul: ascultăm pe tot ecranul, dar prevenim comportamentul de scroll
+window.addEventListener('touchstart', flip, { passive: false });
+window.addEventListener('mousedown', (e) => { if(e.button === 0) flip(); });
 
 function spawn() {
     if(!gameActive) return;
     const isCeiling = Math.random() > 0.5;
+    const sW = (40 + Math.random() * 40) * scale;
+    const sH = (70 + Math.random() * 80) * scale; // Tepi mari cum ai vrut
     
-    // ȚEPI MAI MARI: mărimea variază acum între 40 și 80 unități de scală
-    const sizeW = (31 + Math.random() * 40) * scale;
-    const sizeH = (50 + Math.random() * 60) * scale; 
-    
-    obstacles.push({
-        x: canvas.width + 100,
-        y: isCeiling ? 0 : canvas.height - sizeH,
-        w: sizeW,
-        h: sizeH,
-        isCeiling: isCeiling
-    });
-    
-    // Interval de apariție puțin mai strâns
-    setTimeout(spawn, Math.max(500, 1400 - (score * 25)));
+    obstacles.push({ x: canvas.width + 100, y: isCeiling ? 0 : canvas.height - sH, w: sW, h: sH, isCeiling });
+    setTimeout(spawn, Math.max(400, 1400 - (score * 30)));
 }
 
-function flip() {
-    if(!gameActive) return;
-    player.onCeiling = !player.onCeiling;
-}
-
-window.addEventListener('touchstart', (e) => { e.preventDefault(); flip(); }, {passive: false});
-window.addEventListener('mousedown', (e) => { if(e.button === 0) flip(); });
-
-function draw() {
+function update() {
     if(!gameActive) return;
 
-    ctx.fillStyle = "#000";
+    ctx.fillStyle = "#050505";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Fizică
-    const force = player.onCeiling ? -player.gravity * scale : player.gravity * scale;
-    player.dy += force;
+    // Fizică gravitație
+    const targetGravity = player.onCeiling ? -player.gravity * scale : player.gravity * scale;
+    player.dy += targetGravity;
     player.y += player.dy;
 
-    // Limite ecran
+    // Limite podea/tavan
     if(player.y <= 0) { player.y = 0; player.dy = 0; }
     if(player.y + player.h >= canvas.height) { player.y = canvas.height - player.h; player.dy = 0; }
 
-    // Jucător (Glow)
-    ctx.shadowBlur = 15; ctx.shadowColor = player.color;
-    ctx.fillStyle = player.color;
+    // Jucător Neon
+    ctx.fillStyle = "#00ff88";
+    ctx.shadowBlur = 15; ctx.shadowColor = "#00ff88";
     ctx.fillRect(player.x, player.y, player.w, player.h);
-
-    // Obstacole
     ctx.shadowBlur = 0;
+
+    // Obstacole (Țepi mari)
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let o = obstacles[i];
         o.x -= gameSpeed;
-
-        // Desenare Țep (Triunghi Neon)
+        
         ctx.fillStyle = "#ff0055";
         ctx.shadowBlur = 10; ctx.shadowColor = "#ff0055";
         ctx.beginPath();
         if(o.isCeiling) {
-            ctx.moveTo(o.x, 0);
-            ctx.lineTo(o.x + o.w / 2, o.h);
-            ctx.lineTo(o.x + o.w, 0);
+            ctx.moveTo(o.x, 0); ctx.lineTo(o.x + o.w/2, o.h); ctx.lineTo(o.x + o.w, 0);
         } else {
-            ctx.moveTo(o.x, canvas.height);
-            ctx.lineTo(o.x + o.w / 2, canvas.height - o.h);
-            ctx.lineTo(o.x + o.w, canvas.height);
+            ctx.moveTo(o.x, canvas.height); ctx.lineTo(o.x + o.w/2, canvas.height - o.h); ctx.lineTo(o.x + o.w, canvas.height);
         }
         ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // Coliziune îmbunătățită (hitbox puțin mai mic decât vizualul pentru corectitudine)
-        const hitMargin = 5 * scale;
+        // Coliziune
+        const hitMargin = 6 * scale;
         if(player.x + player.w - hitMargin > o.x && player.x + hitMargin < o.x + o.w) {
             if(o.isCeiling && player.y < o.h - hitMargin) gameOver();
             if(!o.isCeiling && player.y + player.h > canvas.height - o.h + hitMargin) gameOver();
         }
 
-        // Scor și curățare
+        // Ieșire din ecran & Scor
         if(o.x < -150) {
             obstacles.splice(i, 1);
             score++;
             scoreUI.textContent = score;
-            if(score % 5 === 0) gameSpeed += 0.3 * scale;
+            gameSpeed += 0.08;
         }
     }
-
-    requestAnimationFrame(draw);
+    requestAnimationFrame(update);
 }
 
 function gameOver() {
     gameActive = false;
     overlay.style.display = 'flex';
-    overlay.querySelector('h1').textContent = "COLLISION!";
-    overlay.querySelector('p').textContent = "Scor: " + score;
+    document.querySelector('#overlay h1').textContent = "IMPACT!";
+    startBtn.textContent = "DIN NOU";
 }
 </script>
 </body>
