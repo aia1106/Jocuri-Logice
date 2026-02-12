@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Conquest - Mobile Pro</title>
+    <style>
+        body { margin: 0; background: #02050a; color: #00f2fe; font-family: 'Segoe UI', sans-serif; overflow: hidden; touch-action: none; }
+        canvas { display: block; }
+        
+        #ui-top {
+            position: absolute; top: 15px; width: 100%; display: flex;
+            justify-content: space-around; pointer-events: none;
+            font-weight: bold; text-transform: uppercase; letter-spacing: 2px;
+            z-index: 10;
+        }
+
+        #ui-bottom {
+            position: absolute; bottom: 30px; width: 100%; display: flex;
+            justify-content: center; z-index: 10;
+        }
+
+        .skill-btn {
+            background: rgba(0, 0, 0, 0.8); border: 2px solid #00f2fe;
+            color: #00f2fe; padding: 15px 30px; border-radius: 50px;
+            cursor: pointer; pointer-events: auto; font-weight: bold;
+            transition: 0.3s; box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Efectul de pǎlpâire când e gata */
+        .ready-pulse {
+            animation: pulse-glow 1s infinite alternate;
+            background: rgba(0, 242, 254, 0.2);
+            border-color: #fff;
+            color: #fff;
+            box-shadow: 0 0 20px #00f2fe;
+        }
+
+        @keyframes pulse-glow {
+            from { transform: scale(1); box-shadow: 0 0 10px #00f2fe; }
+            to { transform: scale(1.1); box-shadow: 0 0 25px #00f2fe, inset 0 0 10px #00f2fe; }
+        }
+
+        .skill-btn:disabled { border-color: #333; color: #333; box-shadow: none; animation: none; }
+
+        #msg-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; display: none; pointer-events: none; z-index: 20;
+            background: rgba(0,0,0,0.8); padding: 40px; border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-top">
+        <span>LVL: <span id="level-val">1</span></span>
+        <span>ENERGY: <span id="energy-val">0</span>%</span>
+    </div>
+
+    <div id="msg-overlay">
+        <h1 id="msg-title" style="font-size: 40px; margin: 0;"></h1>
+        <p id="msg-sub">CALIBRARE SISTEM...</p>
+    </div>
+
+    <div id="ui-bottom">
+        <button id="btn-airstrike" class="skill-btn" onclick="activateAirStrike()" disabled>AIR STRIKE (50%)</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const levelVal = document.getElementById('level-val');
+    const energyVal = document.getElementById('energy-val');
+    const btnAir = document.getElementById('btn-airstrike');
+    const msgOverlay = document.getElementById('msg-overlay');
+    const msgTitle = document.getElementById('msg-title');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let nodes = [], particles = [], selectedNode = null;
+    let isDragging = false, dragEnd = { x: 0, y: 0 };
+    let level = 1, energy = 0, gameActive = true, radarAngle = 0;
+
+    class Node {
+        constructor(x, y, owner, count) {
+            this.x = x; this.y = y;
+            this.owner = owner; // 'player', 'enemy', 'neutral'
+            this.count = count;
+            this.radius = Math.min(canvas.width * 0.08, 35);
+            this.lastUpdate = Date.now();
+        }
+
+        draw() {
+            let color = this.getColor();
+            ctx.shadowBlur = 10; ctx.shadowColor = color;
+            
+            // Cerc exterior
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Radar
+            if (this.owner !== 'neutral') {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + Math.cos(radarAngle) * this.radius, this.y + Math.sin(radarAngle) * this.radius);
+                ctx.strokeStyle = color;
+                ctx.globalAlpha = 0.4;
+                ctx.stroke();
+                ctx.globalAlpha = 1;
+            }
+
+            // Interior
+            ctx.fillStyle = "#02050a";
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius - 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = "#fff";
+            ctx.font = `bold ${this.radius * 0.5}px Arial`;
+            ctx.textAlign = "center";
+            ctx.fillText(Math.floor(this.count), this.x, this.y + (this.radius * 0.2));
+
+            this.update();
+        }
+
+        getColor() {
+            if (this.owner === 'player') return '#00f2fe';
+            if (this.owner === 'enemy') return '#ff0055';
+            return '#444';
+        }
+
+        update() {
+            if (!gameActive) return;
+            let now = Date.now();
+            let rate = (this.owner === 'neutral') ? 0 : 1000;
+            if (now - this.lastUpdate > rate && rate > 0) {
+                this.count += 1;
+                this.lastUpdate = now;
+                if (this.owner === 'player' && energy < 100) {
+                    energy = Math.min(100, energy + 1);
+                    updateEnergyUI();
+                }
+            }
+        }
+    }
+
+    function updateEnergyUI() {
+        energyVal.innerText = Math.floor(energy);
+        if (energy >= 50) {
+            btnAir.disabled = false;
+            btnAir.classList.add('ready-pulse');
+        } else {
+            btnAir.disabled = true;
+            btnAir.classList.remove('ready-pulse');
+        }
+    }
+
+    function initLevel() {
+        nodes = []; energy = 0; updateEnergyUI();
+        levelVal.innerText = level;
+        gameActive = true;
+        msgOverlay.style.display = 'none';
+
+        // Poziții mobile-friendly
+        nodes.push(new Node(60, canvas.height/2, 'player', 15));
+        nodes.push(new Node(canvas.width - 60, canvas.height/2, 'enemy', 15 + (level * 5)));
+
+        let count = 2 + level;
+        for(let i=0; i<Math.min(count, 8); i++) {
+            nodes.push(new Node(
+                100 + Math.random() * (canvas.width - 200),
+                100 + Math.random() * (canvas.height - 250),
+                'neutral',
+                Math.floor(Math.random() * 15)
+            ));
+        }
+    }
+
+    function handleAttack(from, to) {
+        if (from === to || from.count < 2) return;
+        let sent = Math.floor(from.count / 2);
+        from.count -= sent;
+        if (from.owner === to.owner) to.count += sent;
+        else {
+            to.count -= sent;
+            if (to.count < 0) {
+                to.count = Math.abs(to.count);
+                to.owner = from.owner;
+                createExplosion(to.x, to.y, from.owner === 'player' ? '#00f2fe' : '#ff0055');
+            }
+        }
+        checkGameState();
+    }
+
+    function activateAirStrike() {
+        if (energy < 50) return;
+        energy -= 50; updateEnergyUI();
+        nodes.forEach(n => {
+            if (n.owner === 'enemy') {
+                n.count = Math.max(0, n.count - 25);
+                createExplosion(n.x, n.y, '#fff');
+            }
+        });
+    }
+
+    function createExplosion(x, y, color) {
+        for(let i=0; i<12; i++) {
+            particles.push({ x, y, color, vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8, life: 1.0 });
+        }
+    }
+
+    function checkGameState() {
+        const enemies = nodes.filter(n => n.owner === 'enemy');
+        const players = nodes.filter(n => n.owner === 'player');
+        if (enemies.length === 0) endGame("VICTORIE!", "#00f2fe", true);
+        else if (players.length === 0) endGame("DEFEAT", "#ff0055", false);
+    }
+
+    function endGame(txt, col, win) {
+        gameActive = false;
+        msgTitle.innerText = txt;
+        msgTitle.style.color = col;
+        msgOverlay.style.display = 'block';
+        setTimeout(() => { if(win) level++; else level=1; initLevel(); }, 3000);
+    }
+
+    // Input Events (Mobile & Desktop)
+    function startDrag(x, y) {
+        nodes.forEach(n => {
+            if (Math.hypot(n.x - x, n.y - y) < n.radius + 10 && n.owner === 'player') {
+                selectedNode = n; isDragging = true;
+            }
+        });
+    }
+
+    canvas.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); startDrag(e.touches[0].clientX, e.touches[0].clientY); });
+
+    function moveDrag(x, y) { dragEnd = { x, y }; }
+    window.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+    window.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX, e.touches[0].clientY));
+
+    function endDrag(x, y) {
+        if (!isDragging) return;
+        nodes.forEach(n => { if (Math.hypot(n.x - x, n.y - y) < n.radius + 15) handleAttack(selectedNode, n); });
+        isDragging = false; selectedNode = null;
+    }
+    window.addEventListener('mouseup', e => endDrag(e.clientX, e.clientY));
+    window.addEventListener('touchend', e => { const t = e.changedTouches[0]; endDrag(t.clientX, t.clientY); });
+
+    // AI Inamic
+    setInterval(() => {
+        if (!gameActive) return;
+        nodes.filter(n => n.owner === 'enemy').forEach(en => {
+            if (en.count > 12 + level) {
+                let targets = nodes.filter(n => n.owner !== 'enemy');
+                handleAttack(en, targets[Math.floor(Math.random() * targets.length)]);
+            }
+        });
+    }, 4000 - (level * 200));
+
+    function gameLoop() {
+        ctx.fillStyle = "#02050a";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        radarAngle += 0.04;
+
+        if (isDragging && selectedNode) {
+            ctx.beginPath();
+            ctx.moveTo(selectedNode.x, selectedNode.y);
+            ctx.lineTo(dragEnd.x, dragEnd.y);
+            ctx.strokeStyle = "rgba(0, 242, 254, 0.4)";
+            ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+            ctx.fillRect(p.x, p.y, 2, 2);
+        });
+        ctx.globalAlpha = 1;
+
+        nodes.forEach(n => n.draw());
+        requestAnimationFrame(gameLoop);
+    }
+
+    initLevel();
+    gameLoop();
+
+    window.onresize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initLevel(); };
+</script>
+</body>
+</html>
