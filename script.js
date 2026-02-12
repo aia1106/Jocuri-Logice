@@ -23,14 +23,9 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
-
-function navigateToClass(clasa) {
-    if (clasa === 'Jocuri') {
-        window.location.href = 'jocuri.html';
-    } else if (clasa === '0,1,2,3,4') {
-        window.location.href = 'clasa0.html';
-    } else {
-        window.location.href = 'clasa' + clasa + '.html';
-    }
+// Funcția pentru navigarea la pagina clasei selectate
+function navigateToClass(classNumber) {
+    window.location.href = `clasa${classNumber}.html`;
 }
+
 
