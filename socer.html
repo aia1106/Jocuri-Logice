@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soccer Math Quiz</title>
+    <style>
+        body {
+            margin: 0; background: #111; display: flex; justify-content: center;
+            align-items: center; height: 100vh; font-family: 'Arial Black', sans-serif;
+            overflow: hidden; touch-action: none;
+        }
+        #stadium {
+            position: relative; width: 360px; height: 640px;
+            background: repeating-linear-gradient(#2ecc71, #2ecc71 45px, #27ae60 45px, #27ae60 90px);
+            border: 5px solid #fff; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        #goal {
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            width: 220px; height: 110px; border: 5px solid #fff; border-bottom: none;
+            background-color: rgba(255,255,255,0.1);
+        }
+        #keeper {
+            position: absolute; top: 155px; left: 162px; width: 36px; height: 20px;
+            z-index: 5; transition: left 0.3s ease-out; display: flex; justify-content: space-between;
+        }
+        .glove { width: 16px; height: 16px; background: #fff; border-radius: 4px; border: 1px solid #ccc; font-size: 10px; display: flex; justify-content: center; align-items: center;}
+        #ball {
+            position: absolute; bottom: 80px; left: 160px; width: 40px; height: 40px;
+            background: radial-gradient(circle at 35% 35%, #fff 0%, #bbb 50%, #444 100%);
+            border-radius: 50%; z-index: 10;
+        }
+        #power-container {
+            position: absolute; left: 10px; top: 200px; width: 10px; height: 150px;
+            background: rgba(0,0,0,0.3); border: 1px solid #fff; border-radius: 5px;
+        }
+        #power-bar { position: absolute; bottom: 0; width: 100%; height: 0%; background: #e74c3c; border-radius: 5px; transition: height 0.1s; }
+        #arrow {
+            position: absolute; bottom: 100px; left: 180px; width: 4px; background: #fff;
+            transform-origin: bottom center; display: none; z-index: 8; border-radius: 10px;
+        }
+        #ui { position: absolute; top: 20px; width: 100%; text-align: center; color: #fff; font-size: 20px; z-index: 20; }
+        
+        /* Stil nou pentru GOL */
+        #msg {
+            position: absolute; top: 250px; width: 100%; text-align: center;
+            font-size: 60px; font-weight: 900; display: none; z-index: 100;
+            color: #ffff00; text-shadow: 4px 4px 0px #000, -2px -2px 0px #000;
+        }
+
+        /* Panou Matematica */
+        #math-quiz {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 20px; border-radius: 15px; text-align: center;
+            display: none; z-index: 200; box-shadow: 0 0 30px rgba(0,0,0,0.5); width: 250px;
+        }
+        #math-quiz h2 { margin: 0 0 15px 0; color: #333; }
+        #math-input { width: 60px; font-size: 24px; text-align: center; padding: 5px; margin-bottom: 10px; }
+        #math-btn { display: block; width: 100%; padding: 10px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="stadium">
+    <div id="ui">SCORE: <span id="score">0</span></div>
+    <div id="power-container"><div id="power-bar"></div></div>
+    <div id="goal"></div>
+    <div id="keeper"><div class="glove"></div><div class="glove"></div></div>
+    <div id="arrow"></div>
+    <div id="ball"></div>
+    <div id="msg">GOL!</div>
+
+    <div id="math-quiz">
+        <h2 id="question">10 + 5 = ?</h2>
+        <input type="number" id="math-input" placeholder="?">
+        <button id="math-btn">VERIFIC</button>
+    </div>
+</div>
+
+<script>
+    const ball = document.getElementById('ball');
+    const arrow = document.getElementById('arrow');
+    const keeper = document.getElementById('keeper');
+    const powerBar = document.getElementById('power-bar');
+    const scoreEl = document.getElementById('score');
+    const msg = document.getElementById('msg');
+    const quiz = document.getElementById('math-quiz');
+    const questionEl = document.getElementById('question');
+    const mathInput = document.getElementById('math-input');
+    const mathBtn = document.getElementById('math-btn');
+
+    let score = 0, isDragging = false, gameActive = true, correctAnswer = 0;
+    let startX, startY;
+    const initX = 160, initY = 520;
+
+    const handleStart = (e) => {
+        if (!gameActive) return;
+        const t = e.touches ? e.touches[0] : e;
+        startX = t.clientX; startY = t.clientY;
+        isDragging = true; arrow.style.display = 'block';
+    };
+
+    const handleMove = (e) => {
+        if (!isDragging) return;
+        const t = e.touches ? e.touches[0] : e;
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const powerPerc = Math.min(dist / 150, 1);
+        powerBar.style.height = (powerPerc * 100) + '%';
+        const angleDeg = (Math.atan2(-dy, -dx) * 180 / Math.PI) - 90;
+        arrow.style.height = (powerPerc * 150) + 'px';
+        arrow.style.transform = `rotate(${angleDeg}deg)`;
+    };
+
+    const handleEnd = (e) => {
+        if (!isDragging) return;
+        isDragging = false; arrow.style.display = 'none';
+        const t = e.changedTouches ? e.changedTouches[0] : e;
+        const dx = t.clientX - startX, dy = t.clientY - startY;
+        if (Math.abs(dx) > 15 || Math.abs(dy) > 15) shoot(-dx * 1.8, -dy * 3.8);
+        else powerBar.style.height = '0%';
+    };
+
+    function shoot(tx, ty) {
+        gameActive = false;
+        const startTime = performance.now();
+        const duration = 600;
+        const sX = 160, sY = 520;
+        let fX = sX + tx, fY = Math.max(75, sY + ty);
+
+        setTimeout(() => {
+            const kJump = (tx * 0.4) + (Math.random() - 0.5) * 50;
+            keeper.style.left = Math.max(70, Math.min(250, 162 + kJump)) + 'px';
+        }, 100);
+
+        function frame(now) {
+            const elapsed = now - startTime;
+            const p = Math.min(elapsed / duration, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            let curX = sX + (fX - sX) * ease, curY = sY + (fY - sY) * ease;
+
+            if (curY <= 175) {
+                const kX = parseFloat(keeper.style.left);
+                if (Math.abs(curX + 20 - (kX + 18)) < 25) {
+                    ball.style.top = '175px'; ball.style.left = (kX + 2) + 'px';
+                    finish(false, true); return;
+                }
+            }
+            ball.style.left = curX + 'px'; ball.style.top = curY + 'px';
+            ball.style.transform = `scale(${1 - p * 0.45})`;
+            if (p < 1) requestAnimationFrame(frame);
+            else finish(curX > 70 && curX < 250 && curY <= 130, false);
+        }
+        requestAnimationFrame(frame);
+    }
+
+    function finish(goal, saved) {
+        if (goal && !saved) {
+            score++; scoreEl.innerText = score;
+            msg.innerText = "GOL!"; msg.style.display = 'block';
+            setTimeout(reset, 1500);
+        } else {
+            showMathQuiz();
+        }
+    }
+
+    function showMathQuiz() {
+        const isAdd = Math.random() > 0.5;
+        let a, b;
+        if (isAdd) {
+            a = Math.floor(Math.random() * 11);
+            b = Math.floor(Math.random() * (21 - a));
+            correctAnswer = a + b;
+            questionEl.innerText = `${a} + ${b} = ?`;
+        } else {
+            a = Math.floor(Math.random() * 11) + 10; // 10-20
+            b = Math.floor(Math.random() * a);
+            correctAnswer = a - b;
+            questionEl.innerText = `${a} - ${b} = ?`;
+        }
+        quiz.style.display = 'block';
+        mathInput.value = "";
+        mathInput.focus();
+    }
+
+    mathBtn.onclick = () => {
+        if (parseInt(mathInput.value) === correctAnswer) {
+            quiz.style.display = 'none';
+            reset();
+        } else {
+            mathInput.style.border = "2px solid red";
+            setTimeout(() => mathInput.style.border = "1px solid #ccc", 500);
+        }
+    };
+
+    function reset() {
+        msg.style.display = 'none';
+        powerBar.style.height = '0%';
+        ball.style.transform = 'scale(1)';
+        ball.style.left = initX + 'px'; ball.style.top = initY + 'px';
+        keeper.style.left = '162px';
+        gameActive = true;
+    }
+
+    const s = document.getElementById('stadium');
+    s.addEventListener('mousedown', handleStart);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    s.addEventListener('touchstart', handleStart);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleEnd);
+</script>
+</body>
+</html>
