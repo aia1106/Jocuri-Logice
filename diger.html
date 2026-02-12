@@ -2,11 +2,11 @@
 <html lang="ro">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber-Digger - Multi Level</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber-Digger - Mobile Ready</title>
     <style>
         :root {
-            --cell-size: 40px;
+            --cell-size: 35px; /* Micșorat puțin pentru a încăpea pe ecrane de telefon */
             --bg-dirt: #3d2b1f;
             --bg-empty: #1a120b;
         }
@@ -15,6 +15,7 @@
             margin: 0;
             background-color: #050505;
             display: flex;
+            flex-direction: column; /* Coloană pentru a face loc butoanelor sub joc */
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -39,7 +40,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .dirt { background-color: var(--bg-dirt); border: 0.5px solid #2d1f16; }
@@ -60,55 +61,62 @@
             transition: all 0.1s ease;
             box-shadow: 0 0 10px #ffeb3b;
         }
-        #player::after { content: '🤖'; font-size: 24px; }
+        #player::after { content: '🤖'; font-size: 20px; }
 
         #ui {
-            position: absolute;
-            top: -45px;
             width: 100%;
+            max-width: calc(9 * var(--cell-size));
             display: flex;
             justify-content: space-between;
             color: #0f0;
             font-size: 18px;
+            margin-bottom: 5px;
         }
 
-        /* Mesaj de succes la nivel complet */
-        #victory-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 255, 0, 0.2);
-            display: none;
+        /* CONTROALE MOBIL - DPAD */
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(2, 60px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #5d4037;
+            border-radius: 50%;
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 150;
-            backdrop-filter: blur(2px);
+            font-size: 24px;
+            color: white;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        #victory-overlay h1 {
-            background: #000;
-            color: #0f0;
-            padding: 20px;
-            border: 3px solid #0f0;
-            text-shadow: 0 0 10px #0f0;
+        .btn:active { background: rgba(255, 235, 59, 0.4); }
+        #btn-up { grid-column: 2; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+
+        #victory-overlay, #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none; justify-content: center; align-items: center; z-index: 150;
         }
+
+        #victory-overlay h1 { background: #000; color: #0f0; padding: 20px; border: 3px solid #0f0; }
+        #game-over { background: rgba(0,0,0,0.9); flex-direction: column; z-index: 200;}
+        button { padding: 10px 20px; background: #4caf50; color: white; border: none; cursor: pointer; margin-top: 15px; font-weight: bold;}
 
         @keyframes pulse { from { transform: scale(0.8); } to { transform: scale(1.1); } }
-
-        #game-over {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        button { padding: 10px 20px; background: #4caf50; color: white; border: none; cursor: pointer; margin-top: 15px; font-weight: bold;}
     </style>
 </head>
 <body>
 
-<div style="position: relative;">
     <div id="ui">
         <span>💎: <span id="score">0</span></span>
         <span>❤️: <span id="lives">3</span></span>
@@ -116,18 +124,20 @@
     
     <div id="game-container">
         <div id="player"></div>
+        <div id="victory-overlay"><h1>BRAVO!</h1></div>
+        <div id="game-over">
+            <h2>SISTEM CRITIC!</h2>
+            <p>Scor final: <span id="final-score">0</span></p>
+            <button onclick="location.reload()">REPORNIRE</button>
+        </div>
     </div>
 
-    <div id="victory-overlay">
-        <h1>BRAVO! NIVEL COMPLET!</h1>
+    <div id="controls">
+        <div class="btn" id="btn-up">▲</div>
+        <div class="btn" id="btn-left">◀</div>
+        <div class="btn" id="btn-down">▼</div>
+        <div class="btn" id="btn-right">▶</div>
     </div>
-
-    <div id="game-over">
-        <h2>SISTEM CRITIC!</h2>
-        <p>Scor final: <span id="final-score">0</span></p>
-        <button onclick="location.reload()">REPORNIRE</button>
-    </div>
-</div>
 
 <script>
     const container = document.getElementById('game-container');
@@ -138,15 +148,15 @@
 
     const ROWS = 13;
     const COLS = 9;
-    let score = 0;
-    let lives = 3;
-    let grid = [];
+    const CELL_SIZE = 35; // Trebuie să fie egal cu --cell-size din CSS
+    let score = 0, lives = 3, grid = [], crystalsLeft = 0, gameActive = true;
     let playerPos = { x: 4, y: 0 };
-    let crystalsLeft = 0;
-    let gameActive = true;
 
     function initGame() {
-        container.innerHTML = '<div id="player"></div>';
+        // Ștergem celulele vechi (fără player)
+        const cells = container.querySelectorAll('.cell');
+        cells.forEach(c => c.remove());
+        
         grid = [];
         crystalsLeft = 0;
         playerPos = { x: 4, y: 0 };
@@ -157,78 +167,93 @@
             for (let x = 0; x < COLS; x++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                
                 let type = 'dirt';
                 if (y === 0 && x === 4) type = 'empty';
                 else if (Math.random() < 0.15 && y > 1) type = 'rock';
-                else if (Math.random() < 0.10 && y > 1) { 
-                    type = 'crystal';
-                    crystalsLeft++;
-                }
+                else if (Math.random() < 0.10 && y > 1) { type = 'crystal'; crystalsLeft++; }
                 
                 cell.classList.add(type);
                 container.appendChild(cell);
                 grid[y][x] = { el: cell, type: type };
             }
         }
-        // Dacă printr-o minune nu s-au generat cristale, forțăm unul
-        if (crystalsLeft === 0) {
-            grid[5][5].type = 'crystal';
-            grid[5][5].el.className = 'cell crystal';
-            crystalsLeft = 1;
-        }
+        if (crystalsLeft === 0) { grid[5][5].type = 'crystal'; grid[5][5].el.className = 'cell crystal'; crystalsLeft = 1; }
         updatePlayerDisplay();
     }
 
     function updatePlayerDisplay() {
         const p = document.getElementById('player');
-        p.style.left = (playerPos.x * 40) + 'px';
-        p.style.top = (playerPos.y * 40) + 'px';
+        p.style.left = (playerPos.x * CELL_SIZE) + 'px';
+        p.style.top = (playerPos.y * CELL_SIZE) + 'px';
     }
 
-    window.addEventListener('keydown', (e) => {
+    function movePlayer(dir) {
         if (!gameActive) return;
         let nx = playerPos.x;
         let ny = playerPos.y;
 
-        if (e.key === 'ArrowUp') ny--;
-        if (e.key === 'ArrowDown') ny++;
-        if (e.key === 'ArrowLeft') nx--;
-        if (e.key === 'ArrowRight') nx++;
+        if (dir === 'up') ny--;
+        if (dir === 'down') ny++;
+        if (dir === 'left') nx--;
+        if (dir === 'right') nx++;
 
         if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS) {
             if (grid[ny][nx].type !== 'rock') {
                 playerPos.x = nx;
                 playerPos.y = ny;
-                
                 const current = grid[ny][nx];
-                if (current.type === 'dirt') {
+                if (current.type === 'dirt' || current.type === 'crystal') {
+                    if (current.type === 'crystal') { score += 50; crystalsLeft--; scoreEl.innerText = score; }
                     current.type = 'empty';
                     current.el.className = 'cell empty';
-                } else if (current.type === 'crystal') {
-                    current.type = 'empty';
-                    current.el.className = 'cell empty';
-                    score += 50;
-                    scoreEl.innerText = score;
-                    crystalsLeft--;
                     checkVictory();
                 }
                 updatePlayerDisplay();
             }
         }
+    }
+
+    // Controale Tastatură
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp') movePlayer('up');
+        if (e.key === 'ArrowDown') movePlayer('down');
+        if (e.key === 'ArrowLeft') movePlayer('left');
+        if (e.key === 'ArrowRight') movePlayer('right');
     });
+
+    // Controale Butoane Mobil
+    document.getElementById('btn-up').addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer('up'); });
+    document.getElementById('btn-down').addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer('down'); });
+    document.getElementById('btn-left').addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer('left'); });
+    document.getElementById('btn-right').addEventListener('touchstart', (e) => { e.preventDefault(); movePlayer('right'); });
+
+    // Suport Swipe (opțional, pentru fluiditate)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, false);
+
+    container.addEventListener('touchend', e => {
+        let x = e.changedTouches[0].screenX;
+        let y = e.changedTouches[0].screenY;
+        let dx = x - touchStartX;
+        let dy = y - touchStartY;
+        if (Math.abs(dx) > Math.abs(dy)) {
+            if (Math.abs(dx) > 30) movePlayer(dx > 0 ? 'right' : 'left');
+        } else {
+            if (Math.abs(dy) > 30) movePlayer(dy > 0 ? 'down' : 'up');
+        }
+    }, false);
 
     function checkVictory() {
         if (crystalsLeft === 0) {
             gameActive = false;
-            score += 200; // Bonus nivel
+            score += 200;
             scoreEl.innerText = score;
             victoryOverlay.style.display = 'flex';
-            
-            setTimeout(() => {
-                gameActive = true;
-                initGame();
-            }, 2000);
+            setTimeout(() => { gameActive = true; initGame(); }, 2000);
         }
     }
 
@@ -239,17 +264,12 @@
             for (let x = 0; x < COLS; x++) {
                 if (grid[y][x].type === 'rock') {
                     let belowY = y + 1;
-                    if (belowY < ROWS) {
-                        if (grid[belowY][x].type === 'empty') {
-                            // Verificăm dacă player-ul este sub bolovan
-                            if (playerPos.x === x && playerPos.y === belowY) {
-                                hitPlayer();
-                            }
-                            grid[y][x].type = 'empty';
-                            grid[y][x].el.className = 'cell empty';
-                            grid[belowY][x].type = 'rock';
-                            grid[belowY][x].el.className = 'cell rock';
-                        }
+                    if (belowY < ROWS && grid[belowY][x].type === 'empty') {
+                        if (playerPos.x === x && playerPos.y === belowY) hitPlayer();
+                        grid[y][x].type = 'empty';
+                        grid[y][x].el.className = 'cell empty';
+                        grid[belowY][x].type = 'rock';
+                        grid[belowY][x].el.className = 'cell rock';
                     }
                 }
             }
@@ -261,7 +281,6 @@
         livesEl.innerText = lives;
         container.style.boxShadow = "inset 0 0 50px red";
         setTimeout(() => container.style.boxShadow = "none", 300);
-
         if (lives <= 0) {
             gameActive = false;
             gameOverScreen.style.display = 'flex';
