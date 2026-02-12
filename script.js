@@ -26,5 +26,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Funcția pentru navigarea la pagina clasei selectate
 function navigateToClass(classNumber) {
-    window.location.href = `clasa${classNumber}.html`;
+    if (classNumber === 'jocuri') {
+        // Dacă alegem "jocuri", mergem direct la jocuri.html
+        window.location.href = "jocuri.html";
+    } else {
+        // Pentru cifre (0, 1, 2, 3, 4), păstrăm formatul clasaX.html
+        window.location.href = `clasa${classNumber}.html`;
+    }
+}
+
 }
