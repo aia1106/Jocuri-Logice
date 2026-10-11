@@ -2,198 +2,139 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Exerciții – Jocuri Logice</title>
-<link rel="icon" href="LOGO.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa4.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="stil.css">
-<meta charset="UTF-8">
-<style id="retheme">
-    body { font-family: "Nunito", "Segoe UI", system-ui, sans-serif !important; }
-    h1, h2, h3, button, .btn { font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif; }
-    button { -webkit-tap-highlight-color: transparent; }
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Sortează numerele – Jocuri Logice</title>
+<style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 64px 14px 28px; text-align: center; overscroll-behavior: none; }
+    main { max-width: 440px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(1.9rem, 7.5vw, 2.5rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 8px auto 4px; max-width: 36ch; font: 600 1.02rem/1.4 var(--j-font-text); color: #5B5270; }
+    .prog { display: inline-flex; gap: 8px; margin: 10px 0 14px; }
+    .prog i { width: 14px; height: 14px; border-radius: 50%; background: #E6E2EE; } .prog i.on { background: #1FBF9A; } .prog i.cur { background: #FFB81C; }
+    .hint { font: 800 .85rem var(--j-font-text); letter-spacing: .07em; text-transform: uppercase; color: #5B5270; display: flex; justify-content: space-between; padding: 0 6px; margin-bottom: 8px; }
+    #list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+    #list li { position: relative; display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 6px 8px 6px 16px; border-radius: 20px; background: #fff; border: 2px solid #E6E2EE; box-shadow: 0 5px 0 #E6E2EE;
+        font: 700 clamp(1.4rem, 6.5vw, 1.9rem) var(--j-font); color: #4A2370; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+    #list li .num { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+    #list li .grip { color: #B9A6D6; font-size: 1.4rem; line-height: 1; letter-spacing: -2px; }
+    #list li.drag { z-index: 30; border-color: #E23B6B; box-shadow: 0 18px 28px -10px rgba(35,27,51,.5); transition: none; cursor: grabbing; }
+    #list li.ok { background: #DDF5EE; border-color: #1FBF9A; box-shadow: 0 5px 0 #B9E6DA; }
+    .arrows { display: grid; gap: 4px; }
+    .arrows button { width: 44px; height: 26px; border: 0; border-radius: 10px; background: #EFE9F7; color: #4A2370; font-size: .85rem; cursor: pointer; line-height: 1; touch-action: manipulation; }
+    .arrows button:active { background: #FFB81C; }
+    .check { margin-top: 18px; min-height: 56px; padding: 0 40px; border: 0; border-radius: 999px; background: #E23B6B; color: #fff; font: 700 1.25rem var(--j-font); cursor: pointer; box-shadow: 0 6px 0 #B82A53; }
+    .check:active { transform: translateY(4px); box-shadow: 0 2px 0 #B82A53; }
+    #msg { min-height: 1.6em; margin: 14px 0 0; font: 800 1.15rem var(--j-font-text); }
+    #msg.ok { color: #14937A; } #msg.bad { color: #B82A53; }
+    .jg-overlay { position: fixed; }
 </style>
 </head>
-<body>
-<a class="skip-link" href="#continut">Sari la conținut</a>
-<header class="site-header">
-    <div class="header-top">
-        <a class="brand" href="index.html" aria-label="Jocuri Logice – pagina principală">
-            <img src="logo-palat.png" alt="" class="header-logo" width="113" height="38">
-            <span class="brand-text"><span class="site-name">Jocuri Logice</span></span>
-        </a>
-        <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="meniu"><span class="menu-icon" aria-hidden="true">☰</span><span>Meniu</span></button>
-    </div>
-    <nav aria-label="Navigare principală"><ul class="menu" id="meniu"><li><a href="index.html">Acasă</a></li><li><a href="clasa0.html">Clasa 0</a></li><li><a href="clasa1.html">Clasa I</a></li><li><a href="clasa2.html">Clasa a II-a</a></li><li><a href="clasa3.html">Clasa a III-a</a></li><li><a href="clasa4.html">Clasa a IV-a</a></li><li><a href="jocuri.html">Jocuri</a></li><li><a href="concurs.html">Concurs</a></li><li><a href="info.html">Informații</a></li><li><a href="resursedidactice.html">Resurse</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
-</header>
-<main id="continut" class="legacy">
-<style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #ffffff;
-      padding:px;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-    }
-
-    .exercise {
-      margin-bottom: 40px;
-    }
-
-    .sortable-list {
-      list-style-type: none;
-      padding: 0;
-      width: 200px;
-      margin: 0 auto 20px auto;
-    }
-
-    .sortable-list li {
-      background: #eeeeee;
-      margin: 5px 0;
-      padding: 10px;
-      cursor: move;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background: #dddddd;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #cccccc;
-    }
-
-    .result {
-      margin-top: 10px;
-      font-weight: bold;
-    }
-  </style>
-</head>
-
-
-
-
-<button id="back-button" onclick="history.back()">⬅ Înapoi</button>
-<div id="exercisesContainer"></div>
-
-  <h2>🔊 Sortează numerele în ordine crescătoare!</h2>
-  <div id="exercises"></div>
-
-  <script>
-    const exercises = [
-      [333, 3333, 3, 33333, 333333, 33],
-      [9, 99, 999, 9999, 99999],
-      [1, 100, 10, 1000, 10000],
-      [7, 77, 777, 7777, 77777],
-      [5, 50, 500, 5000, 50000]
-    ];
-
-    const container = document.getElementById("exercises");
-
-    let currentExercise = 0;
-
-    function showExercise(index) {
-      const exercise = exercises[index];
-      const sorted = [...exercise].sort((a, b) => a - b);
-      const shuffled = [...exercise].sort(() => Math.random() - 0.5);
-
-      const div = document.createElement("div");
-      div.className = "exercise";
-      div.id = `exercise-${index}`;
-
-      const ul = document.createElement("ul");
-      ul.className = "sortable-list";
-
-      shuffled.forEach(num => {
-        const li = document.createElement("li");
-        li.draggable = true;
-        li.textContent = num.toLocaleString();
-        ul.appendChild(li);
-      });
-
-      const button = document.createElement("button");
-      button.textContent = "Check";
-
-      const result = document.createElement("div");
-      result.className = "result";
-
-      button.addEventListener("click", () => {
-        const items = [...ul.children].map(li =>
-          parseInt(li.textContent.replace(/,/g, ""))
-        );
-        if (JSON.stringify(items) === JSON.stringify(sorted)) {
-          result.textContent = "✅ Corect!";
-          result.style.color = "green";
-
-          // După 1 secundă, arată următorul exercițiu
-          setTimeout(() => {
-            div.style.display = "none";
-            currentExercise++;
-            if (currentExercise < exercises.length) {
-              showExercise(currentExercise);
-            } else {
-              const done = document.createElement("div");
-              done.textContent = "🎉 Ai terminat toate exercițiile!";
-              done.style.fontWeight = "bold";
-              done.style.fontSize = "1.2em";
-              done.style.color = "blue";
-              container.appendChild(done);
-            }
-          }, 1000);
-        } else {
-          result.textContent = "❌ Mai încearcă!";
-          result.style.color = "red";
-        }
-      });
-
-      div.appendChild(ul);
-      div.appendChild(button);
-      div.appendChild(result);
-      container.appendChild(div);
-    }
-
-    // Inițial afișează doar primul exercițiu
-    showExercise(currentExercise);
-
-    // Drag and Drop logic
-    document.addEventListener("dragstart", function (e) {
-      if (e.target.tagName === "LI") {
-        e.dataTransfer.setData("text/plain", e.target.innerHTML);
-        e.target.classList.add("dragging");
-      }
-    });
-
-    document.addEventListener("dragover", function (e) {
-      e.preventDefault();
-      const dragging = document.querySelector(".dragging");
-      const target = e.target.closest("li");
-      if (target && dragging && target !== dragging) {
-        const list = target.parentNode;
-        const next = dragging.compareDocumentPosition(target) & 4 ? target.nextSibling : target;
-        list.insertBefore(dragging, next);
-      }
-    });
-
-    document.addEventListener("dragend", function (e) {
-      if (e.target.tagName === "LI") {
-        e.target.classList.remove("dragging");
-      }
-    });
-  </script>
+<body class="jg">
+<main>
+    <h1>Sortează numerele</h1>
+    <p class="sub">Așază numerele de la <b>cel mai mic</b> la <b>cel mai mare</b>. Trage-le sau folosește săgețile.</p>
+    <div class="prog" id="prog"></div>
+    <div class="hint"><span>▲ mic</span><span>mare ▼</span></div>
+    <ul id="list"></ul>
+    <button class="check" id="check" type="button">Verifică</button>
+    <p id="msg" role="status" aria-live="polite"></p>
 </main>
-<footer class="site-footer">
-    <img src="LOGO.png" alt="Sigla Cercului de Jocuri Logice" class="footer-logo" width="56" height="56" loading="lazy">
-    <p>&copy; 2025 Cercul de Jocuri Logice – Palatul Copiilor Arad</p>
-</footer>
-<script src="meniu.js"></script>
+
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji">🎉</div>
+    <h1 class="jg-title">Ai terminat!</h1>
+    <p class="jg-text">Ai sortat corect toate șirurile de numere. Bravo!</p>
+    <button class="jg-btn" id="ovBtn" type="button">Joacă din nou</button>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const SETS = [[333, 3333, 3, 33333, 333333, 33], [9, 99, 999, 9999, 99999], [1, 100, 10, 1000, 10000], [7, 77, 777, 7777, 77777], [5, 50, 500, 5000, 50000]];
+const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');      // 3.333 – fără dependență de limba telefonului
+let cur = 0, locked = false, drag = null;
+
+function shuffleNotSorted(arr) {
+    const sorted = [...arr].sort((a, b) => a - b);
+    let s; do { s = [...arr].sort(() => Math.random() - .5); } while (JSON.stringify(s) === JSON.stringify(sorted));
+    return s;
+}
+function showSet() {
+    locked = false; $('msg').textContent = ''; $('msg').className = '';
+    $('prog').innerHTML = SETS.map((_, i) => '<i class="' + (i < cur ? 'on' : i === cur ? 'cur' : '') + '"></i>').join('');
+    const ul = $('list'); ul.innerHTML = '';
+    shuffleNotSorted(SETS[cur]).forEach(n => ul.appendChild(makeItem(n)));
+}
+function makeItem(n) {
+    const li = document.createElement('li'); li.dataset.val = n;
+    li.innerHTML = '<span class="grip" aria-hidden="true">⋮⋮</span><span class="num">' + fmt(n) + '</span><span class="arrows"><button type="button" class="up" aria-label="Mai sus">▲</button><button type="button" class="down" aria-label="Mai jos">▼</button></span>';
+    li.querySelector('.up').addEventListener('click', (e) => { e.stopPropagation(); move(li, -1); });
+    li.querySelector('.down').addEventListener('click', (e) => { e.stopPropagation(); move(li, 1); });
+    li.addEventListener('pointerdown', onDown);
+    return li;
+}
+function move(li, d) {
+    if (locked) return;
+    const ul = li.parentNode;
+    if (d < 0 && li.previousElementSibling) ul.insertBefore(li, li.previousElementSibling);
+    if (d > 0 && li.nextElementSibling) ul.insertBefore(li.nextElementSibling, li);
+    $('msg').textContent = '';
+}
+
+/* ---------- tragere ---------- */
+function onDown(e) {
+    if (locked || e.target.closest('.arrows')) return;
+    const li = e.currentTarget;
+    drag = { li, grab: e.clientY - li.getBoundingClientRect().top };
+    li.setPointerCapture(e.pointerId); li.classList.add('drag');
+    li.addEventListener('pointermove', onMove); li.addEventListener('pointerup', onUp); li.addEventListener('pointercancel', onUp);
+}
+function place(clientY) {
+    const li = drag.li; li.style.transform = 'none';
+    const base = li.getBoundingClientRect().top;
+    li.style.transform = 'translateY(' + (clientY - drag.grab - base) + 'px)';
+}
+function onMove(e) {
+    if (!drag) return;
+    const li = drag.li, ul = li.parentNode;
+    place(e.clientY);
+    const y = e.clientY;
+    const sibs = [...ul.children].filter(x => x !== li);
+    for (const s of sibs) {
+        const r = s.getBoundingClientRect(), mid = r.top + r.height / 2;
+        const after = s.compareDocumentPosition(li) & Node.DOCUMENT_POSITION_FOLLOWING;   // li stă după s?
+        if (!after && y > mid) { ul.insertBefore(li, s.nextSibling); place(y); break; }
+        if (after && y < mid) { ul.insertBefore(li, s); place(y); break; }
+    }
+}
+function onUp() {
+    if (!drag) return; const li = drag.li; drag = null;
+    li.removeEventListener('pointermove', onMove); li.removeEventListener('pointerup', onUp); li.removeEventListener('pointercancel', onUp);
+    li.classList.remove('drag'); li.style.transform = '';
+}
+
+/* ---------- verificare ---------- */
+$('check').addEventListener('click', () => {
+    if (locked) return;
+    const items = [...$('list').children].map(li => Number(li.dataset.val));
+    const ok = items.every((v, i) => i === 0 || items[i - 1] < v);
+    const msg = $('msg');
+    if (ok) {
+        locked = true; msg.textContent = '✅ Corect!'; msg.className = 'ok';
+        $('list').querySelectorAll('li').forEach(li => li.classList.add('ok'));
+        setTimeout(() => { cur++; if (cur >= SETS.length) { $('prog').querySelectorAll('i').forEach(i => i.className = 'on'); $('overlay').hidden = false; } else showSet(); }, 1100);
+    } else { msg.textContent = 'Mai încearcă! Cel mai mic număr trebuie să fie sus.'; msg.className = 'bad'; }
+});
+$('ovBtn').addEventListener('click', () => { cur = 0; $('overlay').hidden = true; showSet(); });
+showSet();
+</script>
+<script src="joc.js"></script>
 </body>
 </html>

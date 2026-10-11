@@ -2,176 +2,163 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Exerciții – Jocuri Logice</title>
-<link rel="icon" href="LOGO.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa3.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="stil.css">
-<meta charset="UTF-8">
-    
-    
-    <link rel="stylesheet" href="style.css"
-<style id="retheme">
-    body { font-family: "Nunito", "Segoe UI", system-ui, sans-serif !important; }
-    h1, h2, h3, button, .btn { font-family: "Fredoka", "Trebuchet MS", "Segoe UI", sans-serif; }
-    button { -webkit-tap-highlight-color: transparent; }
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Potrivește înmulțirile – Jocuri Logice</title>
+<style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 64px 14px 28px; text-align: center; overscroll-behavior: none; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(2rem, 8vw, 2.6rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 8px auto 4px; max-width: 38ch; font: 600 1.02rem/1.4 var(--j-font-text); color: #5B5270; }
+    .prog { display: inline-flex; gap: 8px; margin: 10px 0 14px; }
+    .prog i { width: 14px; height: 14px; border-radius: 50%; background: #E6E2EE; transition: background .2s; }
+    .prog i.on { background: #1FBF9A; }
+    #board { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; align-items: start; }
+    .col { display: grid; gap: 12px; }
+    .col h2 { margin: 0; font: 800 .85rem var(--j-font-text); letter-spacing: .07em; text-transform: uppercase; color: #5B5270; }
+    .card { position: relative; min-height: 66px; display: flex; align-items: center; justify-content: center; border-radius: 20px; font: 700 clamp(1.5rem, 7vw, 2rem) var(--j-font); cursor: pointer; user-select: none; -webkit-user-select: none;
+        touch-action: none; border: 3px solid transparent; transition: transform .12s, background .2s, opacity .3s; -webkit-tap-highlight-color: transparent; }
+    .exp { background: #EFE9F7; color: #4A2370; box-shadow: 0 5px 0 #D9CCEB; }
+    .res { background: #DDF5EE; color: #0E6B58; box-shadow: 0 5px 0 #B9E6DA; }
+    .card.sel { border-color: #FFB81C; transform: scale(1.05); background: #FFF3CF; }
+    .card.drag { z-index: 50; transition: none; box-shadow: 0 18px 30px -10px rgba(35,27,51,.5); opacity: .95; }
+    .card.hover { border-color: #E23B6B; }
+    .card.done { background: #1FBF9A; color: #fff; box-shadow: none; opacity: .55; cursor: default; pointer-events: none; }
+    .card.done::after { content: "✓"; position: absolute; right: 12px; top: 6px; font-size: 1rem; }
+    .card.shake { animation: shake .35s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    #msg { min-height: 1.6em; margin: 16px 0 0; font: 800 1.1rem var(--j-font-text); color: #B82A53; }
+    .again { margin-top: 10px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 999px; background: #EFE9F7; color: #4A2370; font: 700 1rem var(--j-font); cursor: pointer; box-shadow: 0 4px 0 #D9CCEB; }
+    .jg-overlay { position: fixed; }
 </style>
 </head>
-<body>
-<a class="skip-link" href="#continut">Sari la conținut</a>
-<header class="site-header">
-    <div class="header-top">
-        <a class="brand" href="index.html" aria-label="Jocuri Logice – pagina principală">
-            <img src="logo-palat.png" alt="" class="header-logo" width="113" height="38">
-            <span class="brand-text"><span class="site-name">Jocuri Logice</span></span>
-        </a>
-        <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="meniu"><span class="menu-icon" aria-hidden="true">☰</span><span>Meniu</span></button>
+<body class="jg">
+<main>
+    <h1>Înmulțiri</h1>
+    <p class="sub">Atinge o înmulțire și apoi rezultatul ei. Sau trage înmulțirea peste rezultat.</p>
+    <div class="prog" id="prog" aria-label="Progres"></div>
+    <div id="board">
+        <div class="col" id="left"><h2>Înmulțire</h2></div>
+        <div class="col" id="right"><h2>Rezultat</h2></div>
     </div>
-    <nav aria-label="Navigare principală"><ul class="menu" id="meniu"><li><a href="index.html">Acasă</a></li><li><a href="clasa0.html">Clasa 0</a></li><li><a href="clasa1.html">Clasa I</a></li><li><a href="clasa2.html">Clasa a II-a</a></li><li><a href="clasa3.html">Clasa a III-a</a></li><li><a href="clasa4.html">Clasa a IV-a</a></li><li><a href="jocuri.html">Jocuri</a></li><li><a href="concurs.html">Concurs</a></li><li><a href="info.html">Informații</a></li><li><a href="resursedidactice.html">Resurse</a></li><li><a href="contact.html">Contact</a></li></ul></nav>
-</header>
-<main id="continut" class="legacy">
-<style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f4fb;
-      text-align: center;
-      padding: px;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    #game-container {
-      position: relative;
-      height: 500px;
-      border: 2px dashed #cccccc;
-      margin: 30px auto;
-      width: 80%;
-      max-width: 800px;
-    }
-
-    .card {
-      position: absolute;
-      padding: 15px 20px;
-      background-color: #eeeeee;
-      border-radius: 10px;
-      cursor: move;
-      font-size: 20px;
-      font-weight: bold;
-      user-select: none;
-    }
-
-    .target {
-      background-color: #daf6f0;
-    }
-
-    .matched {
-      display: none;
-    }
-
-    #message {
-      display: none;
-      font-size: 28px;
-      font-weight: bold;
-      color: #0e725e;
-      margin-top: 20px;
-    }
-  </style>
-
-
- 
-
-
-
-  <h1>Înmulțiri</h1>
-  <p>Potrivește fiecare exercițiu cu rezultatul corect!</p>
-  <div id="game-container"></div>
-  <div id="message">Bravo!</div>
-
-  <script>
-    const expressions = [
-      { expr: "3 × 4", result: 12 },
-      { expr: "2 × 5", result: 10 },
-      { expr: "6 × 2", result: 12 },
-      { expr: "7 × 1", result: 7 },
-      { expr: "3 × 3", result: 9 }
-    ];
-
-    let matchedCount = 0;
-
-    const gameContainer = document.getElementById("game-container");
-
-    // Generează poziții aleatorii
-    function getRandomPosition() {
-      const x = Math.floor(Math.random() * 700);
-      const y = Math.floor(Math.random() * 400);
-      return { x, y };
-    }
-
-    // Amestecă array-ul
-    function shuffle(arr) {
-      return arr.sort(() => Math.random() - 0.5);
-    }
-
-    // Creează cărți cu expresii
-    expressions.forEach((item, index) => {
-      const pos = getRandomPosition();
-      const card = document.createElement("div");
-      card.className = "card";
-      card.draggable = true;
-      card.id = `expr-${index}`;
-      card.textContent = item.expr;
-      card.style.left = `${pos.x}px`;
-      card.style.top = `${pos.y}px`;
-      card.dataset.result = item.result;
-      card.addEventListener("dragstart", dragStart);
-      gameContainer.appendChild(card);
-    });
-
-    // Creează cărți cu rezultate
-    shuffle(expressions).forEach((item, index) => {
-      const pos = getRandomPosition();
-      const target = document.createElement("div");
-      target.className = "card target";
-      target.id = `target-${index}`;
-      target.textContent = item.result;
-      target.style.left = `${pos.x}px`;
-      target.style.top = `${pos.y}px`;
-      target.addEventListener("dragover", dragOver);
-      target.addEventListener("drop", drop);
-      gameContainer.appendChild(target);
-    });
-
-    let draggedElement = null;
-
-    function dragStart(e) {
-      draggedElement = e.target;
-    }
-
-    function dragOver(e) {
-      e.preventDefault();
-    }
-
-    function drop(e) {
-      e.preventDefault();
-      if (draggedElement && draggedElement.dataset.result === e.target.textContent) {
-        draggedElement.classList.add("matched");
-        e.target.classList.add("matched");
-        matchedCount++;
-        if (matchedCount === expressions.length) {
-          document.getElementById("message").style.display = "block";
-        }
-      }
-    }
-  </script>
+    <p id="msg" role="status" aria-live="polite"></p>
+    <button class="again" id="again" type="button">↺ Alte înmulțiri</button>
 </main>
-<footer class="site-footer">
-    <img src="LOGO.png" alt="Sigla Cercului de Jocuri Logice" class="footer-logo" width="56" height="56" loading="lazy">
-    <p>&copy; 2025 Cercul de Jocuri Logice – Palatul Copiilor Arad</p>
-</footer>
-<script src="meniu.js"></script>
+
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji">🎉</div>
+    <h1 class="jg-title">Bravo!</h1>
+    <p class="jg-text" id="ovText">Ai potrivit toate înmulțirile.</p>
+    <button class="jg-btn" id="ovBtn" type="button">Alte înmulțiri</button>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const N = 5;
+let sel = null, done = 0, t0 = 0, dragState = null;
+
+function makePairs() {
+    const pairs = [], seen = new Set();
+    let tries = 0;
+    while (pairs.length < N && tries++ < 500) {
+        const a = rnd(2, 9), b = rnd(2, 9), p = a * b;
+        if (seen.has(p)) continue;                 // rezultate diferite, ca să nu existe confuzii
+        seen.add(p); pairs.push({ text: a + ' × ' + b, val: p });
+    }
+    return pairs;
+}
+
+function newRound() {
+    done = 0; sel = null; t0 = Date.now(); $('msg').textContent = ''; $('overlay').hidden = true;
+    const pairs = makePairs();
+    const left = $('left'), right = $('right');
+    left.querySelectorAll('.card').forEach(c => c.remove()); right.querySelectorAll('.card').forEach(c => c.remove());
+    pairs.forEach(p => left.appendChild(makeCard(p.text, p.val, 'exp')));
+    [...pairs].sort(() => Math.random() - .5).forEach(p => right.appendChild(makeCard(String(p.val), p.val, 'res')));
+    $('prog').innerHTML = pairs.map(() => '<i></i>').join('');
+}
+
+function makeCard(text, val, kind) {
+    const c = document.createElement('div');
+    c.className = 'card ' + kind; c.textContent = text; c.dataset.val = val; c.dataset.kind = kind;
+    c.setAttribute('role', 'button'); c.tabIndex = 0;
+    c.addEventListener('pointerdown', onDown);
+    c.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tap(c); } });
+    return c;
+}
+
+/* ---------- atingere ---------- */
+function tap(c) {
+    if (c.classList.contains('done')) return;
+    if (!sel) { sel = c; c.classList.add('sel'); return; }
+    if (sel === c) { c.classList.remove('sel'); sel = null; return; }
+    if (sel.dataset.kind === c.dataset.kind) { sel.classList.remove('sel'); sel = c; c.classList.add('sel'); return; }
+    const a = sel; sel.classList.remove('sel'); sel = null;
+    tryMatch(a, c);
+}
+
+function tryMatch(a, b) {
+    if (a.dataset.val === b.dataset.val) {
+        a.classList.add('done'); b.classList.add('done'); done++;
+        $('prog').children[done - 1].classList.add('on'); $('msg').textContent = '';
+        if (done === N) finish();
+    } else {
+        [a, b].forEach(x => { x.classList.add('shake'); setTimeout(() => x.classList.remove('shake'), 400); });
+        $('msg').textContent = 'Aproape! Mai încearcă.';
+    }
+}
+
+function finish() {
+    const s = Math.round((Date.now() - t0) / 1000);
+    $('ovText').textContent = 'Ai potrivit toate înmulțirile în ' + s + ' secunde.';
+    setTimeout(() => { $('overlay').hidden = false; }, 500);
+}
+
+/* ---------- tragere cu degetul sau mouse-ul ---------- */
+function onDown(e) {
+    const c = e.currentTarget; if (c.classList.contains('done')) return;
+    dragState = { c, sx: e.clientX, sy: e.clientY, moved: false, id: e.pointerId };
+    c.setPointerCapture(e.pointerId);
+    c.addEventListener('pointermove', onMove); c.addEventListener('pointerup', onUp); c.addEventListener('pointercancel', onCancel);
+}
+function onMove(e) {
+    const d = dragState; if (!d) return;
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    if (!d.moved && Math.hypot(dx, dy) > 8) { d.moved = true; d.c.classList.add('drag'); if (sel) { sel.classList.remove('sel'); sel = null; } }
+    if (d.moved) {
+        d.c.style.transform = `translate(${dx}px, ${dy}px) scale(1.06)`;
+        document.querySelectorAll('.card.hover').forEach(x => x.classList.remove('hover'));
+        const t = targetAt(e.clientX, e.clientY, d.c); if (t) t.classList.add('hover');
+    }
+}
+function targetAt(x, y, self) {
+    self.style.pointerEvents = 'none';
+    const el = document.elementFromPoint(x, y); self.style.pointerEvents = '';
+    const t = el && el.closest('.card'); return (t && t !== self && t.dataset.kind !== self.dataset.kind && !t.classList.contains('done')) ? t : null;
+}
+function cleanup(c) {
+    c.removeEventListener('pointermove', onMove); c.removeEventListener('pointerup', onUp); c.removeEventListener('pointercancel', onCancel);
+    c.classList.remove('drag'); c.style.transform = ''; document.querySelectorAll('.card.hover').forEach(x => x.classList.remove('hover'));
+}
+function onUp(e) {
+    const d = dragState; if (!d) return; dragState = null;
+    const t = d.moved ? targetAt(e.clientX, e.clientY, d.c) : null;
+    cleanup(d.c);
+    if (!d.moved) tap(d.c); else if (t) tryMatch(d.c, t);
+}
+function onCancel() { if (dragState) { cleanup(dragState.c); dragState = null; } }
+
+$('again').addEventListener('click', newRound); $('ovBtn').addEventListener('click', newRound);
+newRound();
+</script>
+<script src="joc.js"></script>
 </body>
 </html>

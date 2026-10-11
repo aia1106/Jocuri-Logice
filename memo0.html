@@ -30,13 +30,18 @@
         .grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            gap: 10px;
+            width: min(100%, 400px);
+            margin: 0 auto;
             perspective: 1000px;
         }
 
         .card {
-            width: 85px;
-            height: 85px;
+            width: 100%;
+            max-width: 85px;
+            aspect-ratio: 1 / 1;
+            height: auto;
+            margin: 0 auto;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.5s;
