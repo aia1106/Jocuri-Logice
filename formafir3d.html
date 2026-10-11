@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa0.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Forma-fir-3D – Jocuri Logice</title>
+<style>
+/* FALLBACK-UI: stiluri de bază, în caz că joc.css de pe site nu e actualizat */
+
+/* ===== Componente comune pentru jocuri (stilul site-ului) ===== */
+:root {
+    --j-ink: #231B33; --j-plum: #4A2370; --j-plum-dark: #2A1450; --j-plum-mid: #6A3BA0;
+    --j-berry: #E23B6B; --j-sun: #FFB81C; --j-mint: #1FBF9A; --j-orange: #E8541F; --j-bg: #F8F7FB; --j-line: #E6E2EE;
+    --j-font: "Fredoka", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --j-font-text: "Nunito", "Segoe UI", system-ui, sans-serif;
+}
+body.jg { margin: 0; font-family: var(--j-font); -webkit-user-select: none; user-select: none; overscroll-behavior: none; }
+
+.jg-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    padding: 24px; text-align: center; color: #fff;
+    background: rgba(42, 20, 80, .9);
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+}
+.jg-overlay[hidden] { display: none; }
+.jg-emoji { font-size: 3.6rem; line-height: 1; }
+.jg-title { margin: 0; font-weight: 700; font-size: clamp(2.2rem, 9vw, 3.4rem); line-height: 1.05; }
+.jg-text { margin: 0; max-width: 28ch; font: 600 1.1rem/1.4 var(--j-font-text); opacity: .95; }
+.jg-best { margin: 0; font: 800 1rem var(--j-font-text); color: var(--j-sun); min-height: 1.2em; }
+.jg-btn {
+    min-width: 200px; min-height: 58px; padding: 0 36px; margin-top: 8px;
+    border: 0; border-radius: 999px; cursor: pointer;
+    background: var(--j-sun); color: var(--j-ink);
+    font: 700 1.35rem var(--j-font); box-shadow: 0 6px 0 #C99A10;
+}
+.jg-btn:hover { background: #FFC74A; }
+.jg-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #C99A10; }
+.jg-btn.alt { background: #fff; box-shadow: 0 6px 0 #C9C2D8; }
+
+.jg-hud {
+    position: fixed; z-index: 20; pointer-events: none;
+    top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px));
+    display: flex; gap: 8px; flex-wrap: wrap; max-width: calc(100% - 80px);
+}
+.jg-pill {
+    display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px;
+    border-radius: 999px; background: rgba(255,255,255,.95); color: var(--j-ink);
+    font: 700 1.1rem var(--j-font); box-shadow: 0 4px 12px -4px rgba(0,0,0,.4);
+}
+.jg-pill b { font-variant-numeric: tabular-nums; }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { background: #2A1450; color: #fff; overflow: hidden; touch-action: none; }
+    html, body { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    canvas#c { -webkit-touch-callout: none; position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+    canvas#c.pen { cursor: crosshair; }
+    .jg-hud { z-index: 20; }
+    #bar { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(35,15,70,.94); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-top: 2px solid rgba(255,255,255,.12); display: grid; gap: 8px; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; }
+    .chip, .tool { min-height: 46px; min-width: 46px; padding: 0 14px; border: 0; border-radius: 16px; font: 700 .98rem var(--j-font); background: rgba(255,255,255,.14); color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .chip.on, .tool.on { background: #FFB81C; color: #231B33; }
+    .tool:active, .chip:active { transform: scale(.95); }
+    .tool.danger { background: rgba(226,59,107,.35); }
+    .sw { width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
+    .sw.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); transform: scale(1.12); }
+    .lbl { font: 800 .8rem var(--j-font-text); color: #D9CCEB; letter-spacing: .04em; text-transform: uppercase; }
+    input[type=range] { width: min(180px, 38vw); accent-color: #FFB81C; height: 30px; }
+    #hint { position: fixed; z-index: 15; left: 50%; transform: translateX(-50%); top: calc(62px + env(safe-area-inset-top, 0px)); max-width: calc(100% - 28px); padding: 8px 18px; border-radius: 18px; background: rgba(255,255,255,.95); color: #4A2370; font: 800 .98rem var(--j-font-text); text-align: center; pointer-events: none; transition: opacity .3s; box-shadow: 0 8px 20px -10px rgba(0,0,0,.6); }
+    #hint.bad { background: #FBC9D7; color: #B82A53; }
+    #hint.ok { background: #C9F2E8; color: #0E6B58; }
+    .modes { display: grid; gap: 12px; width: min(100%, 360px); margin-top: 8px; }
+    .modes .jg-btn { width: 100%; min-width: 0; font-size: 1.15rem; padding: 0 16px; }
+    .facts { font: 700 1.3rem var(--j-font); color: #FFB81C; margin: 0; }
+    .quiz { display: flex; gap: 10px; justify-content: center; margin-top: 4px; }
+    .quiz button { min-width: 64px; min-height: 56px; border: 0; border-radius: 18px; background: #fff; color: #4A2370; font: 700 1.5rem var(--j-font); cursor: pointer; box-shadow: 0 5px 0 #C9C2D8; }
+    .quiz button.ok { background: #1FBF9A; color: #231B33; } .quiz button.no { background: #E23B6B; color: #fff; }
+    #bar { grid-template-columns: minmax(0, 1fr); }
+    #bar > div { min-width: 0; }
+    .t { display: none; }
+    .row.scroll { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; padding-bottom: 2px; }
+    .row.scroll::-webkit-scrollbar { display: none; }
+    .tool { min-width: 44px; padding: 0 10px; font-size: 1.1rem; }
+    .chip { flex: none; padding: 0 12px; }
+    #barFree .row { gap: 6px; }
+    input[type=range] { width: min(260px, 60vw); }
+    @media (min-width: 700px) { .t { display: inline; } .row.scroll { flex-wrap: wrap; justify-content: center; } .tool { padding: 0 14px; font-size: .98rem; } }
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body class="jg">
+<div class="jg-hud"><span class="jg-pill">🧵 <b id="title">Forma-fir-3D</b></span><span class="jg-pill" id="counterPill" hidden><b id="counter">0/0</b></span></div>
+<canvas id="c"></canvas>
+<div id="hint" hidden></div>
+
+<div id="bar" hidden>
+    <div id="barModel">
+        <div class="row scroll" id="shapes"></div>
+        <div class="row" style="margin-top:8px">
+            <button class="tool on" id="ghostBtn" type="button" title="Arată/ascunde modelul">👁<span class="t"> Model</span></button>
+            <button class="tool" id="spinBtn1" type="button" title="Rotire automată">▶<span class="t"> Rotire</span></button>
+            <button class="tool" id="undoBtn1" type="button" title="Înapoi">↩<span class="t"> Înapoi</span></button>
+            <button class="tool danger" id="resetBtn1" type="button" title="De la capăt">🗑<span class="t"> De la capăt</span></button>
+            <button class="tool" id="freeBtn" type="button" title="Desen liber">✏️<span class="t"> Liber</span></button>
+        </div>
+    </div>
+    <div id="barFree" hidden>
+        <div class="row" id="swatches"></div>
+        <div class="row" style="margin-top:8px">
+            <button class="tool on" id="penBtn" type="button" title="Desenez">✏️<span class="t"> Desenez</span></button>
+            <button class="tool" id="rotBtn" type="button" title="Rotesc">🔄<span class="t"> Rotesc</span></button>
+            <button class="tool" id="spinBtn2" type="button" title="Rotire automată">▶<span class="t"> Rotire</span></button>
+            <button class="tool" id="undoBtn2" type="button" title="Înapoi">↩<span class="t"> Înapoi</span></button>
+            <button class="tool danger" id="clearBtn" type="button" title="Șterge">🗑<span class="t"> Șterge</span></button>
+            <button class="tool" id="saveBtn" type="button" title="Salvează">💾<span class="t"> Salvează</span></button>
+            <button class="tool" id="modelBtn" type="button" title="Model">🧊<span class="t"> Model</span></button>
+        </div>
+        <div class="row" style="margin-top:6px"><span class="lbl">Adâncime</span><input type="range" id="depth" min="-150" max="150" value="0" aria-label="Adâncime"></div>
+    </div>
+</div>
+
+<div class="jg-overlay" id="overlay">
+    <div class="jg-emoji" id="ovEmoji">🧵</div>
+    <h1 class="jg-title" id="ovTitle">Forma-fir-3D</h1>
+    <p class="jg-text" id="ovText">Construiește obiecte 3D din fire, ca pe un schelet. Alege cum vrei să lucrezi!</p>
+    <div class="modes" id="ovModes">
+        <button class="jg-btn" id="goModel" type="button">🧊 Construiesc după model</button>
+        <button class="jg-btn alt" id="goFree" type="button">✏️ Desenez liber în 3D</button>
+    </div>
+    <p class="facts" id="facts" hidden></p>
+    <div id="quizBox" hidden><p class="jg-text" id="quizQ"></p><div class="quiz" id="quizOpts"></div></div>
+    <div class="modes" id="ovAfter" hidden><button class="jg-btn" id="nextShape" type="button">Alt corp</button><button class="jg-btn alt" id="ovFree" type="button">✏️ Desenez liber</button></div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const cv = $('c'), ctx = cv.getContext('2d');
+const D = 700;                                   // distanța camerei (perspectivă)
+let W = 0, H = 0, S = 1, cx = 0, cy = 0, yaw = -.65, pitch = .38, spin = false, mode = 'menu';
+
+/* ---------- 3D ---------- */
+function rot(p) {
+    const cY = Math.cos(yaw), sY = Math.sin(yaw), cP = Math.cos(pitch), sP = Math.sin(pitch);
+    const x1 = p.x * cY + p.z * sY, z1 = -p.x * sY + p.z * cY;
+    return { x: x1, y: p.y * cP - z1 * sP, z: p.y * sP + z1 * cP };
+}
+function proj(p) { const r = rot(p), k = D / (D - r.z); return { x: cx + r.x * S * k, y: cy - r.y * S * k, z: r.z, k }; }
+function unproj(sx, sy, zc) {
+    const k = D / (D - zc), xc = (sx - cx) / (S * k), yc = -(sy - cy) / (S * k);
+    const cY = Math.cos(yaw), sY = Math.sin(yaw), cP = Math.cos(pitch), sP = Math.sin(pitch);
+    const y = yc * cP + zc * sP, z1 = -yc * sP + zc * cP;
+    return { x: xc * cY - z1 * sY, y, z: xc * sY + z1 * cY };
+}
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const barH = $('bar').hidden ? 0 : $('bar').offsetHeight;
+    cx = W / 2; cy = (H - barH) / 2 + 28; S = Math.min(W, H - barH - 30) / 400;
+}
+
+/* ---------- corpuri ---------- */
+function allPairs(n) { const e = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) e.push([i, j]); return e; }
+const SHAPES = {
+    cub: { name: 'Cubul', emoji: '🧊', v: [], e: [], build() { for (let x of [-1, 1]) for (let y of [-1, 1]) for (let z of [-1, 1]) this.v.push([x, y, z]); this.e = allPairs(8).filter(([a, b]) => this.v[a].filter((c, i) => c !== this.v[b][i]).length === 1); } },
+    piramida: { name: 'Piramida', emoji: '🔺', v: [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1], [0, 1.25, 0]], e: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [1, 4], [2, 4], [3, 4]] },
+    prisma: { name: 'Prisma triunghiulară', emoji: '🔻', v: [[-1, -.9, -.9], [1, -.9, -.9], [0, .9, -.9], [-1, -.9, .9], [1, -.9, .9], [0, .9, .9]], e: [[0, 1], [1, 2], [2, 0], [3, 4], [4, 5], [5, 3], [0, 3], [1, 4], [2, 5]] },
+    tetra: { name: 'Tetraedrul', emoji: '🔷', v: [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]], e: allPairs(4) },
+    octa: { name: 'Octaedrul', emoji: '💎', v: [[1.3, 0, 0], [-1.3, 0, 0], [0, 1.3, 0], [0, -1.3, 0], [0, 0, 1.3], [0, 0, -1.3]], e: allPairs(6).filter(([a, b]) => !(a % 2 === 0 && b === a + 1)) },
+    casa: { name: 'Casa', emoji: '🏠', v: [[-1, -1, -1], [1, -1, -1], [1, -1, 1], [-1, -1, 1], [-1, .2, -1], [1, .2, -1], [1, .2, 1], [-1, .2, 1], [0, 1.3, -1], [0, 1.3, 1]],
+        e: [[0, 1], [1, 2], [2, 3], [3, 0], [0, 4], [1, 5], [2, 6], [3, 7], [4, 5], [5, 6], [6, 7], [7, 4], [4, 8], [5, 8], [6, 9], [7, 9], [8, 9]] },
+};
+SHAPES.cub.build();
+const SHAPE_ORDER = ['cub', 'piramida', 'prisma', 'tetra', 'octa', 'casa'];
+
+let cur = 'cub', verts = [], edges = [], drawn = [], selected = -1, ghost = true, finished = false, pulses = [];
+
+function loadShape(key) {
+    cur = key; const sh = SHAPES[key], U = 105;
+    verts = sh.v.map(([x, y, z]) => ({ x: x * U, y: y * U, z: z * U })); edges = sh.e; drawn = []; selected = -1; finished = false; pulses = [];
+    document.querySelectorAll('#shapes .chip').forEach(c => c.classList.toggle('on', c.dataset.k === key));
+    $('title').textContent = sh.name; updateCounter();
+    say('Atinge două vârfuri ca să întinzi un fir între ele.', '');
+}
+const edgeKey = (a, b) => a < b ? a + '-' + b : b + '-' + a;
+const edgeSet = () => new Set(edges.map(([a, b]) => edgeKey(a, b)));
+function updateCounter() { $('counter').textContent = '🧵 ' + drawn.length + '/' + edges.length; }
+
+let hintT = 0;
+function say(text, cls) { const h = $('hint'); h.textContent = text; h.className = cls || ''; h.hidden = !text; clearTimeout(hintT); if (cls) hintT = setTimeout(() => { h.className = ''; }, 2200); }
+
+/* ---------- liber ---------- */
+const COLORS = ['#FFB81C', '#1FBF9A', '#E23B6B', '#E8541F', '#FFFFFF', '#B9A6D6'];
+let strokes = [], curStroke = null, color = COLORS[0], pen = true, depthVal = 0;
+
+/* ---------- desen ---------- */
+function drawBox() {
+    const B = 150, pts = []; for (const x of [-B, B]) for (const y of [-B, B]) for (const z of [-B, B]) pts.push(proj({ x, y, z }));
+    ctx.strokeStyle = 'rgba(255,255,255,.13)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 7]);
+    for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) {
+        const d = (a ^ b); if (d === 1 || d === 2 || d === 4) { ctx.beginPath(); ctx.moveTo(pts[a].x, pts[a].y); ctx.lineTo(pts[b].x, pts[b].y); ctx.stroke(); }
+    }
+    ctx.setLineDash([]);
+}
+function thread(a, b, col, w, alpha) {
+    const pa = proj(a), pb = proj(b), f = Math.max(.5, 1 + (pa.z + pb.z) / 700);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,' + (.28 * (alpha || 1)) + ')'; ctx.lineWidth = w * f + 4; ctx.beginPath(); ctx.moveTo(pa.x + 2, pa.y + 3); ctx.lineTo(pb.x + 2, pb.y + 3); ctx.stroke();
+    ctx.globalAlpha = alpha || 1; ctx.strokeStyle = col; ctx.lineWidth = w * f; ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke(); ctx.globalAlpha = 1;
+}
+const THREAD_COLORS = ['#FFB81C', '#1FBF9A', '#E23B6B', '#E8541F', '#B9A6D6'];
+
+function render() {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2A1450'); g.addColorStop(1, '#4A2370'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    if (mode !== 'menu' || true) drawBox();
+    if (mode === 'model') {
+        if (ghost) { ctx.setLineDash([4, 8]); edges.forEach(([a, b]) => { if (!drawn.includes(edgeKey(a, b))) { const pa = proj(verts[a]), pb = proj(verts[b]); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke(); } }); ctx.setLineDash([]); }
+        const list = drawn.map((k, i) => { const [a, b] = k.split('-').map(Number); return { a, b, i, z: proj(verts[a]).z + proj(verts[b]).z }; }).sort((p, q) => p.z - q.z);
+        list.forEach(t => thread(verts[t.a], verts[t.b], THREAD_COLORS[t.i % THREAD_COLORS.length], 7, 1));
+        const ps = verts.map((v, i) => ({ i, p: proj(v) })).sort((a, b) => a.p.z - b.p.z);
+        ps.forEach(({ i, p }) => {
+            const r = (selected === i ? 15 : 11) * Math.min(1.3, p.k);
+            if (selected === i) { ctx.fillStyle = 'rgba(255,184,28,.35)'; ctx.beginPath(); ctx.arc(p.x, p.y, r + 9, 0, 6.283); ctx.fill(); }
+            ctx.fillStyle = selected === i ? '#FFB81C' : '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.283); ctx.fill();
+            ctx.strokeStyle = 'rgba(74,35,112,.8)'; ctx.lineWidth = 3; ctx.stroke();
+        });
+        pulses = pulses.filter(p => (p.t -= .03) > 0);
+        pulses.forEach(pl => { const p = proj(pl.v); ctx.strokeStyle = 'rgba(255,255,255,' + pl.t + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, 14 + (1 - pl.t) * 40, 0, 6.283); ctx.stroke(); });
+    } else if (mode === 'free') {
+        const segs = [];
+        strokes.concat(curStroke ? [curStroke] : []).forEach(s => { for (let i = 1; i < s.pts.length; i++) segs.push({ a: s.pts[i - 1], b: s.pts[i], c: s.col, w: s.w, z: rot(s.pts[i]).z }); if (s.pts.length === 1) segs.push({ a: s.pts[0], b: s.pts[0], c: s.col, w: s.w, z: rot(s.pts[0]).z }); });
+        segs.sort((p, q) => p.z - q.z).forEach(s => thread(s.a, s.b, s.c, s.w, 1));
+    }
+    if (spin) yaw += .008;
+}
+function loop() { render(); requestAnimationFrame(loop); }
+
+/* ---------- interacțiune ---------- */
+let drag = null;
+cv.addEventListener('contextmenu', (e) => e.preventDefault());
+
+/* Control universal: atingere (touch) + mouse. Nu depinde de "pointer events",
+   deci merge și pe telefoane / tablete mai vechi. */
+function pointOf(e) {
+    const t = e.touches && e.touches.length ? e.touches : null;
+    if (t && t.length >= 2) return { x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 };
+    const one = t ? t[0] : (e.changedTouches && e.changedTouches[0]) || e;
+    return { x: one.clientX, y: one.clientY };
+}
+function inputDown(x, y, rightBtn, shift, twoFingers) {
+    if (mode === 'menu') return;
+    if (mode === 'model') {
+        let hit = -1, best = 32; verts.forEach((v, i) => { const p = proj(v), d = Math.hypot(p.x - x, p.y - y); if (d < best) { best = d; hit = i; } });
+        drag = { type: hit >= 0 && !twoFingers ? 'vertex' : 'rotate', hit, sx: x, sy: y, lx: x, ly: y, moved: false };
+    } else {
+        const rotate = !pen || rightBtn || shift || twoFingers;
+        if (rotate) drag = { type: 'rotate', sx: x, sy: y, lx: x, ly: y, moved: false };
+        else { drag = { type: 'pen' }; curStroke = { col: color, w: 6, zc: depthVal, pts: [unproj(x, y, depthVal)] }; }
+    }
+}
+function inputMove(x, y) {
+    if (!drag) return;
+    if (drag.type === 'pen') { const p = unproj(x, y, curStroke.zc), l = curStroke.pts[curStroke.pts.length - 1]; if (Math.hypot(p.x - l.x, p.y - l.y, p.z - l.z) > 2) curStroke.pts.push(p); return; }
+    if (Math.hypot(x - drag.sx, y - drag.sy) > 8) drag.moved = true;
+    if (drag.type === 'rotate' || (drag.type === 'vertex' && drag.moved)) {
+        drag.type = 'rotate'; yaw += (x - drag.lx) * .01; pitch = Math.max(-1.45, Math.min(1.45, pitch + (y - drag.ly) * .01)); drag.lx = x; drag.ly = y;
+    }
+}
+function endDrag() {
+    if (!drag) return;
+    if (drag.type === 'pen' && curStroke) { if (curStroke.pts.length) strokes.push(curStroke); curStroke = null; }
+    else if (drag.type === 'vertex' && !drag.moved) tapVertex(drag.hit);
+    else if (drag.type === 'rotate' && mode === 'model' && !drag.moved) { selected = -1; }
+    drag = null;
+}
+function cancelDrag() { if (drag && drag.type === 'pen') curStroke = null; drag = null; }
+
+/* touch */
+cv.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (e.touches.length >= 2) { cancelDrag(); const p = pointOf(e); inputDown(p.x, p.y, false, false, true); return; }
+    const p = pointOf(e); inputDown(p.x, p.y, false, false, false);
+}, { passive: false });
+cv.addEventListener('touchmove', (e) => { e.preventDefault(); const p = pointOf(e); inputMove(p.x, p.y); }, { passive: false });
+cv.addEventListener('touchend', (e) => { e.preventDefault(); if (e.touches.length === 0) endDrag(); else cancelDrag(); }, { passive: false });
+cv.addEventListener('touchcancel', cancelDrag);
+/* mouse */
+cv.addEventListener('mousedown', (e) => {
+    inputDown(e.clientX, e.clientY, e.button === 2, e.shiftKey, false);
+    const mm = (ev) => inputMove(ev.clientX, ev.clientY);
+    const mu = () => { endDrag(); window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
+    window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
+});
+window.addEventListener('keydown', (e) => {
+    const d = { ArrowLeft: [-.08, 0], ArrowRight: [.08, 0], ArrowUp: [0, -.08], ArrowDown: [0, .08] }[e.key];
+    if (d) { e.preventDefault(); yaw += d[0]; pitch = Math.max(-1.45, Math.min(1.45, pitch + d[1])); }
+});
+
+function tapVertex(i) {
+    if (finished) return;
+    if (selected < 0) { selected = i; return; }
+    if (selected === i) { selected = -1; return; }
+    const k = edgeKey(selected, i);
+    if (drawn.includes(k)) { say('Firul acesta e deja întins.', 'bad'); selected = i; return; }
+    if (edgeSet().has(k)) {
+        drawn.push(k); pulses.push({ v: verts[i], t: 1 }); selected = -1; updateCounter();
+        say(drawn.length === edges.length ? '' : 'Bravo! Încă ' + (edges.length - drawn.length) + ' fire.', 'ok');
+        if (drawn.length === edges.length) setTimeout(complete, 700);
+    } else { say('Acolo nu e o muchie a corpului. Privește modelul din alt unghi!', 'bad'); selected = i; }
+}
+
+/* ---------- final de corp ---------- */
+function complete() {
+    finished = true;
+    const sh = SHAPES[cur], V = verts.length, E = edges.length, F = E - V + 2;
+    $('ovEmoji').textContent = sh.emoji; $('ovTitle').textContent = 'Ai construit: ' + sh.name + '!';
+    $('ovText').textContent = ''; $('ovModes').hidden = true; $('facts').hidden = false;
+    $('facts').textContent = V + ' vârfuri · ' + E + ' muchii · ' + F + ' fețe';
+    $('quizQ').textContent = 'Câte fețe are ' + sh.name.toLowerCase() + '?';
+    const opts = [...new Set([F - 1, F, F + 1, F + 2])].filter(n => n > 2).sort(() => Math.random() - .5).slice(0, 3); if (!opts.includes(F)) opts[0] = F;
+    $('quizOpts').innerHTML = ''; opts.sort((a, b) => a - b).forEach(n => { const b = document.createElement('button'); b.textContent = n; b.type = 'button'; b.addEventListener('click', () => { b.classList.add(n === F ? 'ok' : 'no'); if (n !== F) [...$('quizOpts').children].find(x => Number(x.textContent) === F).classList.add('ok'); [...$('quizOpts').children].forEach(x => x.disabled = true); $('ovText').textContent = n === F ? 'Corect! Fețele sunt suprafețele plane ale corpului.' : 'Fețele sunt suprafețele plane. Răspunsul corect e ' + F + '.'; }); $('quizOpts').appendChild(b); });
+    $('quizBox').hidden = false; $('ovAfter').hidden = false; $('overlay').hidden = false;
+}
+
+/* ---------- moduri ---------- */
+function setMode(m) {
+    mode = m; $('overlay').hidden = true; $('bar').hidden = false; $('barModel').hidden = m !== 'model'; $('barFree').hidden = m !== 'free';
+    $('counterPill').hidden = m !== 'model'; cv.classList.toggle('pen', m === 'free' && pen); spin = false;
+    ['spinBtn1', 'spinBtn2'].forEach(id => $(id).classList.remove('on'));
+    if (m === 'model') loadShape(cur); else { $('title').textContent = 'Desen liber 3D'; say('Desenează, apoi apasă 🔄 Rotesc și privește firul din alt unghi!', 'ok'); }
+    setTimeout(resize, 30); setTimeout(() => { $('hint').className = ''; }, 3200);
+}
+function showMenu() { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; $('ovEmoji').textContent = '🧵'; $('ovTitle').textContent = 'Forma-fir-3D'; $('ovText').textContent = 'Construiește obiecte 3D din fire, ca pe un schelet. Alege cum vrei să lucrezi!'; $('overlay').hidden = false; }
+
+SHAPE_ORDER.forEach(k => { const b = document.createElement('button'); b.className = 'chip'; b.dataset.k = k; b.type = 'button'; b.textContent = SHAPES[k].emoji + ' ' + SHAPES[k].name.split(' ')[0].replace('Cubul','Cub').replace('Tetraedrul','Tetra').replace('Octaedrul','Octa'); b.addEventListener('click', () => loadShape(k)); $('shapes').appendChild(b); });
+COLORS.forEach((c, i) => { const b = document.createElement('button'); b.className = 'sw' + (i === 0 ? ' on' : ''); b.style.background = c; b.type = 'button'; b.setAttribute('aria-label', 'Culoare ' + (i + 1)); b.addEventListener('click', () => { color = c; document.querySelectorAll('.sw').forEach(x => x.classList.remove('on')); b.classList.add('on'); pen = true; $('penBtn').classList.add('on'); $('rotBtn').classList.remove('on'); cv.classList.add('pen'); }); $('swatches').appendChild(b); });
+
+$('goModel').addEventListener('click', () => setMode('model'));
+$('goFree').addEventListener('click', () => setMode('free'));
+$('freeBtn').addEventListener('click', () => setMode('free'));
+$('modelBtn').addEventListener('click', () => setMode('model'));
+$('nextShape').addEventListener('click', () => { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; const i = SHAPE_ORDER.indexOf(cur); setMode('model'); loadShape(SHAPE_ORDER[(i + 1) % SHAPE_ORDER.length]); });
+$('ovFree').addEventListener('click', () => { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; setMode('free'); });
+$('ghostBtn').addEventListener('click', () => { ghost = !ghost; $('ghostBtn').classList.toggle('on', ghost); });
+const toggleSpin = () => { spin = !spin; ['spinBtn1', 'spinBtn2'].forEach(id => $(id).classList.toggle('on', spin)); };
+$('spinBtn1').addEventListener('click', toggleSpin); $('spinBtn2').addEventListener('click', toggleSpin);
+$('undoBtn1').addEventListener('click', () => { if (finished) return; drawn.pop(); selected = -1; updateCounter(); });
+$('resetBtn1').addEventListener('click', () => { drawn = []; selected = -1; finished = false; updateCounter(); });
+$('penBtn').addEventListener('click', () => { pen = true; $('penBtn').classList.add('on'); $('rotBtn').classList.remove('on'); cv.classList.add('pen'); });
+$('rotBtn').addEventListener('click', () => { pen = false; $('rotBtn').classList.add('on'); $('penBtn').classList.remove('on'); cv.classList.remove('pen'); });
+$('depth').addEventListener('input', (e) => { depthVal = Number(e.target.value); });
+$('undoBtn2').addEventListener('click', () => strokes.pop());
+$('clearBtn').addEventListener('click', () => { if (!strokes.length || confirm('Ștergi tot desenul?')) strokes = []; });
+$('saveBtn').addEventListener('click', () => { render(); const a = document.createElement('a'); a.download = 'forma-fir-3d.png'; a.href = cv.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); say('Imaginea a fost salvată.', 'ok'); });
+
+window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+resize(); loadShape('cub'); say('', ''); loop();
+</script>
+<script src="joc.js"></script>
+</body>
+</html>
