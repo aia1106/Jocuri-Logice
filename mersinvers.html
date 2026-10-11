@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa4.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Mersul invers – Jocuri Logice</title>
+<style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 64px 14px 28px; text-align: center; overscroll-behavior: none; }
+    main { max-width: 480px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(1.9rem, 7.5vw, 2.5rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 6px auto 0; max-width: 36ch; font: 600 1rem/1.4 var(--j-font-text); color: #5B5270; }
+    .prog { display: inline-flex; gap: 7px; margin: 12px 0 12px; }
+    .prog i { width: 14px; height: 14px; border-radius: 50%; background: #E6E2EE; } .prog i.on { background: #1FBF9A; } .prog i.cur { background: #FFB81C; }
+    #card { background: #fff; border: 2px solid #E6E2EE; border-radius: 28px; padding: 18px 16px 20px; box-shadow: 0 14px 30px -20px rgba(35,27,51,.5); }
+    #card.shake { animation: shake .35s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    #story { margin: 0 0 12px; font: 700 clamp(1.05rem, 4.6vw, 1.25rem)/1.5 var(--j-font); color: #4A2370; text-align: left; }
+    #story span { display: block; }
+    #chain { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 14px; padding: 12px 8px; border-radius: 20px; background: #F8F7FB; border: 2px dashed #D9CCEB; }
+    .pill { min-width: 54px; padding: 8px 12px; border-radius: 16px; font: 700 1.25rem var(--j-font); color: #fff; }
+    .p-q { background: #E23B6B; } .p-op { background: #6A3BA0; } .p-end { background: #1FBF9A; color: #231B33; }
+    .arrow { color: #B9A6D6; font-size: 1.2rem; }
+    #answer { width: 150px; min-height: 60px; text-align: center; font: 700 1.9rem var(--j-font); border: 3px solid #E6E2EE; border-radius: 18px; color: #4A2370; background: #fff; }
+    #answer:focus { border-color: #4A2370; outline: none; box-shadow: 0 0 0 4px rgba(74,35,112,.15); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+    .btn { min-height: 52px; padding: 0 26px; border: 0; border-radius: 999px; font: 700 1.1rem var(--j-font); cursor: pointer; }
+    .btn.main { background: #E23B6B; color: #fff; box-shadow: 0 5px 0 #B82A53; } .btn.main:active { transform: translateY(3px); box-shadow: 0 2px 0 #B82A53; }
+    .btn.soft { background: #EFE9F7; color: #4A2370; box-shadow: 0 4px 0 #D9CCEB; }
+    #hint { min-height: 1.4em; margin: 12px 0 0; font: 800 1rem var(--j-font-text); color: #6A3BA0; }
+    #msg { min-height: 1.5em; margin: 8px 0 0; font: 800 1.1rem var(--j-font-text); }
+    #msg.ok { color: #14937A; } #msg.bad { color: #B82A53; }
+    .stars { font-size: 2.2rem; letter-spacing: 4px; }
+    .jg-overlay { position: fixed; }
+</style>
+</head>
+<body class="jg">
+<main>
+    <h1>Mersul invers</h1>
+    <p class="sub">Merge înapoi, pas cu pas, ca să afli numărul de la început!</p>
+    <div class="prog" id="prog"></div>
+    <section id="card">
+        <p id="story"></p>
+        <div id="chain" aria-label="Lanțul de operații"></div>
+        <input id="answer" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="?" aria-label="Numărul gândit">
+        <div class="row">
+            <button class="btn main" id="check" type="button">Verifică</button>
+            <button class="btn soft" id="hintBtn" type="button">💡 Indiciu</button>
+            <button class="btn soft" id="skip" type="button">Sari</button>
+        </div>
+        <p id="hint"></p>
+        <p id="msg" role="status" aria-live="polite"></p>
+    </section>
+</main>
+
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji">🏆</div>
+    <h1 class="jg-title">Bravo, detectivule!</h1>
+    <p class="stars" id="starsOut"></p>
+    <p class="jg-text" id="ovText"></p>
+    <button class="jg-btn" id="ovBtn" type="button">Joacă din nou</button>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const STEPS = [1, 1, 2, 2, 2, 3, 3, 3];       // câți pași are fiecare problemă
+let idx = 0, prob = null, mistakes = 0, hintsUsed = 0, stars = 0, locked = false, results = [];
+
+const SYM = { add: '+', sub: '−', mul: '×', div: '÷' };
+const VERB = { add: (a) => 'Am adunat ' + a + '.', sub: (a) => 'Am scăzut ' + a + '.', mul: (a) => 'Am înmulțit cu ' + a + '.', div: (a) => 'Am împărțit la ' + a + '.' };
+const FIRST = { add: (a) => 'Am adunat ' + a + '.', sub: (a) => 'Am scăzut ' + a + '.', mul: (a) => 'L-am înmulțit cu ' + a + '.', div: (a) => 'L-am împărțit la ' + a + '.' };
+
+function makeProblem(nSteps) {
+    for (let t = 0; t < 300; t++) {
+        const start = rnd(4, nSteps === 1 ? 60 : nSteps === 2 ? 80 : 120);
+        let cur = start; const ops = []; let ok = true;
+        for (let i = 0; i < nSteps && ok; i++) {
+            const types = ['add', 'sub', 'mul', 'div'].sort(() => Math.random() - .5);
+            let done = false;
+            for (const ty of types) {
+                if (ty === 'add') { const a = rnd(3, 60); ops.push({ ty, a }); cur += a; done = true; }
+                else if (ty === 'sub') { if (cur <= 6) continue; const a = rnd(2, Math.min(cur - 2, 50)); ops.push({ ty, a }); cur -= a; done = true; }
+                else if (ty === 'mul') { const a = rnd(2, 9); if (cur * a > 900) continue; ops.push({ ty, a }); cur *= a; done = true; }
+                else { const ds = [2, 3, 4, 5, 6, 7, 8, 9].filter(d => cur % d === 0 && cur / d >= 2); if (!ds.length) continue; const a = ds[rnd(0, ds.length - 1)]; ops.push({ ty, a }); cur /= a; done = true; }
+                if (done) break;
+            }
+            if (!done) ok = false;
+        }
+        if (ok && cur !== start && cur > 0 && cur <= 999) return { start, ops, end: cur };
+    }
+    return { start: 12, ops: [{ ty: 'mul', a: 3 }], end: 36 };
+}
+
+function load() {
+    locked = false; mistakes = 0; hintsUsed = 0;
+    prob = makeProblem(STEPS[idx]);
+    $('prog').innerHTML = STEPS.map((_, i) => '<i class="' + (i < idx ? 'on' : i === idx ? 'cur' : '') + '"></i>').join('');
+    const lines = ['Am gândit un număr.'];
+    prob.ops.forEach((o, i) => lines.push(i === 0 ? FIRST[o.ty](o.a) : (i === 1 ? 'Apoi ' : 'Apoi ') + VERB[o.ty](o.a).replace(/^Am/, 'am')));
+    lines.push('Am obținut ' + prob.end + '. Ce număr am gândit?');
+    $('story').innerHTML = lines.map(l => '<span>' + l + '</span>').join('');
+    let chain = '<span class="pill p-q">?</span>';
+    prob.ops.forEach(o => { chain += '<span class="arrow">➜</span><span class="pill p-op">' + SYM[o.ty] + ' ' + o.a + '</span>'; });
+    chain += '<span class="arrow">➜</span><span class="pill p-end">' + prob.end + '</span>';
+    $('chain').innerHTML = chain;
+    $('answer').value = ''; $('hint').textContent = ''; $('msg').textContent = ''; $('msg').className = '';
+    $('answer').focus({ preventScroll: true });
+}
+
+function inverseText() {
+    const rev = [...prob.ops].reverse().map(o => {
+        const inv = { add: 'sub', sub: 'add', mul: 'div', div: 'mul' }[o.ty];
+        return SYM[inv] + ' ' + o.a;
+    });
+    return 'Pornește de la ' + prob.end + ' și fă operațiile invers: ' + rev.join(', apoi ') + '.';
+}
+
+$('hintBtn').addEventListener('click', () => {
+    if (locked) return; hintsUsed++;
+    $('hint').textContent = hintsUsed === 1 ? '💡 Mergi înapoi: fiecare operație se face invers (+ ↔ −, × ↔ ÷).' : '💡 ' + inverseText();
+});
+$('check').addEventListener('click', check);
+$('answer').addEventListener('keydown', (e) => { if (e.key === 'Enter') check(); });
+$('skip').addEventListener('click', () => { if (locked) return; finishProblem(0, 'Răspunsul era ' + prob.start + '. Mergem mai departe!'); });
+
+function check() {
+    if (locked) return;
+    const v = parseInt($('answer').value, 10);
+    if (isNaN(v)) { $('msg').textContent = 'Scrie un număr.'; $('msg').className = 'bad'; return; }
+    if (v === prob.start) {
+        const s = (mistakes === 0 && hintsUsed === 0) ? 3 : (mistakes + hintsUsed <= 2 ? 2 : 1);
+        finishProblem(s, 'Corect! Numărul era ' + prob.start + '.');
+    } else {
+        mistakes++; $('card').classList.add('shake'); setTimeout(() => $('card').classList.remove('shake'), 400);
+        $('msg').textContent = 'Aproape! Încearcă să mergi invers, de la ' + prob.end + '.'; $('msg').className = 'bad';
+        $('answer').select();
+    }
+}
+
+function finishProblem(s, text) {
+    locked = true; stars += s; results.push(s);
+    $('msg').textContent = text + (s ? ' ' + '⭐'.repeat(s) : ''); $('msg').className = s ? 'ok' : 'bad';
+    setTimeout(() => {
+        idx++;
+        if (idx >= STEPS.length) end(); else load();
+    }, 1500);
+}
+
+function end() {
+    $('prog').querySelectorAll('i').forEach(i => i.className = 'on');
+    const max = STEPS.length * 3;
+    $('starsOut').textContent = '⭐'.repeat(Math.round(stars / max * 5)) + '☆'.repeat(5 - Math.round(stars / max * 5));
+    $('ovText').textContent = 'Ai strâns ' + stars + ' din ' + max + ' puncte.';
+    $('overlay').hidden = false;
+}
+$('ovBtn').addEventListener('click', () => { idx = 0; stars = 0; results = []; $('overlay').hidden = true; load(); });
+load();
+</script>
+<script src="joc.js"></script>
+</body>
+</html>
