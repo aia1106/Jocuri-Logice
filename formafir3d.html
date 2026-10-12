@@ -84,6 +84,12 @@ body.jg { margin: 0; font-family: var(--j-font); -webkit-user-select: none; user
     .quiz button.ok { background: #1FBF9A; color: #231B33; } .quiz button.no { background: #E23B6B; color: #fff; }
     #bar { grid-template-columns: minmax(0, 1fr); }
     #bar > div { min-width: 0; }
+    #wheelTools { position: fixed; z-index: 25; display: grid; gap: 8px; }
+    #wheelTools .tool { background: rgba(255,255,255,.2); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .tool.done { background: #1FBF9A; color: #231B33; }
+    .tool.done:active { background: #FFB81C; }
+    @media (max-width: 480px) { #hint { font-size: .85rem; padding: 6px 12px; max-width: calc(100% - 120px); left: auto; right: 64px; transform: none; top: calc(10px + env(safe-area-inset-top, 0px)); } }
+    @media (max-width: 340px) { .tool { min-width: 40px; padding: 0 6px; } #barWheel .row, #barFree .row, #barModel .row { gap: 4px; } }
     .t { display: none; }
     .row.scroll { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; padding-bottom: 2px; }
     .row.scroll::-webkit-scrollbar { display: none; }
@@ -108,6 +114,7 @@ body.jg { margin: 0; font-family: var(--j-font); -webkit-user-select: none; user
             <button class="tool" id="spinBtn1" type="button" title="Rotire automată">▶<span class="t"> Rotire</span></button>
             <button class="tool" id="undoBtn1" type="button" title="Înapoi">↩<span class="t"> Înapoi</span></button>
             <button class="tool danger" id="resetBtn1" type="button" title="De la capăt">🗑<span class="t"> De la capăt</span></button>
+            <button class="tool" id="wheelBtn1" type="button" title="Roata de fir">🏺<span class="t"> Roata</span></button>
             <button class="tool" id="freeBtn" type="button" title="Desen liber">✏️<span class="t"> Liber</span></button>
         </div>
     </div>
@@ -120,10 +127,35 @@ body.jg { margin: 0; font-family: var(--j-font); -webkit-user-select: none; user
             <button class="tool" id="undoBtn2" type="button" title="Înapoi">↩<span class="t"> Înapoi</span></button>
             <button class="tool danger" id="clearBtn" type="button" title="Șterge">🗑<span class="t"> Șterge</span></button>
             <button class="tool" id="saveBtn" type="button" title="Salvează">💾<span class="t"> Salvează</span></button>
+            <button class="tool" id="wheelBtn2" type="button" title="Roata de fir">🏺<span class="t"> Roata</span></button>
             <button class="tool" id="modelBtn" type="button" title="Model">🧊<span class="t"> Model</span></button>
         </div>
         <div class="row" style="margin-top:6px"><span class="lbl">Adâncime</span><input type="range" id="depth" min="-150" max="150" value="0" aria-label="Adâncime"></div>
     </div>
+    <div id="barWheel" hidden>
+        <div class="row scroll" id="ideas"></div>
+        <div class="row" style="margin-top:8px">
+            <button class="tool done" id="doneBtn" type="button" title="Gata">✓<span class="t"> Gata</span></button>
+            <button class="tool" id="undoBtn3" type="button" title="Înapoi">↩<span class="t"> Înapoi</span></button>
+            <button class="tool danger" id="clearBtn3" type="button" title="Șterge">🗑<span class="t"> Șterge</span></button>
+            <button class="tool on" id="spinBtn3" type="button" title="Rotire">⏯<span class="t"> Rotire</span></button>
+            <button class="tool" id="saveBtn3" type="button" title="Salvează">💾</button>
+            <button class="tool" id="modelBtn3" type="button" title="Model">🧊</button>
+        </div>
+    </div>
+</div>
+
+<div id="wheelTools" hidden>
+    <button class="tool" id="merBtn" type="button" title="Număr de fire">🧵 <b id="merN">12</b></button>
+    <button class="tool" id="colBtn" type="button" title="Culori">🎨</button>
+</div>
+
+<div class="jg-overlay" id="wheelDone" hidden>
+    <div class="jg-emoji" id="wdEmoji">🌟</div>
+    <h1 class="jg-title" id="wdTitle">Bravo!</h1>
+    <p class="stars" id="wdStars" style="font-size:2.4rem;margin:0"></p>
+    <p class="jg-text" id="wdText"></p>
+    <div class="modes"><button class="jg-btn" id="wdNext" type="button">Alt obiect</button><button class="jg-btn alt" id="wdMore" type="button">Mai desenez</button></div>
 </div>
 
 <div class="jg-overlay" id="overlay">
@@ -131,7 +163,8 @@ body.jg { margin: 0; font-family: var(--j-font); -webkit-user-select: none; user
     <h1 class="jg-title" id="ovTitle">Forma-fir-3D</h1>
     <p class="jg-text" id="ovText">Construiește obiecte 3D din fire, ca pe un schelet. Alege cum vrei să lucrezi!</p>
     <div class="modes" id="ovModes">
-        <button class="jg-btn" id="goModel" type="button">🧊 Construiesc după model</button>
+        <button class="jg-btn" id="goWheel" type="button">🏺 Roata de fir: desenez o linie și iese 3D</button>
+        <button class="jg-btn alt" id="goModel" type="button">🧊 Construiesc după model</button>
         <button class="jg-btn alt" id="goFree" type="button">✏️ Desenez liber în 3D</button>
     </div>
     <p class="facts" id="facts" hidden></p>
@@ -163,6 +196,7 @@ function resize() {
     W = window.innerWidth; H = window.innerHeight; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const barH = $('bar').hidden ? 0 : $('bar').offsetHeight;
     cx = W / 2; cy = (H - barH) / 2 + 28; S = Math.min(W, H - barH - 30) / 400;
+    layoutWheel();
 }
 
 /* ---------- corpuri ---------- */
@@ -193,7 +227,7 @@ const edgeSet = () => new Set(edges.map(([a, b]) => edgeKey(a, b)));
 function updateCounter() { $('counter').textContent = '🧵 ' + drawn.length + '/' + edges.length; }
 
 let hintT = 0;
-function say(text, cls) { const h = $('hint'); h.textContent = text; h.className = cls || ''; h.hidden = !text; clearTimeout(hintT); if (cls) hintT = setTimeout(() => { h.className = ''; }, 2200); }
+function say(text, cls) { const h = $('hint'); h.textContent = text; h.className = cls || ''; h.hidden = !text; clearTimeout(hintT); if (text) hintT = setTimeout(() => { h.hidden = true; h.className = ''; }, 3500); }
 
 /* ---------- liber ---------- */
 const COLORS = ['#FFB81C', '#1FBF9A', '#E23B6B', '#E8541F', '#FFFFFF', '#B9A6D6'];
@@ -218,7 +252,7 @@ const THREAD_COLORS = ['#FFB81C', '#1FBF9A', '#E23B6B', '#E8541F', '#B9A6D6'];
 
 function render() {
     const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2A1450'); g.addColorStop(1, '#4A2370'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    if (mode !== 'menu' || true) drawBox();
+    if (mode !== 'wheel') drawBox();
     if (mode === 'model') {
         if (ghost) { ctx.setLineDash([4, 8]); edges.forEach(([a, b]) => { if (!drawn.includes(edgeKey(a, b))) { const pa = proj(verts[a]), pb = proj(verts[b]); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke(); } }); ctx.setLineDash([]); }
         const list = drawn.map((k, i) => { const [a, b] = k.split('-').map(Number); return { a, b, i, z: proj(verts[a]).z + proj(verts[b]).z }; }).sort((p, q) => p.z - q.z);
@@ -232,12 +266,14 @@ function render() {
         });
         pulses = pulses.filter(p => (p.t -= .03) > 0);
         pulses.forEach(pl => { const p = proj(pl.v); ctx.strokeStyle = 'rgba(255,255,255,' + pl.t + ')'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, 14 + (1 - pl.t) * 40, 0, 6.283); ctx.stroke(); });
+    } else if (mode === 'wheel') {
+        renderWheel();
     } else if (mode === 'free') {
         const segs = [];
         strokes.concat(curStroke ? [curStroke] : []).forEach(s => { for (let i = 1; i < s.pts.length; i++) segs.push({ a: s.pts[i - 1], b: s.pts[i], c: s.col, w: s.w, z: rot(s.pts[i]).z }); if (s.pts.length === 1) segs.push({ a: s.pts[0], b: s.pts[0], c: s.col, w: s.w, z: rot(s.pts[0]).z }); });
         segs.sort((p, q) => p.z - q.z).forEach(s => thread(s.a, s.b, s.c, s.w, 1));
     }
-    if (spin) yaw += .008;
+    if (spin) yaw += (mode === 'wheel' ? .014 : .008);
 }
 function loop() { render(); requestAnimationFrame(loop); }
 
@@ -255,6 +291,11 @@ function pointOf(e) {
 }
 function inputDown(x, y, rightBtn, shift, twoFingers) {
     if (mode === 'menu') return;
+    if (mode === 'wheel') {
+        if (inRect(x, y, pad) && !twoFingers) { drag = { type: 'wdraw' }; curProf = [padToProf(x, y)]; finger = { x, y }; }
+        else drag = { type: 'rotate', sx: x, sy: y, lx: x, ly: y, moved: false };
+        return;
+    }
     if (mode === 'model') {
         let hit = -1, best = 32; verts.forEach((v, i) => { const p = proj(v), d = Math.hypot(p.x - x, p.y - y); if (d < best) { best = d; hit = i; } });
         drag = { type: hit >= 0 && !twoFingers ? 'vertex' : 'rotate', hit, sx: x, sy: y, lx: x, ly: y, moved: false };
@@ -266,20 +307,22 @@ function inputDown(x, y, rightBtn, shift, twoFingers) {
 }
 function inputMove(x, y) {
     if (!drag) return;
+    if (drag.type === 'wdraw') { const q = padToProf(x, y), l = curProf[curProf.length - 1]; if (Math.hypot(q.r - l.r, q.y - l.y) > 2.5) curProf.push(q); finger = { x, y }; return; }
     if (drag.type === 'pen') { const p = unproj(x, y, curStroke.zc), l = curStroke.pts[curStroke.pts.length - 1]; if (Math.hypot(p.x - l.x, p.y - l.y, p.z - l.z) > 2) curStroke.pts.push(p); return; }
     if (Math.hypot(x - drag.sx, y - drag.sy) > 8) drag.moved = true;
     if (drag.type === 'rotate' || (drag.type === 'vertex' && drag.moved)) {
-        drag.type = 'rotate'; yaw += (x - drag.lx) * .01; pitch = Math.max(-1.45, Math.min(1.45, pitch + (y - drag.ly) * .01)); drag.lx = x; drag.ly = y;
+        drag.type = 'rotate'; yaw += (x - drag.lx) * .01; pitch = Math.max(mode === 'wheel' ? .05 : -1.45, Math.min(mode === 'wheel' ? 1.2 : 1.45, pitch + (y - drag.ly) * .01)); drag.lx = x; drag.ly = y;
     }
 }
 function endDrag() {
     if (!drag) return;
+    if (drag.type === 'wdraw') { if (curProf && curProf.length >= 2) profiles.push(curProf); curProf = null; finger = null; drag = null; return; }
     if (drag.type === 'pen' && curStroke) { if (curStroke.pts.length) strokes.push(curStroke); curStroke = null; }
     else if (drag.type === 'vertex' && !drag.moved) tapVertex(drag.hit);
     else if (drag.type === 'rotate' && mode === 'model' && !drag.moved) { selected = -1; }
     drag = null;
 }
-function cancelDrag() { if (drag && drag.type === 'pen') curStroke = null; drag = null; }
+function cancelDrag() { if (drag && drag.type === 'pen') curStroke = null; if (drag && drag.type === 'wdraw') { curProf = null; finger = null; } drag = null; }
 
 /* touch */
 cv.addEventListener('touchstart', (e) => {
@@ -328,12 +371,131 @@ function complete() {
     $('quizBox').hidden = false; $('ovAfter').hidden = false; $('overlay').hidden = false;
 }
 
+
+/* ---------- roata de fir: o linie plată devine obiect 3D ---------- */
+let pad = { x: 0, y: 0, w: 0, h: 0 }, prev = { x: 0, y: 0, w: 0, h: 0 }, padS = 1, axisX = 0, floorY = 0, pcx = 0, pcy = 0, pS = 1;
+let profiles = [], curProf = null, finger = null, tpl = null, ideaKey = 'liber', mer = 12, colorMode = 0;
+const inRect = (x, y, r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+const range = (n, f) => Array.from({ length: n }, (_, i) => f(i / (n - 1)));
+const IDEAS = {
+    liber:    { n: 'Liber',     e: '✨', f: null },
+    vaza:     { n: 'Vază', of: 'vazei',      e: '🏺', f: () => range(40, t => ({ y: t * 300, r: 38 + 62 * Math.pow(Math.sin(Math.PI * t), 1.5) * (1 - .35 * t) + (t > .88 ? (t - .88) * 220 : 0) })) },
+    minge:    { n: 'Minge', of: 'mingii',     e: '⚽', f: () => range(40, t => { const a = -Math.PI / 2 + t * Math.PI; return { y: 150 + 120 * Math.sin(a), r: 120 * Math.cos(a) }; }) },
+    clopot:   { n: 'Clopot', of: 'clopotului',    e: '🔔', f: () => range(40, t => ({ y: t * 300, r: 20 + 110 * Math.pow(1 - t, 1.6) + (t < .08 ? (.08 - t) * 300 : 0) })) },
+    pom:      { n: 'Pom', of: 'pomului',       e: '🌲', f: () => range(40, t => ({ y: t * 300, r: 125 * (1 - t) * (.75 + .25 * Math.abs(Math.sin(t * 3 * Math.PI))) })) },
+    clepsidra:{ n: 'Clepsidră', of: 'clepsidrei', e: '⏳', f: () => range(40, t => ({ y: t * 300, r: 30 + 95 * Math.pow(Math.abs(2 * t - 1), 1.2) })) },
+};
+function layoutWheel() {
+    const barH = $('bar').hidden ? 0 : $('bar').offsetHeight, availH = H - barH, m = 10;
+    if (W > availH * 1.2) { const top = 64; pad = { x: m, y: top, w: W / 2 - 1.5 * m, h: availH - top - m }; prev = { x: W / 2 + m / 2, y: top, w: W / 2 - 1.5 * m, h: availH - top - m }; }
+    else { const padH = Math.max(170, Math.min(availH * .42, 340)); pad = { x: m, y: availH - padH - m, w: W - 2 * m, h: padH }; prev = { x: 0, y: 54, w: W, h: Math.max(110, availH - padH - 2 * m - 54) }; }
+    const wt = $('wheelTools'); if (wt) { wt.style.left = (prev.x + 10) + 'px'; wt.style.top = (prev.y + 4) + 'px'; }
+    padS = (pad.h - 26) / 300; axisX = pad.x + pad.w / 2; floorY = pad.y + pad.h - 13;
+    pS = Math.min(prev.w / 380, prev.h * .86 / 300); pcx = prev.x + prev.w / 2; pcy = prev.y + prev.h / 2;
+}
+function padToProf(x, y) { return { r: Math.min(170, Math.abs(x - axisX) / padS), y: Math.max(0, Math.min(310, (floorY - y) / padS)) }; }
+function projW(p) { const r = rot(p), k = D / (D - r.z); return { x: pcx + r.x * pS * k, y: pcy - r.y * pS * k }; }
+function wheelColor(t) {
+    if (colorMode === 0) return 'hsl(' + (40 + t * 290) + ',88%,62%)';
+    if (colorMode === 1) return 'hsl(42,100%,' + (48 + t * 22) + '%)';
+    if (colorMode === 2) return 'hsl(165,70%,' + (42 + t * 28) + '%)';
+    return 'hsl(' + (335 - t * 70) + ',82%,66%)';
+}
+function resample(pts, n) {
+    if (pts.length < 2) return pts;
+    const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].r - pts[i - 1].r, pts[i].y - pts[i - 1].y));
+    const total = cum[cum.length - 1] || 1, out = []; let j = 0;
+    for (let k = 0; k < n; k++) { const d = total * k / (n - 1); while (j < cum.length - 2 && cum[j + 1] < d) j++; const u = (d - cum[j]) / ((cum[j + 1] - cum[j]) || 1); out.push({ r: pts[j].r + (pts[j + 1].r - pts[j].r) * u, y: pts[j].y + (pts[j + 1].y - pts[j].y) * u }); }
+    return out;
+}
+function revolve(pts, alpha) {
+    const sm = resample(pts, 26), n = sm.length; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = alpha;
+    for (let i = 0; i < n; i++) {                                    // inelele
+        const r = sm[i].r, y = sm[i].y - 150; if (r < 1) continue;
+        ctx.strokeStyle = wheelColor(i / (n - 1)); ctx.lineWidth = 2.4; ctx.beginPath();
+        for (let a = 0; a <= 36; a++) { const g = a / 36 * 6.2832, q = projW({ x: r * Math.cos(g), y, z: r * Math.sin(g) }); a ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+        ctx.stroke();
+    }
+    for (let k = 0; k < mer; k++) {                                  // meridianele
+        const g = k / mer * 6.2832, c = Math.cos(g), sn = Math.sin(g); let last = null;
+        for (let i = 0; i < n; i++) {
+            const q = projW({ x: sm[i].r * c, y: sm[i].y - 150, z: sm[i].r * sn });
+            if (last) { ctx.strokeStyle = wheelColor(i / (n - 1)); ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+            last = q;
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+function renderWheel() {
+    // planșa de desen
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(pad.x, pad.y, pad.w, pad.h, 22); else ctx.rect(pad.x, pad.y, pad.w, pad.h); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(axisX, pad.y + 10); ctx.lineTo(axisX, floorY); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.beginPath(); ctx.moveTo(pad.x + 14, floorY); ctx.lineTo(pad.x + pad.w - 14, floorY); ctx.stroke();
+    const toPad = (q, side) => ({ x: axisX + side * q.r * padS, y: floorY - q.y * padS });
+    if (tpl) {                                                       // linia punctată de urmat
+        ctx.setLineDash([2, 9]); ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 4;
+        [1, -1].forEach(side => { ctx.beginPath(); tpl.forEach((q, i) => { const p = toPad(q, side); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.stroke(); });
+        ctx.setLineDash([]);
+    }
+    const all = profiles.concat(curProf ? [curProf] : []);
+    all.forEach((pts, idx) => {
+        [-1, 1].forEach(side => {                                    // linia + oglinda ei
+            ctx.strokeStyle = side === 1 ? '#FFB81C' : 'rgba(255,184,28,.35)'; ctx.lineWidth = side === 1 ? 6 : 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.beginPath(); pts.forEach((q, i) => { const p = toPad(q, side); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.stroke();
+        });
+    });
+    if (!all.length) { ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = '700 ' + Math.round(Math.min(22, pad.w / 14)) + 'px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('✏️ Desenează aici o linie de sus în jos', axisX, pad.y + pad.h / 2); }
+    if (finger) { ctx.fillStyle = 'rgba(255,184,28,.3)'; ctx.beginPath(); ctx.arc(finger.x, finger.y, 24, 0, 6.283); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(finger.x, finger.y, 8, 0, 6.283); ctx.fill(); }
+    // previzualizarea 3D
+    ctx.save(); ctx.beginPath(); ctx.rect(prev.x, prev.y, prev.w, prev.h); ctx.clip();
+    if (!all.length && tpl) revolve(tpl, .28);
+    all.forEach(pts => { if (pts.length >= 2) revolve(pts, 1); });
+    if (curProf && curProf.length) {                                 // inelul "punctului" pe care îl urmărești cu degetul
+        const q = curProf[curProf.length - 1]; ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.beginPath();
+        for (let a = 0; a <= 36; a++) { const g = a / 36 * 6.2832, pp = projW({ x: q.r * Math.cos(g), y: q.y - 150, z: q.r * Math.sin(g) }); a ? ctx.lineTo(pp.x, pp.y) : ctx.moveTo(pp.x, pp.y); }
+        ctx.stroke(); const c = projW({ x: q.r, y: q.y - 150, z: 0 }); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(c.x, c.y, 7, 0, 6.283); ctx.fill();
+    }
+    if (!all.length && !tpl) { ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '700 ' + Math.round(Math.min(20, prev.w / 16)) + 'px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Aici apare obiectul tău 3D din fire', pcx, pcy); }
+    ctx.restore();
+}
+function pickIdea(k, silent) {
+    ideaKey = k; tpl = IDEAS[k].f ? IDEAS[k].f() : null; profiles = []; curProf = null;
+    document.querySelectorAll('#ideas .chip').forEach(c => c.classList.toggle('on', c.dataset.k === k));
+    say(tpl ? 'Calcă pe linia punctată cu degetul. Sus se face ' + IDEAS[k].n.toLowerCase() + ' din fire!' : 'Desenează o linie pe planșă. Sus apare obiectul tău din fire!', 'ok');
+}
+function finishWheel() {
+    if (!profiles.length) { say('Desenează întâi o linie pe planșă.', 'bad'); return; }
+    let stars = 3, text = 'Ai făcut un obiect 3D din fire!';
+    if (tpl) {
+        const pts = profiles.flat(); let hit = 0; tpl.forEach(t => { if (pts.some(q => Math.hypot(q.r - t.r, q.y - t.y) < 28)) hit++; });
+        const pct = hit / tpl.length; stars = pct >= .85 ? 3 : pct >= .6 ? 2 : 1;
+        text = 'Ai urmat ' + Math.round(pct * 100) + '% din linia ' + IDEAS[ideaKey].of + '.';
+    }
+    $('wdEmoji').textContent = tpl ? IDEAS[ideaKey].e : '🌟'; $('wdTitle').textContent = stars === 3 ? 'Foarte bine!' : stars === 2 ? 'Bravo!' : 'Frumos început!';
+    $('wdStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars); $('wdText').textContent = text; $('wheelDone').hidden = false;
+}
+Object.keys(IDEAS).forEach(k => { const b = document.createElement('button'); b.className = 'chip'; b.dataset.k = k; b.type = 'button'; b.textContent = IDEAS[k].e + ' ' + IDEAS[k].n; b.addEventListener('click', () => pickIdea(k)); $('ideas').appendChild(b); });
+$('doneBtn').addEventListener('click', finishWheel);
+$('undoBtn3').addEventListener('click', () => profiles.pop());
+$('clearBtn3').addEventListener('click', () => { profiles = []; curProf = null; });
+$('merBtn').addEventListener('click', () => { const o = [8, 12, 20, 32]; mer = o[(o.indexOf(mer) + 1) % o.length]; $('merN').textContent = mer; });
+$('colBtn').addEventListener('click', () => { colorMode = (colorMode + 1) % 4; });
+$('saveBtn3').addEventListener('click', () => { render(); const a = document.createElement('a'); a.download = 'forma-fir-3d.png'; a.href = cv.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove(); say('Imaginea a fost salvată.', 'ok'); });
+$('modelBtn3').addEventListener('click', () => setMode('model'));
+$('wheelBtn1').addEventListener('click', () => setMode('wheel')); $('wheelBtn2').addEventListener('click', () => setMode('wheel'));
+$('goWheel').addEventListener('click', () => setMode('wheel'));
+$('wdMore').addEventListener('click', () => { $('wheelDone').hidden = true; });
+$('wdNext').addEventListener('click', () => { const ks = Object.keys(IDEAS), i = ks.indexOf(ideaKey); $('wheelDone').hidden = true; pickIdea(ks[(i + 1) % ks.length]); });
+
 /* ---------- moduri ---------- */
 function setMode(m) {
-    mode = m; $('overlay').hidden = true; $('bar').hidden = false; $('barModel').hidden = m !== 'model'; $('barFree').hidden = m !== 'free';
-    $('counterPill').hidden = m !== 'model'; cv.classList.toggle('pen', m === 'free' && pen); spin = false;
-    ['spinBtn1', 'spinBtn2'].forEach(id => $(id).classList.remove('on'));
-    if (m === 'model') loadShape(cur); else { $('title').textContent = 'Desen liber 3D'; say('Desenează, apoi apasă 🔄 Rotesc și privește firul din alt unghi!', 'ok'); }
+    mode = m; $('overlay').hidden = true; $('wheelDone').hidden = true; $('bar').hidden = false; $('barModel').hidden = m !== 'model'; $('barFree').hidden = m !== 'free'; $('barWheel').hidden = m !== 'wheel'; $('wheelTools').hidden = m !== 'wheel';
+    $('counterPill').hidden = m !== 'model'; cv.classList.toggle('pen', m === 'free' && pen); spin = (m === 'wheel' || m === 'free');
+    ['spinBtn1', 'spinBtn2', 'spinBtn3'].forEach(id => $(id).classList.toggle('on', spin));
+    if (m === 'model') loadShape(cur);
+    else if (m === 'wheel') { pitch = Math.max(pitch, .3); pitch = Math.min(pitch, .6); $('title').textContent = 'Roata de fir'; pickIdea(ideaKey, true); }
+    else { $('title').textContent = 'Desen liber 3D'; say('Scena se rotește singură, deci desenul tău devine 3D! Apasă ⏯ ca să oprești rotirea.', 'ok'); }
     setTimeout(resize, 30); setTimeout(() => { $('hint').className = ''; }, 3200);
 }
 function showMenu() { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; $('ovEmoji').textContent = '🧵'; $('ovTitle').textContent = 'Forma-fir-3D'; $('ovText').textContent = 'Construiește obiecte 3D din fire, ca pe un schelet. Alege cum vrei să lucrezi!'; $('overlay').hidden = false; }
@@ -348,8 +510,8 @@ $('modelBtn').addEventListener('click', () => setMode('model'));
 $('nextShape').addEventListener('click', () => { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; const i = SHAPE_ORDER.indexOf(cur); setMode('model'); loadShape(SHAPE_ORDER[(i + 1) % SHAPE_ORDER.length]); });
 $('ovFree').addEventListener('click', () => { $('quizBox').hidden = true; $('facts').hidden = true; $('ovAfter').hidden = true; $('ovModes').hidden = false; setMode('free'); });
 $('ghostBtn').addEventListener('click', () => { ghost = !ghost; $('ghostBtn').classList.toggle('on', ghost); });
-const toggleSpin = () => { spin = !spin; ['spinBtn1', 'spinBtn2'].forEach(id => $(id).classList.toggle('on', spin)); };
-$('spinBtn1').addEventListener('click', toggleSpin); $('spinBtn2').addEventListener('click', toggleSpin);
+const toggleSpin = () => { spin = !spin; ['spinBtn1', 'spinBtn2', 'spinBtn3'].forEach(id => $(id).classList.toggle('on', spin)); };
+$('spinBtn1').addEventListener('click', toggleSpin); $('spinBtn2').addEventListener('click', toggleSpin); $('spinBtn3').addEventListener('click', toggleSpin);
 $('undoBtn1').addEventListener('click', () => { if (finished) return; drawn.pop(); selected = -1; updateCounter(); });
 $('resetBtn1').addEventListener('click', () => { drawn = []; selected = -1; finished = false; updateCounter(); });
 $('penBtn').addEventListener('click', () => { pen = true; $('penBtn').classList.add('on'); $('rotBtn').classList.remove('on'); cv.classList.add('pen'); });
