@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa3.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Pizza fracțiilor – Jocuri Logice</title>
+<style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 62px 14px 30px; text-align: center; overscroll-behavior: none; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(2rem, 8vw, 2.7rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 6px auto 14px; max-width: 38ch; font: 600 1.02rem/1.4 var(--j-font-text); color: #5B5270; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #fff; border: 2px solid #E6E2EE; font: 700 1rem var(--j-font); color: #4A2370; }
+
+    /* meniu */
+    #menu { display: grid; gap: 12px; }
+    .mode { display: flex; align-items: center; gap: 14px; text-align: left; padding: 14px 16px; border: 2px solid #E6E2EE; border-radius: 22px; background: #fff; cursor: pointer; font: inherit; color: inherit; box-shadow: 0 5px 0 #E6E2EE; -webkit-tap-highlight-color: transparent; }
+    .mode:active { transform: translateY(3px); box-shadow: 0 2px 0 #E6E2EE; }
+    .mode .em { font-size: 2.1rem; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 16px; background: #EFE9F7; flex: none; }
+    .mode b { display: block; font: 700 1.2rem var(--j-font); color: #4A2370; }
+    .mode span.d { font: 600 .92rem/1.3 var(--j-font-text); color: #5B5270; }
+    .mode .best { margin-left: auto; font: 800 .85rem var(--j-font-text); color: #B87500; white-space: nowrap; }
+
+    /* joc */
+    #game { display: none; }
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .prog { display: inline-flex; gap: 6px; } .prog i { width: 13px; height: 13px; border-radius: 50%; background: #E6E2EE; } .prog i.on { background: #1FBF9A; } .prog i.cur { background: #FFB81C; }
+    .menuBtn { min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: #EFE9F7; color: #4A2370; font: 700 .95rem var(--j-font); cursor: pointer; }
+    #card { background: #fff; border: 2px solid #E6E2EE; border-radius: 28px; padding: 16px 14px 18px; box-shadow: 0 14px 30px -20px rgba(35,27,51,.5); }
+    #card.shake { animation: shake .35s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    #prompt { margin: 0 0 8px; font: 700 clamp(1.15rem, 5vw, 1.45rem)/1.35 var(--j-font); color: #4A2370; }
+    #note { margin: 0 0 8px; font: 700 .95rem/1.4 var(--j-font-text); color: #5B5270; min-height: 1.3em; }
+    #stage { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    #msg { min-height: 1.6em; margin: 10px 0 0; font: 800 1.05rem/1.4 var(--j-font-text); }
+    #msg.ok { color: #14937A; } #msg.bad { color: #B82A53; }
+
+    /* fracții */
+    .frac { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.05; font-family: var(--j-font); font-weight: 700; vertical-align: middle; margin: 0 3px; }
+    .frac b { padding: 0 6px; font-weight: 700; } .frac i { display: block; width: 100%; height: 3px; border-radius: 2px; background: currentColor; margin: 2px 0; }
+    .frac.big { font-size: 2.4rem; color: #E23B6B; }
+    .labels { display: flex; gap: 14px; justify-content: center; font: 800 .8rem var(--j-font-text); color: #5B5270; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* pizza */
+    svg.pizza { width: min(76vw, 300px); height: auto; touch-action: manipulation; }
+    svg.pizza.small { width: min(40vw, 190px); }
+    svg.pizza.mini { width: min(26vw, 120px); }
+    .sl path.f { fill: #EFE9F7; stroke: #fff; stroke-width: 3; transition: fill .15s; }
+    .sl path.c { fill: none; stroke: #D9CCEB; stroke-width: 12; transition: stroke .15s; }
+    .sl .pep { display: none; fill: #E23B6B; stroke: #B82A53; stroke-width: 1.5; }
+    .sl.on path.f { fill: #FFC93C; } .sl.on path.c { stroke: #E8A13B; } .sl.on .pep { display: block; }
+    svg.pizza.live .sl { cursor: pointer; }
+    .plate { fill: #fff; stroke: #E6E2EE; stroke-width: 3; }
+
+    /* butoane răspuns */
+    .opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; }
+    .opts.three { grid-template-columns: repeat(3, 1fr); }
+    .opt { min-height: 70px; border: 0; border-radius: 20px; font: 700 1.5rem var(--j-font); color: #fff; cursor: pointer; box-shadow: 0 5px 0 rgba(35,27,51,.28); -webkit-tap-highlight-color: transparent; }
+    .opt:nth-child(1) { background: #6A3BA0; } .opt:nth-child(2) { background: #E8541F; } .opt:nth-child(3) { background: #8E5BD6; } .opt:nth-child(4) { background: #D9356A; }
+    .opt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(35,27,51,.28); }
+    .opt.ok { background: #1FBF9A !important; color: #231B33; } .opt.no { background: #9A8FB0 !important; } .opt:disabled { cursor: default; }
+    .go { min-height: 54px; padding: 0 34px; border: 0; border-radius: 999px; background: #E23B6B; color: #fff; font: 700 1.2rem var(--j-font); cursor: pointer; box-shadow: 0 5px 0 #B82A53; }
+    .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #B82A53; }
+    .counter { font: 800 1rem var(--j-font-text); color: #5B5270; }
+
+    /* comparare / ordonare */
+    .duo { display: flex; gap: 10px; justify-content: center; align-items: flex-start; width: 100%; }
+    .duo > div { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; font-size: 1.7rem; color: #4A2370; }
+    .cards { display: flex; gap: 8px; justify-content: center; width: 100%; }
+    .fc { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px 6px; border: 3px solid #E6E2EE; border-radius: 20px; background: #fff; cursor: pointer; font: inherit; color: #4A2370; font-size: 1.5rem; -webkit-tap-highlight-color: transparent; }
+    .fc.picked { border-color: #1FBF9A; background: #DDF5EE; pointer-events: none; }
+    .fc.picked .n { display: grid; }
+    .fc .n { display: none; position: absolute; top: -10px; right: -6px; width: 28px; height: 28px; border-radius: 50%; place-items: center; background: #1FBF9A; color: #fff; font: 700 1rem var(--j-font); }
+    .fc.shake { animation: shake .35s; border-color: #E23B6B; }
+
+    /* final */
+    .jg-overlay { position: fixed; }
+    .stars { font-size: 2.4rem; letter-spacing: 4px; margin: 0; }
+</style>
+</head>
+<body class="jg">
+<main>
+    <h1>Pizza fracțiilor</h1>
+    <p class="sub" id="sub">Învățăm fracțiile cu felii de pizza. Alege un joc!</p>
+
+    <section id="menu" aria-label="Alege jocul"></section>
+
+    <section id="game" aria-live="polite">
+        <div class="bar"><div class="prog" id="prog"></div><span class="pill">⭐ <span id="score">0</span></span><button class="menuBtn" id="menuBtn" type="button">☰ Jocuri</button></div>
+        <div id="card">
+            <p id="prompt"></p>
+            <p id="note"></p>
+            <div id="stage"></div>
+            <p id="msg" role="status"></p>
+        </div>
+    </section>
+</main>
+
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji" id="ovEmoji">🍕</div>
+    <h1 class="jg-title" id="ovTitle">Bravo!</h1>
+    <p class="stars" id="ovStars"></p>
+    <p class="jg-text" id="ovText"></p>
+    <button class="jg-btn" id="ovAgain" type="button">Joacă din nou</button>
+    <button class="jg-btn alt" id="ovMenu" type="button">Alt joc</button>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const shuffle = (a) => [...a].sort(() => Math.random() - .5);
+const Q = 6;                                         // întrebări într-o rundă
+const NAMES = { 2: ['doime', 'doimi'], 3: ['treime', 'treimi'], 4: ['pătrime', 'pătrimi'], 5: ['cincime', 'cincimi'], 6: ['șesime', 'șesimi'], 7: ['șeptime', 'șeptimi'], 8: ['optime', 'optimi'], 9: ['noime', 'noimi'], 10: ['zecime', 'zecimi'] };
+const frac = (n, d, cls) => '<span class="frac ' + (cls || '') + '"><b>' + n + '</b><i></i><b>' + d + '</b></span>';
+const words = (n, d) => n === d ? 'întregul' : (n === 1 ? 'o ' + NAMES[d][0] : n + ' ' + NAMES[d][1]);
+
+/* ---------- pizza (SVG) ---------- */
+function pizza(d, selected, cls, onTap) {
+    const R = 100, C = 110, pt = (a, r) => [C + r * Math.cos(a), C + r * Math.sin(a)];
+    let s = '<svg class="pizza ' + (cls || '') + (onTap ? ' live' : '') + '" viewBox="0 0 220 220" role="img" aria-label="Pizza tăiată în ' + d + ' felii, ' + selected.size + ' colorate"><circle class="plate" cx="110" cy="110" r="108"/>';
+    for (let i = 0; i < d; i++) {
+        const a0 = -Math.PI / 2 + i * 2 * Math.PI / d, a1 = a0 + 2 * Math.PI / d, large = (a1 - a0) > Math.PI ? 1 : 0;
+        const [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R), [c0x, c0y] = pt(a0, 94), [c1x, c1y] = pt(a1, 94), am = (a0 + a1) / 2;
+        const pr = Math.max(4, Math.min(10, R * Math.sin(Math.PI / d) * .26 + 2));
+        let pep = ''; [[d <= 3 ? 52 : 60, 0], [d <= 6 ? 80 : 0, 0]].forEach(([r]) => { if (r) { const [px, py] = pt(am, r); pep += '<circle class="pep" cx="' + px.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="' + pr.toFixed(1) + '"/>'; } });
+        s += '<g class="sl' + (selected.has(i) ? ' on' : '') + '" data-i="' + i + '"><path class="f" d="M' + C + ' ' + C + ' L' + x0.toFixed(1) + ' ' + y0.toFixed(1) + ' A' + R + ' ' + R + ' 0 ' + large + ' 1 ' + x1.toFixed(1) + ' ' + y1.toFixed(1) + ' Z"/>'
+            + '<path class="c" d="M' + c0x.toFixed(1) + ' ' + c0y.toFixed(1) + ' A94 94 0 ' + large + ' 1 ' + c1x.toFixed(1) + ' ' + c1y.toFixed(1) + '"/>' + pep + '</g>';
+    }
+    s += '</svg>';
+    const wrap = document.createElement('div'); wrap.innerHTML = s; const el = wrap.firstChild;
+    if (onTap) el.querySelectorAll('.sl').forEach(g => g.addEventListener('click', () => onTap(Number(g.dataset.i), g)));
+    return el;
+}
+const contiguous = (d, k) => { const st = rnd(0, d - 1), set = new Set(); for (let i = 0; i < k; i++) set.add((st + i) % d); return set; };
+
+/* ---------- starea rundei ---------- */
+let mode = null, qi = 0, score = 0, firstTries = 0, tries = 0, locked = false, best = {}, current = null;
+try { best = JSON.parse(localStorage.getItem('pizza_best') || '{}'); } catch (e) {}
+const MODES = {
+    color:   { name: 'Colorează fracția',      em: '🎨', desc: 'Colorează feliile cerute de fracție.', run: qColor },
+    read:    { name: 'Ce fracție este?',        em: '👀', desc: 'Citește fracția din pizza colorată.', run: qRead },
+    compare: { name: 'Compară fracțiile',      em: '⚖️', desc: 'Care fracție e mai mare? (același numitor)', run: qCompare },
+    order:   { name: 'Ordonează fracțiile',     em: '🔢', desc: 'De la cea mai mică la cea mai mare.', run: qOrder },
+    terms:   { name: 'Numitor și numărător',    em: '📖', desc: 'Ce arată fiecare număr din fracție?', run: qTerms },
+};
+function saveBest() { try { localStorage.setItem('pizza_best', JSON.stringify(best)); } catch (e) {} }
+
+function buildMenu() {
+    const m = $('menu'); m.innerHTML = '';
+    Object.keys(MODES).forEach(k => {
+        const M = MODES[k], b = document.createElement('button'); b.className = 'mode'; b.type = 'button';
+        b.innerHTML = '<span class="em">' + M.em + '</span><span><b>' + M.name + '</b><span class="d">' + M.desc + '</span></span>' + (best[k] ? '<span class="best">🏆 ' + best[k] + '</span>' : '');
+        b.addEventListener('click', () => start(k)); m.appendChild(b);
+    });
+}
+function showMenu() { $('game').style.display = 'none'; $('menu').style.display = 'grid'; $('sub').style.display = ''; $('overlay').hidden = true; buildMenu(); }
+function start(k) {
+    mode = k; qi = 0; score = 0; firstTries = 0; $('score').textContent = '0'; $('overlay').hidden = true;
+    $('menu').style.display = 'none'; $('sub').style.display = 'none'; $('game').style.display = 'block'; next();
+}
+function next() {
+    if (qi >= Q) return finish();
+    locked = false; tries = 0; $('msg').textContent = ''; $('msg').className = '';
+    $('prog').innerHTML = Array.from({ length: Q }, (_, i) => '<i class="' + (i < qi ? 'on' : i === qi ? 'cur' : '') + '"></i>').join('');
+    $('stage').innerHTML = ''; $('note').textContent = '';
+    MODES[mode].run(qi);
+}
+function ok(extra) {
+    if (locked) return; locked = true;
+    const first = tries === 0; score += first ? 10 : 5; if (first) firstTries++; $('score').textContent = score;
+    const m = $('msg'); m.textContent = (['Bravo!', 'Super!', 'Excelent!', 'Corect!'][qi % 4]) + (extra ? ' ' + extra : ''); m.className = 'ok';
+    qi++; setTimeout(next, 1700);
+}
+function wrong(text) {
+    tries++; $('card').classList.add('shake'); setTimeout(() => $('card').classList.remove('shake'), 400);
+    const m = $('msg'); m.textContent = text || 'Aproape! Mai încearcă.'; m.className = 'bad';
+}
+function finish() {
+    if (!best[mode] || score > best[mode]) { best[mode] = score; saveBest(); }
+    const stars = firstTries >= Q - 1 ? 3 : firstTries >= Q / 2 ? 2 : 1;
+    $('ovEmoji').textContent = stars === 3 ? '🍕' : '🙂'; $('ovTitle').textContent = stars === 3 ? 'Maestru pizzar!' : stars === 2 ? 'Foarte bine!' : 'Bravo, exersăm mai departe!';
+    $('ovStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    $('ovText').textContent = 'Ai răspuns corect din prima la ' + firstTries + ' din ' + Q + ' întrebări. Puncte: ' + score + '.';
+    $('overlay').hidden = false;
+}
+$('ovAgain').addEventListener('click', () => start(mode)); $('ovMenu').addEventListener('click', showMenu); $('menuBtn').addEventListener('click', showMenu);
+
+/* ---------- 1. Colorează ---------- */
+function qColor(i) {
+    const dmax = i < 2 ? 4 : i < 4 ? 6 : 10, d = rnd(2, dmax), k = Math.random() < .12 ? d : rnd(1, d - 1);
+    $('prompt').innerHTML = 'Colorează ' + frac(k, d, 'big') + ' din pizza.';
+    $('note').textContent = 'Numitorul ' + d + ': pizza e tăiată în ' + d + ' felii egale. Numărătorul ' + k + ': colorezi ' + k + ' felii.';
+    const sel = new Set(), cnt = document.createElement('div'); cnt.className = 'counter';
+    const upd = () => { cnt.textContent = 'Colorate: ' + sel.size + ' din ' + d + ' felii'; };
+    const pz = pizza(d, sel, '', (idx, g) => { if (locked) return; sel.has(idx) ? sel.delete(idx) : sel.add(idx); g.classList.toggle('on', sel.has(idx)); upd(); });
+    const go = document.createElement('button'); go.className = 'go'; go.type = 'button'; go.textContent = 'Verifică';
+    go.addEventListener('click', () => {
+        if (locked) return;
+        if (sel.size === k) ok('Ai colorat ' + k + '/' + d + ' = ' + words(k, d) + '.');
+        else wrong('Ai colorat ' + sel.size + ' felii, iar fracția ' + k + '/' + d + ' cere ' + k + ' felii.');
+    });
+    upd(); $('stage').append(pz, cnt, go);
+}
+
+/* ---------- 2. Ce fracție este? ---------- */
+function qRead(i) {
+    const dmax = i < 2 ? 4 : i < 4 ? 6 : 10, d = rnd(2, dmax), k = Math.random() < .12 ? d : rnd(1, d - 1);
+    $('prompt').textContent = 'Ce fracție din pizza este colorată?';
+    const cand = [[k + 1, d], [k - 1, d], [d - k, d], [k, d + 1], [k, Math.max(2, d - 1)], [k + 2, d]].filter(([n, m]) => n >= 1 && m >= 2 && m <= 10 && !(n === k && m === d));
+    const wr = []; cand.forEach(c => { if (!wr.some(w => w[0] === c[0] && w[1] === c[1]) && wr.length < 3) wr.push(c); });
+    const opts = shuffle([[k, d], ...wr]);
+    $('stage').append(pizza(d, contiguous(d, k), ''));
+    $('note').textContent = 'Numără feliile colorate și feliile pizzei.';
+    const box = document.createElement('div'); box.className = 'opts';
+    opts.forEach(([n, m]) => {
+        const b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.innerHTML = frac(n, m);
+        b.addEventListener('click', () => { if (locked) return; if (n === k && m === d) { b.classList.add('ok'); ok('Sunt ' + words(k, d) + '.'); } else { b.classList.add('no'); b.disabled = true; wrong('Numără din nou: ' + k + ' felii colorate din ' + d + '.'); } });
+        box.appendChild(b);
+    });
+    $('stage').appendChild(box);
+}
+
+/* ---------- 3. Compară ---------- */
+function qCompare(i) {
+    const d = rnd(3, i < 3 ? 6 : 10); let a = rnd(1, d - 1), b = rnd(1, d - 1); if (Math.random() < .15) b = a; else while (b === a) b = rnd(1, d - 1);
+    $('prompt').textContent = 'Compară fracțiile.'; $('note').textContent = 'Numitorul este la fel, deci te uiți la câte felii sunt colorate.';
+    const duo = document.createElement('div'); duo.className = 'duo';
+    [[a], [b]].forEach(([n]) => { const c = document.createElement('div'); c.append(pizza(d, contiguous(d, n), 'small')); const f = document.createElement('div'); f.innerHTML = frac(n, d); c.append(f); duo.append(c); });
+    const box = document.createElement('div'); box.className = 'opts three';
+    const right = a < b ? '<' : a > b ? '>' : '=';
+    ['<', '=', '>'].forEach(sg => {
+        const bt = document.createElement('button'); bt.className = 'opt'; bt.type = 'button'; bt.textContent = sg;
+        bt.addEventListener('click', () => { if (locked) return; if (sg === right) { bt.classList.add('ok'); ok(a + '/' + d + ' ' + right + ' ' + b + '/' + d + '.'); } else { bt.classList.add('no'); bt.disabled = true; wrong('Mai multe felii colorate înseamnă fracția mai mare.'); } });
+        box.appendChild(bt);
+    });
+    $('stage').append(duo, box);
+}
+
+/* ---------- 4. Ordonează ---------- */
+function qOrder(i) {
+    const d = rnd(4, i < 3 ? 7 : 10), n = Math.min(i < 2 ? 3 : 4, d - 1), nums = shuffle(Array.from({ length: d - 1 }, (_, x) => x + 1)).slice(0, n);
+    const asc = [...nums].sort((x, y) => x - y); let pos = 0;
+    $('prompt').textContent = 'Atinge fracțiile de la cea mai mică la cea mai mare.'; $('note').textContent = 'Toate au numitorul ' + d + '.';
+    const row = document.createElement('div'); row.className = 'cards';
+    nums.forEach(k => {
+        const c = document.createElement('button'); c.className = 'fc'; c.type = 'button';
+        c.append(pizza(d, contiguous(d, k), 'mini')); const f = document.createElement('div'); f.innerHTML = frac(k, d); c.append(f);
+        const nb = document.createElement('span'); nb.className = 'n'; c.append(nb);
+        c.addEventListener('click', () => {
+            if (locked) return;
+            if (k === asc[pos]) { pos++; c.classList.add('picked'); nb.textContent = pos; if (pos === n) ok('Ordinea: ' + asc.map(x => x + '/' + d).join(' < ') + '.'); }
+            else { c.classList.add('shake'); setTimeout(() => c.classList.remove('shake'), 400); wrong('Caută fracția cu mai puține felii colorate.'); }
+        });
+        row.appendChild(c);
+    });
+    $('stage').appendChild(row);
+}
+
+/* ---------- 5. Numitor și numărător ---------- */
+function qTerms(i) {
+    const d = rnd(2, i < 3 ? 6 : 10), k = rnd(1, d - 1), askDen = Math.random() < .5, right = askDen ? d : k;
+    $('prompt').innerHTML = 'Fracția ' + frac(k, d, 'big') + '. Care este ' + (askDen ? '<u>numitorul</u>' : '<u>numărătorul</u>') + '?';
+    $('note').textContent = 'Pizza are ' + d + ' felii egale și ' + k + ' sunt colorate.';
+    $('stage').append(pizza(d, contiguous(d, k), 'small'));
+    const pool = [...new Set([d, k, d - k, d + 1, k + 1, 1].filter(x => x >= 1 && x <= 11))]; const wr = shuffle(pool.filter(x => x !== right)).slice(0, 3);
+    const box = document.createElement('div'); box.className = 'opts';
+    shuffle([right, ...wr]).forEach(v => {
+        const b = document.createElement('button'); b.className = 'opt'; b.type = 'button'; b.textContent = v;
+        b.addEventListener('click', () => {
+            if (locked) return;
+            if (v === right) { b.classList.add('ok'); ok(askDen ? 'Numitorul arată în câte părți egale e împărțit întregul.' : 'Numărătorul arată câte părți luăm din întreg.'); }
+            else { b.classList.add('no'); b.disabled = true; wrong(askDen ? 'Numitorul e numărul de jos: câte felii are toată pizza.' : 'Numărătorul e numărul de sus: câte felii sunt colorate.'); }
+        });
+        box.appendChild(b);
+    });
+    $('stage').appendChild(box);
+}
+
+buildMenu();
+</script>
+<script src="joc.js"></script>
+</body>
+</html>
