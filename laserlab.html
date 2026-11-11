@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Laser Lab - Jocuri Logice</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(ellipse at 50% 0%,#24395b,#101c32 48%,#080e1b);
+    color:#edf5ff;
+    font-family:Inter,Arial,sans-serif;
+    padding:25px 15px;
+}
+
+.app{max-width:850px;margin:auto}
+
+header{text-align:center;margin-bottom:25px}
+
+.logo{
+    font-size:36px;
+    font-weight:900;
+    letter-spacing:5px;
+    color:#a9eaff;
+    text-shadow:0 0 25px #36baff66;
+}
+
+.subtitle{
+    font-size:13px;
+    color:#94a9c6;
+    margin-top:8px;
+    letter-spacing:1px;
+}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.stat{
+    flex:1;
+    max-width:180px;
+    padding:14px;
+    border-radius:18px;
+    background:linear-gradient(145deg,#1d304d,#14233a);
+    border:1px solid #344c6b;
+    text-align:center;
+}
+
+.stat small{
+    display:block;
+    color:#91a8c6;
+    font-size:10px;
+    letter-spacing:1.5px;
+    margin-bottom:7px;
+}
+
+.stat strong{color:#9de8ff;font-size:21px}
+
+.panel{
+    padding:22px;
+    border-radius:28px;
+    background:linear-gradient(145deg,#172a45,#101d32);
+    border:1px solid #304765;
+    box-shadow:0 25px 70px #0005;
+}
+
+.level-info{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:18px;
+}
+
+.level-info h2{margin:0;font-size:19px}
+
+.chapter-label{
+    color:#83dff5;
+    font-size:10px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:5px;
+}
+
+.stars{color:#ffd76b;font-size:22px;letter-spacing:3px}
+
+/* LABORATORUL */
+
+.lab{
+    width:100%;
+    max-width:540px;
+    margin:auto;
+    padding:10px;
+    border-radius:50%;
+    background:radial-gradient(circle,#1a3552,#11243d 58%,#0d1b30);
+    border:1px solid #395675;
+    box-shadow:inset 0 0 50px #0005,0 0 45px #2b83b522;
+}
+
+#board{
+    width:100%;
+    aspect-ratio:1;
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(8,1fr);
+    grid-template-rows:repeat(8,1fr);
+    border-radius:50%;
+    overflow:hidden;
+    background:radial-gradient(circle,#203b58,#132944 65%,#102039);
+}
+
+#board::before{
+    content:"";
+    position:absolute;
+    inset:5%;
+    border:1px solid #8bb8d015;
+    border-radius:50%;
+    pointer-events:none;
+}
+
+#board::after{
+    content:"";
+    position:absolute;
+    inset:18%;
+    border:1px solid #8bb8d012;
+    border-radius:50%;
+    pointer-events:none;
+}
+
+.cell{
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:2;
+    min-width:0;
+    min-height:0;
+}
+
+/* OGLINZI SUBTIRI */
+
+.cell.mirror{
+    cursor:pointer;
+    z-index:4;
+}
+
+.mirror-disc{
+    width:100%;
+    height:100%;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:none;
+    border:none;
+    border-radius:0;
+    box-shadow:none;
+    transition:transform .2s;
+}
+
+.mirror-surface{
+    position:relative;
+    width:96%;
+    height:8px;
+    border-radius:3px;
+
+    background:linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #d9f7ff 18%,
+        #8edcff 45%,
+        #e8fbff 65%,
+        #75a9ca 100%
+    );
+
+    border:1px solid #e5faff;
+
+    box-shadow:
+        0 1px 3px #000a,
+        0 0 5px #a9eaff,
+        0 0 12px #39bfff88;
+
+    transition:transform .3s;
+    z-index:2;
+}
+
+.mirror-surface::before{
+    content:"";
+    position:absolute;
+    left:8%;
+    top:1px;
+    width:35%;
+    height:1px;
+    background:white;
+    box-shadow:0 0 4px white;
+}
+
+.mirror-surface::after{
+    content:"";
+    position:absolute;
+    right:4%;
+    bottom:-3px;
+    width:65%;
+    height:2px;
+    border-radius:3px;
+    background:#29445d;
+}
+
+.mirror-surface.slash{
+    transform:rotate(-45deg);
+}
+
+.mirror-surface.slash-back{
+    transform:rotate(45deg);
+}
+
+.cell.mirror:active .mirror-disc{
+    transform:scale(.9);
+}
+
+/* SURSA */
+
+.source-disc{
+    width:65%;
+    height:65%;
+    border-radius:50%;
+    background:radial-gradient(circle,#b5ffe3,#20dba0 50%,#087b67);
+    border:2px solid #8dffdf;
+    box-shadow:0 0 12px #00ffb2,0 0 30px #00ffb255;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(12px,3vw,21px);
+    position:relative;
+    z-index:8;
+}
+
+/* TINTA */
+
+.target-disc{
+    width:65%;
+    height:65%;
+    border-radius:50%;
+    border:3px solid #cf91ff;
+    background:radial-gradient(circle,#a54bff44,#6427aa22);
+    box-shadow:0 0 15px #b35aff77,inset 0 0 12px #b35aff55;
+    position:relative;
+    z-index:8;
+    animation:pulse 2s infinite;
+}
+
+.target-disc::after{
+    content:"";
+    position:absolute;
+    inset:25%;
+    border-radius:50%;
+    background:#e0a9ff;
+    box-shadow:0 0 15px #d58aff;
+}
+
+.target-disc.hit{
+    background:#26d69c;
+    border-color:#a4ffe1;
+    box-shadow:0 0 25px #00ffb9;
+}
+
+.target-disc.hit::after{
+    background:white;
+    box-shadow:0 0 20px white;
+}
+
+@keyframes pulse{
+    50%{box-shadow:0 0 25px #c36affaa}
+}
+
+/* OBSTACOLE */
+
+.obstacle-disc{
+    width:48%;
+    height:48%;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#66758c,#202d43 70%);
+    border:1px solid #7889a0;
+    box-shadow:inset 0 0 12px #0008,0 0 10px #0005;
+}
+
+/* LASER - DEASUPRA OGLINZILOR */
+
+.beam-svg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    z-index:6;
+    pointer-events:none;
+    overflow:visible;
+}
+
+.beam-glow{
+    fill:none;
+    stroke:#ff294c;
+    stroke-width:12;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    filter:blur(7px);
+    opacity:.7;
+}
+
+.beam-core{
+    fill:none;
+    stroke:#ff3558;
+    stroke-width:3;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    filter:drop-shadow(0 0 5px #ff294c);
+}
+
+.beam-white{
+    fill:none;
+    stroke:#ffd8df;
+    stroke-width:1;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:.9;
+}
+
+.beam-animated{
+    stroke-dasharray:15 12;
+    animation:beamMove .35s linear infinite;
+}
+
+@keyframes beamMove{
+    to{stroke-dashoffset:-27}
+}
+
+/* CONTROALE */
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    margin-top:24px;
+}
+
+button{
+    padding:13px 20px;
+    border:1px solid #405d7c;
+    border-radius:30px;
+    background:#203957;
+    color:#e7f5ff;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    transition:.25s;
+}
+
+button:hover{
+    background:#2b5279;
+    transform:translateY(-2px);
+}
+
+.primary{
+    background:linear-gradient(135deg,#40d9ec,#3699e8);
+    color:#092039;
+    border:0;
+    box-shadow:0 5px 20px #31b9e733;
+}
+
+.primary:hover{
+    background:linear-gradient(135deg,#70eaff,#50b8ff);
+}
+
+.hint{
+    background:#49386d;
+    border-color:#7861a8;
+}
+
+.message{
+    text-align:center;
+    color:#a8c2df;
+    margin-top:20px;
+    min-height:25px;
+    font-size:14px;
+}
+
+.instructions{
+    margin-top:25px;
+    padding:18px 20px;
+    border-radius:18px;
+    background:#0c1a2d;
+    border:1px solid #293e59;
+    color:#a6bad4;
+    font-size:13px;
+    line-height:1.9;
+}
+
+.instructions strong{color:#8ce6ff}
+
+/* VICTORIE */
+
+.overlay{
+    position:fixed;
+    inset:0;
+    background:#050b16ed;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:10;
+}
+
+.modal{
+    width:100%;
+    max-width:380px;
+    padding:35px;
+    border-radius:28px;
+    text-align:center;
+    background:linear-gradient(145deg,#203c5e,#13233c);
+    border:1px solid #5c8ab0;
+    box-shadow:0 0 60px #00baff33;
+}
+
+.modal h2{color:#9deaff;font-size:30px}
+.big-stars{color:#ffd76b;font-size:35px;margin:20px}
+
+@media(max-width:550px){
+    body{padding:12px 7px}
+    .logo{font-size:29px}
+    .panel{padding:12px}
+    .lab{padding:5px}
+    .stats{gap:5px}
+    .stat{padding:10px 3px}
+    .stat strong{font-size:17px}
+    button{padding:12px 14px;font-size:12px}
+    .mirror-surface{height:6px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="logo">⚡ LASER LAB</div>
+    <div class="subtitle">LABORATORUL REFLEXIILOR LUMINOASE</div>
+</header>
+
+<div class="stats">
+    <div class="stat">
+        <small>NIVEL</small>
+        <strong id="levelNumber">1 / 30</strong>
+    </div>
+    <div class="stat">
+        <small>PUNCTAJ</small>
+        <strong id="score">0</strong>
+    </div>
+    <div class="stat">
+        <small>COMPLETATE</small>
+        <strong id="completed">0 / 30</strong>
+    </div>
+</div>
+
+<div class="panel">
+
+    <div class="level-info">
+        <div>
+            <div class="chapter-label" id="chapterLabel">CAPITOLUL 1 · INIȚIERE</div>
+            <h2 id="levelTitle">Primii pași</h2>
+        </div>
+        <div class="stars" id="stars">★★★</div>
+    </div>
+
+    <div class="lab">
+        <div id="board"></div>
+    </div>
+
+    <div class="message" id="message" aria-live="polite">
+        Rotește oglinzile pentru a activa cristalul!
+    </div>
+
+    <div class="controls">
+        <button class="primary" onclick="fireLaser()">⚡ ACTIVEAZĂ LASERUL</button>
+        <button onclick="resetLevel()">↻ RESET</button>
+        <button class="hint" onclick="showHint()">✧ INDICIU</button>
+        <button onclick="nextLevel()">URMĂTORUL →</button>
+    </div>
+
+    <div class="instructions">
+        <strong>✦ CUM SE JOACĂ?</strong><br>
+        ⚡ Laserul pornește din sursa verde.<br>
+        🪞 Apasă pe oglinzi pentru a le roti.<br>
+        🎯 Direcționează fasciculul către cristalul violet.<br>
+        ⭐ Rezolvă puzzle-urile cu cât mai puține încercări!
+    </div>
+
+</div>
+</div>
+
+<div class="overlay" id="winOverlay">
+    <div class="modal">
+        <h2>✨ EXCELENT!</h2>
+        <p>Ai activat cristalul!</p>
+        <div class="big-stars" id="winStars">★★★</div>
+        <p id="winMessage"></p>
+        <button class="primary" onclick="continueGame()">CONTINUĂ →</button>
+    </div>
+</div>
+
+<script>
+
+/* ==========================================
+   GENERAREA CELOR 30 DE NIVELURI
+========================================== */
+
+const names=[
+"Primii pași","Reflexia","Prima cotitură","Traseul luminii",
+"Oglinda secretă","Două reflexii","Labirintul albastru",
+"Drumul cristalului","Reflexii multiple","Provocarea luminii",
+"Laboratorul ascuns","Drumul în zigzag","Oglinzi în lanț",
+"Traseul dificil","Camera cristalelor","Reflexia dublă",
+"Labirintul optic","Fasciculul pierdut","Enigma oglinzilor",
+"Maestrul reflexiilor","Poarta luminii","Traseul imposibil",
+"Labirintul secret","Reflexia perfectă","Camera finală",
+"Drumul maestrului","Enigma laserului","Ultima reflexie",
+"Provocarea supremă","Maestrul laserelor"
+];
+
+const levels=[];
+
+function seededRandom(seed){
+    let x=seed;
+    return function(){
+        x=(x*1664525+1013904223)>>>0;
+        return x/4294967296;
+    };
+}
+
+function reflect(dx,dy,direction){
+    if(direction==="/"){
+        return [-dy,-dx];
+    }
+    return [dy,dx];
+}
+
+function insideCircle(x,y){
+    const nx=(x+0.5-4)/4;
+    const ny=(y+0.5-4)/4;
+    return Math.sqrt(nx*nx+ny*ny)<=0.91;
+}
+
+function getMirrorDirection(dx,dy,nx,ny){
+    const slash=reflect(dx,dy,"/");
+    if(slash[0]===nx && slash[1]===ny)return "/";
+    return "\\";
+}
+
+function createLevel(index){
+
+    const random=seededRandom(9182+index*731);
+
+    // Primele două niveluri au câte o singură oglindă.
+    const turns=index<2
+        ?1
+        :Math.min(7,2+Math.floor(index/5));
+
+    for(let attempt=0;attempt<10000;attempt++){
+
+        let x=0;
+        let y=3;
+        let dx=1;
+        let dy=0;
+
+        const mirrors=[];
+        const path=[];
+        const visited=new Set(["0,3"]);
+
+        let valid=true;
+
+        function move(steps){
+
+            for(let s=0;s<steps;s++){
+
+                x+=dx;
+                y+=dy;
+
+                if(x<0||x>7||y<0||y>7||!insideCircle(x,y)){
+                    valid=false;
+                    return;
+                }
+
+                const key=x+","+y;
+
+                if(visited.has(key)){
+                    valid=false;
+                    return;
+                }
+
+                visited.add(key);
+                path.push([x,y]);
+            }
+        }
+
+        for(let t=0;t<turns;t++){
+
+            /*
+             * Minimum două celule între oglinzi.
+             * Astfel, elementele nu se mai ating
+             * și nu se mai suprapun vizual.
+             */
+            const steps=2+Math.floor(random()*2);
+
+            move(steps);
+
+            if(!valid)break;
+
+            const turn=random()<0.5?"L":"R";
+
+            let nx,ny;
+
+            if(turn==="L"){
+                nx=-dy;
+                ny=dx;
+            }else{
+                nx=dy;
+                ny=-dx;
+            }
+
+            const direction=getMirrorDirection(dx,dy,nx,ny);
+
+            mirrors.push({
+                x,y,
+                solution:direction
+            });
+
+            dx=nx;
+            dy=ny;
+        }
+
+        if(!valid)continue;
+
+        const finalSteps=1+Math.floor(random()*3);
+
+        move(finalSteps);
+
+        if(!valid)continue;
+
+        if(x===0&&y===3)continue;
+
+        const obstacles=[];
+
+        const occupied=new Set(path.map(p=>p[0]+","+p[1]));
+
+        occupied.add("0,3");
+        occupied.add(x+","+y);
+
+        mirrors.forEach(m=>{
+            occupied.add(m.x+","+m.y);
+        });
+
+        const obstacleCount=Math.min(2+Math.floor(index/7),5);
+
+        let tries=0;
+
+        while(obstacles.length<obstacleCount&&tries<300){
+
+            tries++;
+
+            const ox=Math.floor(random()*8);
+            const oy=Math.floor(random()*8);
+
+            const key=ox+","+oy;
+
+            if(!insideCircle(ox,oy))continue;
+            if(occupied.has(key))continue;
+
+            occupied.add(key);
+            obstacles.push([ox,oy]);
+        }
+
+        return {
+            title:names[index],
+            mirrors:mirrors.map(m=>[m.x,m.y,m.solution]),
+            target:[x,y],
+            obstacles:obstacles
+        };
+    }
+
+    // Nivel de rezervă, cu o singură oglindă.
+    return {
+        title:names[index],
+        mirrors:[[3,3,"/"]],
+        target:[3,1],
+        obstacles:[]
+    };
+}
+
+for(let i=0;i<30;i++){
+    levels.push(createLevel(i));
+}
+
+
+/* ==========================================
+   STAREA JOCULUI
+========================================== */
+
+let currentLevel=0;
+
+let score=Number(localStorage.getItem("laserScore")||0);
+
+let completedLevels=JSON.parse(
+    localStorage.getItem("laserCompleted")||"[]"
+);
+
+let unlockedLevel=Math.max(
+    0,
+    Number(localStorage.getItem("laserUnlocked")||0)
+);
+
+let mirrors=[];
+let attempts=0;
+let solved=false;
+let beamCells=[];
+
+const board=document.getElementById("board");
+
+
+/* ==========================================
+   ÎNCĂRCARE NIVEL
+========================================== */
+
+function loadLevel(){
+
+    solved=false;
+    attempts=0;
+    beamCells=[];
+
+    const level=levels[currentLevel];
+
+    mirrors=level.mirrors.map(m=>({
+        x:m[0],
+        y:m[1],
+        direction:m[2]==="/"?"\\":"/"
+    }));
+
+    document.getElementById("levelNumber").textContent=
+        (currentLevel+1)+" / 30";
+
+    document.getElementById("levelTitle").textContent=
+        level.title;
+
+    const chapter=Math.floor(currentLevel/10)+1;
+
+    const chapterNames=[
+        "INIȚIERE",
+        "EXPERIMENTARE",
+        "MAESTRUL"
+    ];
+
+    document.getElementById("chapterLabel").textContent=
+        "CAPITOLUL "+chapter+" · "+chapterNames[chapter-1];
+
+    document.getElementById("message").textContent=
+        "Rotește oglinzile și găsește traseul corect!";
+
+    updateStats();
+    drawBoard();
+}
+
+
+/* ==========================================
+   STATISTICI
+========================================== */
+
+function updateStats(){
+
+    document.getElementById("score").textContent=score;
+
+    document.getElementById("completed").textContent=
+        completedLevels.length+" / 30";
+
+    localStorage.setItem("laserScore",score);
+}
+
+
+/* ==========================================
+   DESENAREA TABLOULUI
+========================================== */
+
+function drawBoard(){
+
+    board.innerHTML="";
+
+    const level=levels[currentLevel];
+
+    for(let y=0;y<8;y++){
+
+        for(let x=0;x<8;x++){
+
+            const cell=document.createElement("div");
+            cell.className="cell";
+
+            if(x===0&&y===3){
+
+                const source=document.createElement("div");
+                source.className="source-disc";
+                source.textContent="⚡";
+
+                cell.appendChild(source);
+            }
+
+            if(x===level.target[0]&&y===level.target[1]){
+
+                const target=document.createElement("div");
+                target.className="target-disc";
+
+                if(solved)target.classList.add("hit");
+
+                cell.appendChild(target);
+            }
+
+            if(level.obstacles.some(o=>o[0]===x&&o[1]===y)){
+
+                const obstacle=document.createElement("div");
+                obstacle.className="obstacle-disc";
+
+                cell.appendChild(obstacle);
+            }
+
+            const mirror=mirrors.find(m=>m.x===x&&m.y===y);
+
+            if(mirror){
+
+                cell.classList.add("mirror");
+
+                const disc=document.createElement("div");
+                disc.className="mirror-disc";
+
+                const surface=document.createElement("div");
+                surface.className="mirror-surface";
+
+                surface.classList.add(
+                    mirror.direction==="/"
+                    ?"slash"
+                    :"slash-back"
+                );
+
+                disc.appendChild(surface);
+                cell.appendChild(disc);
+
+                cell.onclick=()=>{
+
+                    if(solved)return;
+
+                    mirror.direction=
+                        mirror.direction==="/"?"\\":"/";
+
+                    beamCells=[];
+                    drawBoard();
+
+                    document.getElementById("message").textContent=
+                        "Oglindă rotită! Activează laserul.";
+                };
+            }
+
+            board.appendChild(cell);
+        }
+    }
+
+    /*
+     * SVG-ul este adăugat DUPĂ celule.
+     * Astfel fasciculul este vizibil peste oglinzi.
+     */
+    if(beamCells.length){
+
+        const svg=document.createElementNS(
+            "http://www.w3.org/2000/svg","svg"
+        );
+
+        svg.setAttribute("viewBox","0 0 800 800");
+        svg.setAttribute("preserveAspectRatio","none");
+        svg.classList.add("beam-svg");
+
+        let points="50,350";
+
+        beamCells.forEach(p=>{
+            points+=" "+(p.x*100+50)+","+(p.y*100+50);
+        });
+
+        const makePath=(className)=>{
+
+            const path=document.createElementNS(
+                "http://www.w3.org/2000/svg","polyline"
+            );
+
+            path.setAttribute("points",points);
+            path.setAttribute("class",className);
+
+            return path;
+        };
+
+        svg.appendChild(makePath("beam-glow"));
+        svg.appendChild(makePath("beam-core beam-animated"));
+        svg.appendChild(makePath("beam-white"));
+
+        board.appendChild(svg);
+    }
+}
+
+
+/* ==========================================
+   CALCULUL TRASEULUI LASERULUI
+========================================== */
+
+function calculateBeam(){
+
+    const level=levels[currentLevel];
+
+    let x=0,y=3;
+    let dx=1,dy=0;
+
+    const path=[];
+    const visited=new Set();
+
+    let hit=false;
+
+    for(let i=0;i<100;i++){
+
+        x+=dx;
+        y+=dy;
+
+        if(x<0||x>7||y<0||y>7)break;
+
+        const key=x+","+y;
+
+        if(visited.has(key))break;
+
+        visited.add(key);
+        path.push({x,y});
+
+        if(x===level.target[0]&&y===level.target[1]){
+            hit=true;
+            break;
+        }
+
+        if(level.obstacles.some(o=>o[0]===x&&o[1]===y)){
+            break;
+        }
+
+        const mirror=mirrors.find(m=>m.x===x&&m.y===y);
+
+        if(mirror){
+
+            const result=reflect(dx,dy,mirror.direction);
+
+            dx=result[0];
+            dy=result[1];
+        }
+    }
+
+    return {path,hit};
+}
+
+
+/* ==========================================
+   ACTIVAREA LASERULUI
+========================================== */
+
+function fireLaser(){
+
+    if(solved)return;
+
+    attempts++;
+
+    const result=calculateBeam();
+
+    beamCells=result.path;
+
+    if(result.hit){
+
+        solved=true;
+
+        const earned=Math.max(10,100-(attempts-1)*10);
+
+        score+=earned;
+
+        if(!completedLevels.includes(currentLevel)){
+
+            completedLevels.push(currentLevel);
+
+            localStorage.setItem(
+                "laserCompleted",
+                JSON.stringify(completedLevels)
+            );
+        }
+
+        if(currentLevel===unlockedLevel&&unlockedLevel<29){
+
+            unlockedLevel++;
+
+            localStorage.setItem(
+                "laserUnlocked",
+                unlockedLevel
+            );
+        }
+
+        updateStats();
+        drawBoard();
+
+        document.getElementById("message").textContent=
+            "✨ Fasciculul a activat cristalul!";
+
+        setTimeout(showWin,700);
+
+    }else{
+
+        drawBoard();
+
+        document.getElementById("message").textContent=
+            "Laserul nu a ajuns la cristal. Mai încearcă!";
+    }
+}
+
+
+/* ==========================================
+   VICTORIE
+========================================== */
+
+function showWin(){
+
+    const stars=attempts===1?3:attempts<=3?2:1;
+
+    document.getElementById("winStars").textContent=
+        "★".repeat(stars)+"☆".repeat(3-stars);
+
+    document.getElementById("winMessage").textContent=
+        "Ai câștigat "+Math.max(10,100-(attempts-1)*10)+" puncte!";
+
+    document.getElementById("winOverlay").style.display="flex";
+}
+
+function continueGame(){
+
+    document.getElementById("winOverlay").style.display="none";
+
+    if(currentLevel<29&&currentLevel<unlockedLevel){
+
+        currentLevel++;
+        loadLevel();
+
+    }else if(currentLevel===29){
+
+        document.getElementById("message").textContent=
+            "🏆 FELICITĂRI! Ai devenit MAESTRUL LASERELOR!";
+
+    }
+}
+
+
+/* ==========================================
+   URMĂTORUL NIVEL
+========================================== */
+
+function nextLevel(){
+
+    if(currentLevel<unlockedLevel){
+
+        currentLevel++;
+        loadLevel();
+
+    }else{
+
+        document.getElementById("message").textContent=
+            "Rezolvă nivelul actual pentru a-l debloca pe următorul!";
+    }
+}
+
+
+/* ==========================================
+   RESET
+========================================== */
+
+function resetLevel(){
+    loadLevel();
+}
+
+
+/* ==========================================
+   INDICIU
+========================================== */
+
+function showHint(){
+
+    const level=levels[currentLevel];
+
+    document.getElementById("message").textContent=
+        "💡 Acest nivel are "+level.mirrors.length+
+        " oglinzi. Gândește-te la direcția fiecărei reflexii!";
+}
+
+
+/* START */
+
+loadLevel();
+
+</script>
+
+</body>
+</html>

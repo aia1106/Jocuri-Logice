@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vecinii numărului | Jocuri Logice</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --purple: #8664c5;
+    --purple-light: #eee7fa;
+    --pink: #f6a8bc;
+    --green: #72b99a;
+    --text: #48415b;
+    --muted: #938ba5;
+    --white: #ffffff;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 10% 10%, #fce8f0 0, transparent 35%),
+        radial-gradient(circle at 90% 20%, #e8e8ff 0, transparent 35%),
+        linear-gradient(135deg, #faf7ff, #f4f1fc 55%, #fdf5f7);
+    padding: 25px 15px 40px;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.logo {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: 3px;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 10px;
+}
+
+h1 {
+    font-size: clamp(27px, 5vw, 39px);
+    margin: 0;
+    font-weight: 750;
+    color: #55466e;
+}
+
+.subtitle {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 16px;
+}
+
+.card {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(255,255,255,0.9);
+    border-radius: 28px;
+    padding: 25px;
+    box-shadow: 0 15px 45px rgba(95,75,130,0.09);
+}
+
+.levels {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.level-btn {
+    border: 1px solid #e7e0f1;
+    background: #fff;
+    color: #756b88;
+    border-radius: 30px;
+    padding: 11px 19px;
+    font-size: 14px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.level-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--purple);
+}
+
+.level-btn.active {
+    background: linear-gradient(135deg, #9878d0, #8060b9);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 5px 15px rgba(134,100,197,0.25);
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    flex: 1;
+    background: #f8f5fc;
+    border-radius: 17px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 21px;
+    font-weight: 750;
+    color: #7256a5;
+}
+
+.progress-track {
+    height: 8px;
+    background: #eee9f5;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 25px;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #a98cdb, #e9a7c1);
+    border-radius: 20px;
+    transition: width 0.4s;
+}
+
+.instruction {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 650;
+    margin: 15px 0 22px;
+}
+
+.number-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 25px;
+}
+
+.answer-box {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #d7cde8;
+    border-radius: 23px;
+    background: #faf8fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 37px;
+    font-weight: 750;
+    color: #8066ad;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.answer-box.active {
+    border: 2px solid #a98cdb;
+    background: #f0eafa;
+    box-shadow: 0 0 0 5px rgba(169,140,219,0.12);
+}
+
+.answer-box.correct {
+    border: 2px solid #72b99a;
+    background: #e8f7ef;
+    color: #42936f;
+}
+
+.answer-box.wrong {
+    border: 2px solid #e9a1a9;
+    background: #fff0f1;
+    color: #cf6e7a;
+}
+
+.center-number {
+    width: 130px;
+    height: 130px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #a88bd9, #8061bd);
+    color: white;
+    font-size: 58px;
+    font-weight: 800;
+    box-shadow:
+        0 12px 25px rgba(126,93,183,0.25),
+        inset 0 3px 8px rgba(255,255,255,0.25);
+}
+
+.box-labels {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: -12px;
+    margin-bottom: 25px;
+}
+
+.box-label {
+    width: 100px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 650;
+}
+
+.box-label.center-label {
+    width: 130px;
+}
+
+.options-title {
+    text-align: center;
+    font-size: 15px;
+    color: #766b89;
+    margin: 20px 0 14px;
+}
+
+.options {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.option {
+    width: 65px;
+    height: 65px;
+    border-radius: 19px;
+    border: 1px solid #e7e0f1;
+    background: white;
+    color: #685784;
+    font-size: 25px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(90,70,120,0.06);
+    transition: 0.2s;
+}
+
+.option:hover:not(:disabled) {
+    transform: translateY(-4px);
+    background: #f2ecfb;
+    border-color: #ad93d5;
+}
+
+.option:disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.feedback {
+    min-height: 32px;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.feedback.success {
+    color: #4a9b78;
+}
+
+.feedback.error {
+    color: #cc7884;
+}
+
+.line-area {
+    margin-top: 22px;
+    padding: 15px 10px;
+    background: #faf8fd;
+    border-radius: 18px;
+    transition: opacity 0.3s;
+}
+
+.line-area.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.line-title {
+    text-align: center;
+    font-size: 12px;
+    color: #a098ae;
+    margin-bottom: 14px;
+}
+
+.number-line {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.line-number {
+    position: relative;
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    color: #8d829e;
+    padding-top: 15px;
+}
+
+.line-number::before {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #cbbce0;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.line-number.highlight {
+    color: #8061bd;
+    font-weight: 800;
+}
+
+.line-number.highlight::before {
+    background: #9272c9;
+    width: 11px;
+    height: 11px;
+}
+
+.hint-btn {
+    display: block;
+    margin: 18px auto 0;
+    border: none;
+    background: #f2ecfa;
+    color: #8065ad;
+    padding: 11px 20px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.hint-btn:hover {
+    background: #e8def6;
+}
+
+.result {
+    display: none;
+    text-align: center;
+    padding: 35px 10px;
+}
+
+.result h2 {
+    font-size: 29px;
+    color: #70559e;
+}
+
+.result p {
+    color: #81778f;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.restart-btn {
+    border: none;
+    border-radius: 30px;
+    padding: 14px 30px;
+    color: white;
+    background: linear-gradient(135deg, #9878d0, #8060b9);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 15px;
+    box-shadow: 0 6px 15px rgba(134,100,197,0.2);
+}
+
+footer {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 12px;
+    color: #aaa1b7;
+    letter-spacing: 1px;
+}
+
+@media(max-width:520px) {
+    body {
+        padding: 15px 10px 25px;
+    }
+
+    .card {
+        padding: 17px 12px;
+        border-radius: 23px;
+    }
+
+    .number-area {
+        gap: 8px;
+    }
+
+    .answer-box {
+        width: 75px;
+        height: 80px;
+        font-size: 30px;
+        border-radius: 17px;
+    }
+
+    .center-number {
+        width: 105px;
+        height: 105px;
+        font-size: 48px;
+    }
+
+    .box-labels {
+        gap: 8px;
+    }
+
+    .box-label {
+        width: 75px;
+    }
+
+    .box-label.center-label {
+        width: 105px;
+    }
+
+    .option {
+        width: 57px;
+        height: 57px;
+    }
+
+    .stat {
+        padding: 10px 5px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+    <div class="logo">JOCURI LOGICE</div>
+    <h1>Vecinii numărului</h1>
+    <div class="subtitle">
+        Descoperă numărul dinainte și numărul de după!
+    </div>
+</header>
+
+<div class="card">
+
+    <div class="levels">
+        <button class="level-btn active" data-max="10">
+            Începător
+        </button>
+
+        <button class="level-btn" data-max="20">
+            Explorator
+        </button>
+
+        <button class="level-btn" data-max="31">
+            Campion
+        </button>
+    </div>
+
+    <div id="gameArea">
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-label">EXERCIȚIUL</div>
+                <div class="stat-value" id="round">1/10</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">PUNCTE</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-label">NIVEL</div>
+                <div class="stat-value" id="levelName">1</div>
+            </div>
+
+        </div>
+
+        <div class="progress-track">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="instruction">
+            Completează vecinii numărului!
+        </div>
+
+        <div class="number-area">
+
+            <div class="answer-box" id="leftBox">
+                ?
+            </div>
+
+            <div class="center-number" id="centerNumber">
+                5
+            </div>
+
+            <div class="answer-box" id="rightBox">
+                ?
+            </div>
+
+        </div>
+
+        <div class="box-labels">
+            <div class="box-label">Vecinul din stânga</div>
+            <div class="box-label center-label">Numărul dat</div>
+            <div class="box-label">Vecinul din dreapta</div>
+        </div>
+
+        <div class="options-title" id="optionsTitle">
+            Alege vecinul din stânga.
+        </div>
+
+        <div class="options" id="options"></div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="line-area" id="lineArea">
+            <div class="line-title">
+                Linia numerelor – folosește-o ca ajutor!
+            </div>
+            <div class="number-line" id="numberLine"></div>
+        </div>
+
+        <button class="hint-btn" id="hintBtn">
+            💡 Arată linia numerelor
+        </button>
+
+    </div>
+
+    <div class="result" id="result">
+
+        <h2>Bravo! 🎉</h2>
+
+        <p id="resultText"></p>
+
+        <button class="restart-btn" id="restartBtn">
+            Joacă din nou
+        </button>
+
+    </div>
+
+</div>
+
+<footer>
+    ÎNVĂȚĂM PRIN JOACĂ
+</footer>
+
+</div>
+
+<script>
+
+// ===============================
+// CONFIGURARE JOC
+// ===============================
+
+const TOTAL = 10;
+
+let maxNumber = 10;
+let questions = [];
+
+let round = 0;
+let current = 1;
+let score = 0;
+
+let selectedLeft = null;
+let selectedRight = null;
+
+let activeSide = "left";
+let locked = false;
+let hintUsed = false;
+
+let advanceTimer = null;
+
+
+// ===============================
+// ELEMENTE HTML
+// ===============================
+
+const $ = id => document.getElementById(id);
+
+
+// ===============================
+// FUNCȚII UTILE
+// ===============================
+
+function shuffle(array) {
+
+    for(let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] = [array[j], array[i]];
+
+    }
+
+    return array;
+}
+
+
+// ===============================
+// GENERARE EXERCIȚII
+// ===============================
+
+function makeQuestions() {
+
+    // Numerele centrale trebuie să aibă
+    // obligatoriu și vecin stâng, și vecin drept.
+
+    const pool = [];
+
+    for(let n = 1; n < maxNumber; n++) {
+        pool.push(n);
+    }
+
+    shuffle(pool);
+
+    questions = pool.slice(0, TOTAL);
+
+    // La nivelul Începător există numai 9 numere
+    // centrale posibile (1-9), dar avem 10 exerciții.
+    // Completăm lista fără repetări consecutive.
+
+    while(questions.length < TOTAL) {
+
+        const last = questions[questions.length - 1];
+
+        const available = pool.filter(n => n !== last);
+
+        const pick = available[
+            Math.floor(Math.random() * available.length)
+        ];
+
+        questions.push(pick);
+
+    }
+
+}
+
+
+// ===============================
+// PORNIRE JOC
+// ===============================
+
+function startGame() {
+
+    clearTimeout(advanceTimer);
+
+    round = 0;
+    score = 0;
+
+    makeQuestions();
+
+    $("score").textContent = score;
+
+    $("gameArea").style.display = "block";
+    $("result").style.display = "none";
+
+    $("progressBar").style.width = "0%";
+
+    nextQuestion();
+
+}
+
+
+// ===============================
+// EXERCIȚIUL URMĂTOR
+// ===============================
+
+function nextQuestion() {
+
+    if(round >= TOTAL) {
+
+        finishGame();
+        return;
+
+    }
+
+    const nextNumber = questions[round];
+
+    // Protecție împotriva valorilor invalide.
+
+    if(!Number.isInteger(nextNumber)) {
+
+        console.error(
+            "Număr invalid la exercițiul:",
+            round,
+            questions
+        );
+
+        startGame();
+        return;
+
+    }
+
+    current = nextNumber;
+
+    selectedLeft = null;
+    selectedRight = null;
+
+    activeSide = "left";
+
+    locked = false;
+    hintUsed = false;
+
+    $("centerNumber").textContent = current;
+
+    resetAnswer("left");
+    resetAnswer("right");
+
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+
+    $("optionsTitle").textContent =
+        "Alege vecinul din stânga.";
+
+    $("round").textContent =
+        (round + 1) + "/" + TOTAL;
+
+    $("progressBar").style.width =
+        (round / TOTAL * 100) + "%";
+
+    $("levelName").textContent =
+        maxNumber === 10 ? "1" :
+        maxNumber === 20 ? "2" : "3";
+
+    $("lineArea").classList.remove("hidden");
+
+    renderOptions();
+    renderLine();
+
+}
+
+
+// ===============================
+// RESETARE CĂSUȚĂ
+// ===============================
+
+function resetAnswer(side) {
+
+    const box = side === "left"
+        ? $("leftBox")
+        : $("rightBox");
+
+    box.textContent = "?";
+
+    box.className = "answer-box";
+
+}
+
+
+// ===============================
+// AFIȘARE VARIANTE
+// ===============================
+
+function renderOptions() {
+
+    const correct = activeSide === "left"
+        ? current - 1
+        : current + 1;
+
+    const values = new Set();
+
+    values.add(correct);
+
+    while(values.size < 4) {
+
+        const n = Math.floor(
+            Math.random() * (maxNumber + 1)
+        );
+
+        if(n !== current && n !== correct) {
+            values.add(n);
+        }
+
+    }
+
+    const options = shuffle([...values]);
+
+    $("options").innerHTML = "";
+
+    options.forEach(number => {
+
+        const button = document.createElement("button");
+
+        button.className = "option";
+        button.textContent = number;
+
+        button.addEventListener("click", () => {
+            selectAnswer(number);
+        });
+
+        $("options").appendChild(button);
+
+    });
+
+}
+
+
+// ===============================
+// SELECTARE RĂSPUNS
+// ===============================
+
+function selectAnswer(number) {
+
+    if(locked || !Number.isInteger(number)) {
+        return;
+    }
+
+    if(activeSide === "left") {
+
+        selectedLeft = number;
+
+        $("leftBox").textContent = number;
+
+        $("leftBox").className = "answer-box active";
+
+    } else {
+
+        selectedRight = number;
+
+        $("rightBox").textContent = number;
+
+        $("rightBox").className = "answer-box active";
+
+    }
+
+    // Dacă ambele răspunsuri au fost completate,
+    // verificăm automat.
+
+    if(selectedLeft !== null && selectedRight !== null) {
+
+        evaluateAnswers();
+        return;
+
+    }
+
+    // După vecinul din stânga cerem vecinul din dreapta.
+
+    activeSide = "right";
+
+    $("leftBox").className = "answer-box";
+
+    $("optionsTitle").textContent =
+        "Acum alege vecinul din dreapta.";
+
+    renderOptions();
+
+}
+
+
+// ===============================
+// VERIFICARE AUTOMATĂ
+// ===============================
+
+function evaluateAnswers() {
+
+    const leftCorrect = selectedLeft === current - 1;
+
+    const rightCorrect = selectedRight === current + 1;
+
+    if(leftCorrect) {
+
+        $("leftBox").className = "answer-box correct";
+
+    } else {
+
+        $("leftBox").className = "answer-box wrong";
+
+    }
+
+    if(rightCorrect) {
+
+        $("rightBox").className = "answer-box correct";
+
+    } else {
+
+        $("rightBox").className = "answer-box wrong";
+
+    }
+
+    // AMBELE CORECTE
+
+    if(leftCorrect && rightCorrect) {
+
+        locked = true;
+
+        score += hintUsed ? 5 : 10;
+
+        $("score").textContent = score;
+
+        $("feedback").textContent =
+            "Excelent! Ai găsit ambii vecini! ⭐";
+
+        $("feedback").className =
+            "feedback success";
+
+        $("options").innerHTML = "";
+
+        $("optionsTitle").textContent =
+            "Foarte bine!";
+
+        $("progressBar").style.width =
+            ((round + 1) / TOTAL * 100) + "%";
+
+        round++;
+
+        advanceTimer = setTimeout(() => {
+
+            nextQuestion();
+
+        }, 1300);
+
+        return;
+
+    }
+
+    // EXISTĂ UN RĂSPUNS GREȘIT
+
+    $("feedback").textContent =
+        "Aproape! Mai încearcă o dată. 💜";
+
+    $("feedback").className =
+        "feedback error";
+
+    if(!leftCorrect) {
+
+        activeSide = "left";
+
+        $("optionsTitle").textContent =
+            "Corectează vecinul din stânga.";
+
+    } else {
+
+        activeSide = "right";
+
+        $("optionsTitle").textContent =
+            "Corectează vecinul din dreapta.";
+
+    }
+
+    renderOptions();
+
+}
+
+
+// ===============================
+// LINIA NUMERELOR
+// ===============================
+
+function renderLine() {
+
+    const line = $("numberLine");
+
+    line.innerHTML = "";
+
+    const start = Math.max(0, current - 3);
+
+    const end = Math.min(maxNumber, current + 3);
+
+    for(let n = start; n <= end; n++) {
+
+        const item = document.createElement("div");
+
+        item.className = "line-number";
+
+        if(n === current) {
+            item.classList.add("highlight");
+        }
+
+        item.textContent = n;
+
+        line.appendChild(item);
+
+    }
+
+}
+
+
+// ===============================
+// INDICIU
+// ===============================
+
+function showHint() {
+
+    if(locked) return;
+
+    hintUsed = true;
+
+    $("lineArea").classList.remove("hidden");
+
+    $("feedback").textContent =
+        "Privește linia numerelor și găsește vecinii!";
+
+    $("feedback").className = "feedback";
+
+}
+
+
+// ===============================
+// FINAL JOC
+// ===============================
+
+function finishGame() {
+
+    clearTimeout(advanceTimer);
+
+    $("gameArea").style.display = "none";
+
+    $("result").style.display = "block";
+
+    $("resultText").innerHTML =
+        "Ai obținut <strong>" + score +
+        " puncte</strong> din maximum " +
+        (TOTAL * 10) +
+        "!<br><br>Felicitări pentru efortul tău!";
+
+}
+
+
+// ===============================
+// SCHIMBARE NIVEL
+// ===============================
+
+document.querySelectorAll(".level-btn").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".level-btn")
+            .forEach(b => b.classList.remove("active"));
+
+        button.classList.add("active");
+
+        maxNumber = Number(button.dataset.max);
+
+        startGame();
+
+    });
+
+});
+
+
+// ===============================
+// BUTOANE
+// ===============================
+
+$("hintBtn").addEventListener("click", showHint);
+
+$("restartBtn").addEventListener("click", startGame);
+
+
+// Permite copilului să selecteze din nou
+// o căsuță pentru corectarea răspunsului.
+
+$("leftBox").addEventListener("click", () => {
+
+    if(locked) return;
+
+    if(selectedLeft !== null && selectedRight !== null) {
+
+        activeSide = "left";
+
+        $("optionsTitle").textContent =
+            "Alege din nou vecinul din stânga.";
+
+        renderOptions();
+
+    }
+
+});
+
+
+$("rightBox").addEventListener("click", () => {
+
+    if(locked) return;
+
+    if(selectedLeft !== null && selectedRight !== null) {
+
+        activeSide = "right";
+
+        $("optionsTitle").textContent =
+            "Alege din nou vecinul din dreapta.";
+
+        renderOptions();
+
+    }
+
+});
+
+
+// ===============================
+// START
+// ===============================
+
+startGame();
+
+</script>
+
+</body>
+</html>
