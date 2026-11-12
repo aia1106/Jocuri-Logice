@@ -2,8 +2,15 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Laser Lab - Jocuri Logice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Laser Lab – joc de logică în care copiii orientează oglinzi pentru a ghida fasciculul laser spre țintă.">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="LOGO.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="stil.css">
+<title>Laser Lab – Jocuri Logice</title>
 
 <style>
 *{box-sizing:border-box}
@@ -441,14 +448,153 @@ button:hover{
     button{padding:12px 14px;font-size:12px}
     .mirror-surface{height:6px}
 }
+
+/* Integrare în identitatea vizuală Jocuri Logice */
+body{
+    margin:0;
+    min-height:100vh;
+    padding:0;
+    background:#fff;
+    color:#393545;
+    font-family:'Nunito',Arial,sans-serif;
+}
+.app{max-width:900px;margin:34px auto 48px;padding:0 18px}
+.app>header{text-align:center;margin:0 auto 25px}
+.logo{
+    font-family:'Fredoka',sans-serif;
+    font-size:clamp(29px,5vw,42px);
+    font-weight:700;
+    letter-spacing:0;
+    color:#343044;
+    text-shadow:none;
+}
+.subtitle{
+    font-family:'Nunito',sans-serif;
+    font-size:15px;
+    color:#777386;
+    margin-top:8px;
+    letter-spacing:.2px;
+}
+.stats{gap:12px;margin-bottom:20px}
+.stat{
+    max-width:180px;
+    padding:13px 10px;
+    border-radius:17px;
+    background:#FFF5F7;
+    border:1px solid #f3e5eb;
+    box-shadow:0 4px 14px rgba(48,39,65,.04);
+}
+.stat small{color:#8b8290;font-size:10px;letter-spacing:1px}
+.stat strong{color:#D83E6D;font-family:'Fredoka',sans-serif;font-size:21px}
+.panel{
+    padding:clamp(15px,3vw,25px);
+    border-radius:25px;
+    background:#fff;
+    border:1px solid #eeeaf2;
+    box-shadow:0 12px 35px rgba(48,39,65,.08);
+}
+.level-info h2{font-family:'Fredoka',sans-serif;color:#343044}
+.chapter-label{color:#D94B76;font-weight:800;letter-spacing:1.4px}
+.stars{color:#e9b84f}
+.lab{
+    background:radial-gradient(circle,#fffafd,#fff1f5 65%,#fce8ef);
+    border:1px solid #f0cbd8;
+    box-shadow:inset 0 0 35px rgba(226,59,107,.06),0 7px 22px rgba(48,39,65,.07);
+}
+#board{
+    background:radial-gradient(circle,#fff,#fff4f7 65%,#fbeaf0);
+}
+#board::before,#board::after{border-color:rgba(226,59,107,.10)}
+.mirror-surface{
+    background:linear-gradient(180deg,#fff 0%,#fceaf0 18%,#e99ab3 45%,#fff4f7 65%,#c97996 100%);
+    border-color:#f7dbe4;
+    box-shadow:0 1px 3px #9d547088,0 0 5px #f3a9c0,0 0 12px #e8799d66;
+}
+.mirror-surface::after{background:#a75d78}
+.source-disc{
+    background:radial-gradient(circle,#d7ffed,#5ed7a5 50%,#279a70);
+    border-color:#a6f2cc;
+    box-shadow:0 0 12px #55dca5,0 0 25px #55dca555;
+}
+.target-disc{
+    border-color:#c58be9;
+    background:radial-gradient(circle,#d8b5f744,#9b55c222);
+    box-shadow:0 0 15px #b35aff55,inset 0 0 12px #d58aff44;
+}
+.target-disc::after{background:#c58be9;box-shadow:0 0 12px #d58aff}
+.obstacle-disc{
+    background:radial-gradient(circle at 35% 30%,#d9d3df,#8d8798 70%);
+    border-color:#c5bdce;
+    box-shadow:inset 0 0 12px #6c637733,0 0 8px #6c637722;
+}
+.beam-glow{stroke:#ef476f;opacity:.42}
+.beam-core{stroke:#e23b6b;filter:drop-shadow(0 0 5px #e23b6b)}
+.beam-white{stroke:#fff0f4}
+button{
+    border:1px solid #eadfe5;
+    background:#fff;
+    color:#665d70;
+    font-family:'Nunito',sans-serif;
+    box-shadow:0 3px 10px rgba(50,40,60,.04);
+}
+button:hover{background:#fff1f5;color:#bd3e68;border-color:#e99ab0}
+.primary{
+    background:linear-gradient(135deg,#E23B6B,#F28AA6);
+    color:#fff;border:0;
+    box-shadow:0 5px 16px rgba(226,59,107,.2);
+}
+.primary:hover{background:linear-gradient(135deg,#d92e61,#ec8ca7);color:#fff}
+.hint{background:#fff0f4;color:#C83B65;border-color:#f4d5df}
+.hint:hover{background:#ffe4ec;color:#b72e59}
+.message{color:#777386;font-weight:700}
+.instructions{
+    background:#faf7f8;
+    border:1px solid #f0e8ed;
+    color:#777181;
+}
+.instructions strong{color:#D83B6B}
+.overlay{background:rgba(39,31,48,.62);backdrop-filter:blur(5px)}
+.modal{
+    background:#fff;
+    border:1px solid #f0dce4;
+    box-shadow:0 18px 60px rgba(48,39,65,.2);
+}
+.modal h2{color:#D83B6B;font-family:'Fredoka',sans-serif}
+.big-stars{color:#e9b84f}
+@media(max-width:550px){
+    .app{margin:24px auto 35px;padding:0 10px}
+    .app>header{margin-bottom:20px}
+    .panel{padding:13px 10px;border-radius:21px}
+    .stats{gap:6px}
+    .stat{padding:10px 4px}
+    .stat strong{font-size:17px}
+}
 </style>
 </head>
 
 <body>
-
+<a class="skip-link" href="#continut">Sari la conținut</a>
+<header class="site-header">
+    <div class="header-top">
+        <a class="brand" href="index.html" aria-label="Jocuri Logice – pagina principală">
+            <img src="logo-palat.png" alt="" class="header-logo" width="113" height="38">
+            <span class="brand-text"><span class="site-name">Jocuri Logice</span></span>
+        </a>
+        <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="meniu"><span class="menu-icon" aria-hidden="true">☰</span><span>Meniu</span></button>
+    </div>
+    <nav aria-label="Navigare principală"><ul class="menu" id="meniu">
+        <li><a href="index.html">Acasă</a></li><li><a href="clasa0.html">Clasa 0</a></li>
+        <li><a href="clasa1.html">Clasa I</a></li><li><a href="clasa2.html">Clasa a II-a</a></li>
+        <li><a href="clasa3.html">Clasa a III-a</a></li><li><a href="clasa4.html">Clasa a IV-a</a></li>
+        <li><a href="jocuri.html" aria-current="page">Jocuri</a></li><li><a href="concurs.html">Concurs</a></li>
+        <li><a href="info.html">Informații</a></li><li><a href="resursedidactice.html">Resurse</a></li><li><a href="contact.html">Contact</a></li>
+    </ul></nav>
+</header>
+<main id="continut">
 <div class="app">
 
 <header>
+    <div class="chapter-label">JOC DE LOGICĂ · ATENȚIE ȘI ORIENTARE</div>
     <div class="logo">⚡ LASER LAB</div>
     <div class="subtitle">LABORATORUL REFLEXIILOR LUMINOASE</div>
 </header>
@@ -1112,5 +1258,11 @@ loadLevel();
 
 </script>
 
+</main>
+<footer class="site-footer">
+    <img src="LOGO.png" alt="Sigla Cercului de Jocuri Logice" class="footer-logo" width="56" height="56" loading="lazy">
+    <p>&copy; 2025 Cercul de Jocuri Logice – Palatul Copiilor Arad</p>
+</footer>
+<script src="meniu.js"></script>
 </body>
 </html>
