@@ -2,1126 +2,178 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vecinii numărului | Jocuri Logice</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa0.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Vecinii numărului – Jocuri Logice</title>
 <style>
-* {
-    box-sizing: border-box;
-}
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 62px 14px 30px; text-align: center; overscroll-behavior: none; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(2rem, 8.5vw, 2.7rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 6px auto 12px; max-width: 36ch; font: 600 1.02rem/1.4 var(--j-font-text); color: #5B5270; }
 
-:root {
-    --purple: #8664c5;
-    --purple-light: #eee7fa;
-    --pink: #f6a8bc;
-    --green: #72b99a;
-    --text: #48415b;
-    --muted: #938ba5;
-    --white: #ffffff;
-}
+    .levels { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+    .lv { min-height: 44px; padding: 0 16px; border: 2px solid #E6E2EE; border-radius: 999px; background: #fff; color: #5B5270; font: 700 .95rem var(--j-font); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .lv small { display: block; font: 700 .68rem var(--j-font-text); opacity: .8; }
+    .lv.on { background: #4A2370; border-color: #4A2370; color: #fff; }
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    font-family: "Segoe UI", Arial, sans-serif;
-    color: var(--text);
-    background:
-        radial-gradient(circle at 10% 10%, #fce8f0 0, transparent 35%),
-        radial-gradient(circle at 90% 20%, #e8e8ff 0, transparent 35%),
-        linear-gradient(135deg, #faf7ff, #f4f1fc 55%, #fdf5f7);
-    padding: 25px 15px 40px;
-}
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 10px; }
+    .prog { display: inline-flex; gap: 5px; flex-wrap: wrap; justify-content: flex-start; max-width: 70%; }
+    .prog i { width: 12px; height: 12px; border-radius: 50%; background: #E6E2EE; } .prog i.on { background: #1FBF9A; } .prog i.cur { background: #FFB81C; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #fff; border: 2px solid #E6E2EE; font: 700 1rem var(--j-font); color: #4A2370; }
 
-.container {
-    max-width: 850px;
-    margin: auto;
-}
+    #card { background: #fff; border: 2px solid #E6E2EE; border-radius: 28px; padding: 16px 10px 18px; box-shadow: 0 14px 30px -20px rgba(35,27,51,.5); }
+    #card.shake { animation: shake .35s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    .task { margin: 0 0 12px; font: 700 clamp(1.05rem, 4.6vw, 1.3rem)/1.3 var(--j-font); color: #4A2370; }
 
-header {
-    text-align: center;
-    margin-bottom: 25px;
-}
+    .trio { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; justify-items: center; }
+    .box { width: min(24vw, 92px); aspect-ratio: 1 / 1.05; border: 3px dashed #D9CCEB; border-radius: 22px; background: #F8F7FB; display: grid; place-items: center; font: 700 clamp(1.8rem, 9vw, 2.6rem) var(--j-font); color: #6A3BA0; cursor: default; transition: background .2s, border-color .2s; }
+    .box.ask { border-style: solid; border-color: #E23B6B; background: #FFF0F5; box-shadow: 0 0 0 5px rgba(226,59,107,.14); animation: glow 1.2s infinite alternate; }
+    .box.ok { border-style: solid; border-color: #1FBF9A; background: #DDF5EE; color: #0E6B58; }
+    .box.bad { border-style: solid; border-color: #E23B6B; background: #FBC9D7; color: #B82A53; }
+    .box.pick { border-style: solid; border-color: #6A3BA0; background: #EFE9F7; }
+    @keyframes glow { to { box-shadow: 0 0 0 9px rgba(226,59,107,.06); } }
+    .center { width: min(30vw, 112px); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 700 clamp(2.4rem, 13vw, 3.6rem) var(--j-font); color: #fff;
+        background: radial-gradient(circle at 32% 28%, #A77BE6, #6A3BA0 55%, #4A2370); box-shadow: 0 12px 22px -10px rgba(74,35,112,.6), inset 0 3px 8px rgba(255,255,255,.3); }
+    .labels { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; margin: 6px 0 12px; font: 800 .68rem var(--j-font-text); color: #5B5270; text-transform: uppercase; letter-spacing: .03em; }
+    .labels span:nth-child(2) { width: min(30vw, 112px); text-align: center; }
 
-.logo {
-    display: inline-block;
-    font-size: 13px;
-    letter-spacing: 3px;
-    font-weight: 700;
-    color: var(--purple);
-    margin-bottom: 10px;
-}
+    #prompt { margin: 6px 0 8px; font: 700 1.1rem var(--j-font); color: #4A2370; min-height: 1.4em; }
+    .opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .opt { min-height: 64px; border: 0; border-radius: 18px; font: 700 clamp(1.4rem, 7vw, 1.9rem) var(--j-font); color: #fff; cursor: pointer; box-shadow: 0 5px 0 rgba(35,27,51,.28); -webkit-tap-highlight-color: transparent; }
+    .opt:nth-child(1) { background: #6A3BA0; } .opt:nth-child(2) { background: #E8541F; } .opt:nth-child(3) { background: #8E5BD6; } .opt:nth-child(4) { background: #D9356A; }
+    .opt:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 rgba(35,27,51,.28); }
+    .opt:disabled { opacity: .5; cursor: default; }
+    #msg { min-height: 1.6em; margin: 12px 0 0; font: 800 1.02rem/1.4 var(--j-font-text); color: #5B5270; }
+    #msg.ok { color: #14937A; } #msg.bad { color: #B82A53; }
 
-h1 {
-    font-size: clamp(27px, 5vw, 39px);
-    margin: 0;
-    font-weight: 750;
-    color: #55466e;
-}
+    #line { display: none; margin-top: 10px; padding: 12px 6px 8px; border-radius: 18px; background: #F8F7FB; border: 2px solid #E6E2EE; }
+    #line.show { display: block; }
+    #line p { margin: 0 0 8px; font: 800 .78rem var(--j-font-text); color: #5B5270; text-transform: uppercase; letter-spacing: .04em; }
+    .nl { display: flex; justify-content: center; align-items: flex-end; }
+    .nl div { flex: 1; position: relative; padding-top: 16px; font: 700 1.05rem var(--j-font); color: #8D829E; }
+    .nl div::before { content: ""; position: absolute; top: 0; left: 50%; width: 9px; height: 9px; border-radius: 50%; background: #CBBCE0; transform: translateX(-50%); }
+    .nl div::after { content: ""; position: absolute; top: 4px; left: 0; right: 0; height: 2px; background: #E0D6EE; z-index: -1; }
+    .nl div.me { color: #4A2370; font-size: 1.3rem; } .nl div.me::before { width: 14px; height: 14px; background: #6A3BA0; top: -2px; }
 
-.subtitle {
-    margin-top: 9px;
-    color: var(--muted);
-    font-size: 16px;
-}
-
-.card {
-    background: rgba(255,255,255,0.88);
-    border: 1px solid rgba(255,255,255,0.9);
-    border-radius: 28px;
-    padding: 25px;
-    box-shadow: 0 15px 45px rgba(95,75,130,0.09);
-}
-
-.levels {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 25px;
-}
-
-.level-btn {
-    border: 1px solid #e7e0f1;
-    background: #fff;
-    color: #756b88;
-    border-radius: 30px;
-    padding: 11px 19px;
-    font-size: 14px;
-    font-weight: 650;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.level-btn:hover {
-    transform: translateY(-2px);
-    border-color: var(--purple);
-}
-
-.level-btn.active {
-    background: linear-gradient(135deg, #9878d0, #8060b9);
-    color: white;
-    border-color: transparent;
-    box-shadow: 0 5px 15px rgba(134,100,197,0.25);
-}
-
-.stats {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.stat {
-    flex: 1;
-    background: #f8f5fc;
-    border-radius: 17px;
-    padding: 12px;
-    text-align: center;
-}
-
-.stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 5px;
-}
-
-.stat-value {
-    font-size: 21px;
-    font-weight: 750;
-    color: #7256a5;
-}
-
-.progress-track {
-    height: 8px;
-    background: #eee9f5;
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 25px;
-}
-
-.progress-bar {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #a98cdb, #e9a7c1);
-    border-radius: 20px;
-    transition: width 0.4s;
-}
-
-.instruction {
-    text-align: center;
-    font-size: 17px;
-    font-weight: 650;
-    margin: 15px 0 22px;
-}
-
-.number-area {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 16px;
-    margin: 20px 0 25px;
-}
-
-.answer-box {
-    width: 100px;
-    height: 100px;
-    border: 2px dashed #d7cde8;
-    border-radius: 23px;
-    background: #faf8fd;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 37px;
-    font-weight: 750;
-    color: #8066ad;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.answer-box.active {
-    border: 2px solid #a98cdb;
-    background: #f0eafa;
-    box-shadow: 0 0 0 5px rgba(169,140,219,0.12);
-}
-
-.answer-box.correct {
-    border: 2px solid #72b99a;
-    background: #e8f7ef;
-    color: #42936f;
-}
-
-.answer-box.wrong {
-    border: 2px solid #e9a1a9;
-    background: #fff0f1;
-    color: #cf6e7a;
-}
-
-.center-number {
-    width: 130px;
-    height: 130px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(145deg, #a88bd9, #8061bd);
-    color: white;
-    font-size: 58px;
-    font-weight: 800;
-    box-shadow:
-        0 12px 25px rgba(126,93,183,0.25),
-        inset 0 3px 8px rgba(255,255,255,0.25);
-}
-
-.box-labels {
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    margin-top: -12px;
-    margin-bottom: 25px;
-}
-
-.box-label {
-    width: 100px;
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 650;
-}
-
-.box-label.center-label {
-    width: 130px;
-}
-
-.options-title {
-    text-align: center;
-    font-size: 15px;
-    color: #766b89;
-    margin: 20px 0 14px;
-}
-
-.options {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.option {
-    width: 65px;
-    height: 65px;
-    border-radius: 19px;
-    border: 1px solid #e7e0f1;
-    background: white;
-    color: #685784;
-    font-size: 25px;
-    font-weight: 750;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(90,70,120,0.06);
-    transition: 0.2s;
-}
-
-.option:hover:not(:disabled) {
-    transform: translateY(-4px);
-    background: #f2ecfb;
-    border-color: #ad93d5;
-}
-
-.option:disabled {
-    cursor: default;
-    opacity: 0.55;
-}
-
-.feedback {
-    min-height: 32px;
-    text-align: center;
-    margin-top: 20px;
-    font-size: 16px;
-    font-weight: 650;
-}
-
-.feedback.success {
-    color: #4a9b78;
-}
-
-.feedback.error {
-    color: #cc7884;
-}
-
-.line-area {
-    margin-top: 22px;
-    padding: 15px 10px;
-    background: #faf8fd;
-    border-radius: 18px;
-    transition: opacity 0.3s;
-}
-
-.line-area.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.line-title {
-    text-align: center;
-    font-size: 12px;
-    color: #a098ae;
-    margin-bottom: 14px;
-}
-
-.number-line {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0;
-    flex-wrap: nowrap;
-    overflow: hidden;
-}
-
-.line-number {
-    position: relative;
-    flex: 1;
-    text-align: center;
-    font-size: 13px;
-    color: #8d829e;
-    padding-top: 15px;
-}
-
-.line-number::before {
-    content: "";
-    position: absolute;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #cbbce0;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.line-number.highlight {
-    color: #8061bd;
-    font-weight: 800;
-}
-
-.line-number.highlight::before {
-    background: #9272c9;
-    width: 11px;
-    height: 11px;
-}
-
-.hint-btn {
-    display: block;
-    margin: 18px auto 0;
-    border: none;
-    background: #f2ecfa;
-    color: #8065ad;
-    padding: 11px 20px;
-    border-radius: 25px;
-    font-size: 13px;
-    font-weight: 650;
-    cursor: pointer;
-}
-
-.hint-btn:hover {
-    background: #e8def6;
-}
-
-.result {
-    display: none;
-    text-align: center;
-    padding: 35px 10px;
-}
-
-.result h2 {
-    font-size: 29px;
-    color: #70559e;
-}
-
-.result p {
-    color: #81778f;
-    font-size: 17px;
-    line-height: 1.6;
-}
-
-.restart-btn {
-    border: none;
-    border-radius: 30px;
-    padding: 14px 30px;
-    color: white;
-    background: linear-gradient(135deg, #9878d0, #8060b9);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 15px;
-    box-shadow: 0 6px 15px rgba(134,100,197,0.2);
-}
-
-footer {
-    text-align: center;
-    margin-top: 22px;
-    font-size: 12px;
-    color: #aaa1b7;
-    letter-spacing: 1px;
-}
-
-@media(max-width:520px) {
-    body {
-        padding: 15px 10px 25px;
-    }
-
-    .card {
-        padding: 17px 12px;
-        border-radius: 23px;
-    }
-
-    .number-area {
-        gap: 8px;
-    }
-
-    .answer-box {
-        width: 75px;
-        height: 80px;
-        font-size: 30px;
-        border-radius: 17px;
-    }
-
-    .center-number {
-        width: 105px;
-        height: 105px;
-        font-size: 48px;
-    }
-
-    .box-labels {
-        gap: 8px;
-    }
-
-    .box-label {
-        width: 75px;
-    }
-
-    .box-label.center-label {
-        width: 105px;
-    }
-
-    .option {
-        width: 57px;
-        height: 57px;
-    }
-
-    .stat {
-        padding: 10px 5px;
-    }
-}
+    .hintBtn { margin-top: 12px; min-height: 46px; padding: 0 22px; border: 0; border-radius: 999px; background: #EFE9F7; color: #4A2370; font: 700 .98rem var(--j-font); cursor: pointer; box-shadow: 0 4px 0 #D9CCEB; }
+    .hintBtn:disabled { opacity: .5; }
+    .jg-overlay { position: fixed; } .stars { font-size: 2.4rem; letter-spacing: 4px; margin: 0; }
 </style>
 </head>
-
-<body>
-
-<div class="container">
-
-<header>
-    <div class="logo">JOCURI LOGICE</div>
+<body class="jg">
+<main>
     <h1>Vecinii numărului</h1>
-    <div class="subtitle">
-        Descoperă numărul dinainte și numărul de după!
-    </div>
-</header>
+    <p class="sub">Găsește numărul de <b>dinainte</b> și numărul de <b>după</b>!</p>
 
-<div class="card">
-
-    <div class="levels">
-        <button class="level-btn active" data-max="10">
-            Începător
-        </button>
-
-        <button class="level-btn" data-max="20">
-            Explorator
-        </button>
-
-        <button class="level-btn" data-max="31">
-            Campion
-        </button>
+    <div class="levels" id="levels">
+        <button class="lv on" type="button" data-max="10">Începător<small>numere 0–10</small></button>
+        <button class="lv" type="button" data-max="20">Explorator<small>numere 0–20</small></button>
+        <button class="lv" type="button" data-max="31">Campion<small>numere 0–31</small></button>
     </div>
 
-    <div id="gameArea">
+    <div class="bar"><div class="prog" id="prog"></div><span class="pill">⭐ <span id="score">0</span></span></div>
 
-        <div class="stats">
-
-            <div class="stat">
-                <div class="stat-label">EXERCIȚIUL</div>
-                <div class="stat-value" id="round">1/10</div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-label">PUNCTE</div>
-                <div class="stat-value" id="score">0</div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-label">NIVEL</div>
-                <div class="stat-value" id="levelName">1</div>
-            </div>
-
+    <section id="card">
+        <p class="task">Completează vecinii numărului!</p>
+        <div class="trio">
+            <div class="box" id="leftBox">?</div>
+            <div class="center" id="center">5</div>
+            <div class="box" id="rightBox">?</div>
         </div>
+        <div class="labels"><span>Vecinul din stânga</span><span>Numărul dat</span><span>Vecinul din dreapta</span></div>
 
-        <div class="progress-track">
-            <div class="progress-bar" id="progressBar"></div>
-        </div>
+        <p id="prompt"></p>
+        <div class="opts" id="options"></div>
+        <p id="msg" role="status" aria-live="polite"></p>
 
-        <div class="instruction">
-            Completează vecinii numărului!
-        </div>
+        <div id="line"><p>Linia numerelor</p><div class="nl" id="nl"></div></div>
+        <button class="hintBtn" id="hintBtn" type="button">💡 Arată linia numerelor</button>
+    </section>
+</main>
 
-        <div class="number-area">
-
-            <div class="answer-box" id="leftBox">
-                ?
-            </div>
-
-            <div class="center-number" id="centerNumber">
-                5
-            </div>
-
-            <div class="answer-box" id="rightBox">
-                ?
-            </div>
-
-        </div>
-
-        <div class="box-labels">
-            <div class="box-label">Vecinul din stânga</div>
-            <div class="box-label center-label">Numărul dat</div>
-            <div class="box-label">Vecinul din dreapta</div>
-        </div>
-
-        <div class="options-title" id="optionsTitle">
-            Alege vecinul din stânga.
-        </div>
-
-        <div class="options" id="options"></div>
-
-        <div class="feedback" id="feedback"></div>
-
-        <div class="line-area" id="lineArea">
-            <div class="line-title">
-                Linia numerelor – folosește-o ca ajutor!
-            </div>
-            <div class="number-line" id="numberLine"></div>
-        </div>
-
-        <button class="hint-btn" id="hintBtn">
-            💡 Arată linia numerelor
-        </button>
-
-    </div>
-
-    <div class="result" id="result">
-
-        <h2>Bravo! 🎉</h2>
-
-        <p id="resultText"></p>
-
-        <button class="restart-btn" id="restartBtn">
-            Joacă din nou
-        </button>
-
-    </div>
-
-</div>
-
-<footer>
-    ÎNVĂȚĂM PRIN JOACĂ
-</footer>
-
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji" id="ovEmoji">🎉</div>
+    <h1 class="jg-title">Bravo!</h1>
+    <p class="stars" id="ovStars"></p>
+    <p class="jg-text" id="ovText"></p>
+    <button class="jg-btn" id="ovAgain" type="button">Joacă din nou</button>
 </div>
 
 <script>
-
-// ===============================
-// CONFIGURARE JOC
-// ===============================
-
-const TOTAL = 10;
-
-let maxNumber = 10;
-let questions = [];
-
-let round = 0;
-let current = 1;
-let score = 0;
-
-let selectedLeft = null;
-let selectedRight = null;
-
-let activeSide = "left";
-let locked = false;
-let hintUsed = false;
-
-let advanceTimer = null;
-
-
-// ===============================
-// ELEMENTE HTML
-// ===============================
-
-const $ = id => document.getElementById(id);
-
-
-// ===============================
-// FUNCȚII UTILE
-// ===============================
-
-function shuffle(array) {
-
-    for(let i = array.length - 1; i > 0; i--) {
-
-        const j = Math.floor(Math.random() * (i + 1));
-
-        [array[i], array[j]] = [array[j], array[i]];
-
-    }
-
-    return array;
-}
-
-
-// ===============================
-// GENERARE EXERCIȚII
-// ===============================
+const $ = (id) => document.getElementById(id);
+const shuffle = (a) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const TOTAL = 10, TOP = 10;                       // 10 exerciții, maxim 10 puncte fiecare
+let maxN = 10, questions = [], round = 0, current = 1, score = 0;
+let selL = null, selR = null, side = 'left', locked = false, hintUsed = false, mistakes = 0, timer = 0, perfect = 0;
 
 function makeQuestions() {
-
-    // Numerele centrale trebuie să aibă
-    // obligatoriu și vecin stâng, și vecin drept.
-
-    const pool = [];
-
-    for(let n = 1; n < maxNumber; n++) {
-        pool.push(n);
-    }
-
-    shuffle(pool);
-
+    const pool = shuffle(Array.from({ length: maxN - 1 }, (_, i) => i + 1));      // centrul are mereu vecin și în stânga, și în dreapta
     questions = pool.slice(0, TOTAL);
-
-    // La nivelul Începător există numai 9 numere
-    // centrale posibile (1-9), dar avem 10 exerciții.
-    // Completăm lista fără repetări consecutive.
-
-    while(questions.length < TOTAL) {
-
-        const last = questions[questions.length - 1];
-
-        const available = pool.filter(n => n !== last);
-
-        const pick = available[
-            Math.floor(Math.random() * available.length)
-        ];
-
-        questions.push(pick);
-
-    }
-
+    while (questions.length < TOTAL) { const last = questions[questions.length - 1], av = pool.filter(n => n !== last); questions.push(av[Math.floor(Math.random() * av.length)]); }
 }
-
-
-// ===============================
-// PORNIRE JOC
-// ===============================
-
 function startGame() {
-
-    clearTimeout(advanceTimer);
-
-    round = 0;
-    score = 0;
-
-    makeQuestions();
-
-    $("score").textContent = score;
-
-    $("gameArea").style.display = "block";
-    $("result").style.display = "none";
-
-    $("progressBar").style.width = "0%";
-
-    nextQuestion();
-
+    clearTimeout(timer); round = 0; score = 0; perfect = 0; makeQuestions(); $('score').textContent = '0'; $('overlay').hidden = true; nextQuestion();
 }
-
-
-// ===============================
-// EXERCIȚIUL URMĂTOR
-// ===============================
-
+function renderProg() { $('prog').innerHTML = Array.from({ length: TOTAL }, (_, i) => '<i class="' + (i < round ? 'on' : i === round ? 'cur' : '') + '"></i>').join(''); }
 function nextQuestion() {
-
-    if(round >= TOTAL) {
-
-        finishGame();
-        return;
-
-    }
-
-    const nextNumber = questions[round];
-
-    // Protecție împotriva valorilor invalide.
-
-    if(!Number.isInteger(nextNumber)) {
-
-        console.error(
-            "Număr invalid la exercițiul:",
-            round,
-            questions
-        );
-
-        startGame();
-        return;
-
-    }
-
-    current = nextNumber;
-
-    selectedLeft = null;
-    selectedRight = null;
-
-    activeSide = "left";
-
-    locked = false;
-    hintUsed = false;
-
-    $("centerNumber").textContent = current;
-
-    resetAnswer("left");
-    resetAnswer("right");
-
-    $("feedback").textContent = "";
-    $("feedback").className = "feedback";
-
-    $("optionsTitle").textContent =
-        "Alege vecinul din stânga.";
-
-    $("round").textContent =
-        (round + 1) + "/" + TOTAL;
-
-    $("progressBar").style.width =
-        (round / TOTAL * 100) + "%";
-
-    $("levelName").textContent =
-        maxNumber === 10 ? "1" :
-        maxNumber === 20 ? "2" : "3";
-
-    $("lineArea").classList.remove("hidden");
-
-    renderOptions();
-    renderLine();
-
+    if (round >= TOTAL) return finish();
+    current = questions[round]; selL = selR = null; side = 'left'; locked = false; hintUsed = false; mistakes = 0;
+    $('center').textContent = current; setBox('left', '?', 'ask'); setBox('right', '?', ''); msg('');
+    $('line').classList.remove('show'); $('hintBtn').disabled = false; renderProg(); renderOptions();
 }
-
-
-// ===============================
-// RESETARE CĂSUȚĂ
-// ===============================
-
-function resetAnswer(side) {
-
-    const box = side === "left"
-        ? $("leftBox")
-        : $("rightBox");
-
-    box.textContent = "?";
-
-    box.className = "answer-box";
-
-}
-
-
-// ===============================
-// AFIȘARE VARIANTE
-// ===============================
+function setBox(which, text, cls) { const b = $(which === 'left' ? 'leftBox' : 'rightBox'); b.textContent = text; b.className = 'box' + (cls ? ' ' + cls : ''); }
+function msg(t, c) { $('msg').textContent = t; $('msg').className = c || ''; }
 
 function renderOptions() {
-
-    const correct = activeSide === "left"
-        ? current - 1
-        : current + 1;
-
-    const values = new Set();
-
-    values.add(correct);
-
-    while(values.size < 4) {
-
-        const n = Math.floor(
-            Math.random() * (maxNumber + 1)
-        );
-
-        if(n !== current && n !== correct) {
-            values.add(n);
-        }
-
-    }
-
-    const options = shuffle([...values]);
-
-    $("options").innerHTML = "";
-
-    options.forEach(number => {
-
-        const button = document.createElement("button");
-
-        button.className = "option";
-        button.textContent = number;
-
-        button.addEventListener("click", () => {
-            selectAnswer(number);
-        });
-
-        $("options").appendChild(button);
-
-    });
-
+    const correct = side === 'left' ? current - 1 : current + 1;
+    $('prompt').textContent = side === 'left' ? 'Alege vecinul din stânga (cu 1 mai puțin).' : 'Alege vecinul din dreapta (cu 1 mai mult).';
+    const near = [];
+    for (let n = current - 4; n <= current + 4; n++) if (n >= 0 && n <= maxN && n !== current && n !== correct) near.push(n);
+    const opts = shuffle([correct, ...shuffle(near).slice(0, 3)]);
+    const box = $('options'); box.innerHTML = '';
+    opts.forEach(n => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.textContent = n; b.addEventListener('click', () => pick(n)); box.appendChild(b); });
 }
-
-
-// ===============================
-// SELECTARE RĂSPUNS
-// ===============================
-
-function selectAnswer(number) {
-
-    if(locked || !Number.isInteger(number)) {
-        return;
-    }
-
-    if(activeSide === "left") {
-
-        selectedLeft = number;
-
-        $("leftBox").textContent = number;
-
-        $("leftBox").className = "answer-box active";
-
-    } else {
-
-        selectedRight = number;
-
-        $("rightBox").textContent = number;
-
-        $("rightBox").className = "answer-box active";
-
-    }
-
-    // Dacă ambele răspunsuri au fost completate,
-    // verificăm automat.
-
-    if(selectedLeft !== null && selectedRight !== null) {
-
-        evaluateAnswers();
-        return;
-
-    }
-
-    // După vecinul din stânga cerem vecinul din dreapta.
-
-    activeSide = "right";
-
-    $("leftBox").className = "answer-box";
-
-    $("optionsTitle").textContent =
-        "Acum alege vecinul din dreapta.";
-
-    renderOptions();
-
+function pick(n) {
+    if (locked) return;
+    if (side === 'left') { selL = n; setBox('left', n, 'pick'); } else { selR = n; setBox('right', n, 'pick'); }
+    if (selL !== null && selR !== null) return check();
+    side = 'right'; setBox('right', '?', 'ask'); renderOptions();
 }
-
-
-// ===============================
-// VERIFICARE AUTOMATĂ
-// ===============================
-
-function evaluateAnswers() {
-
-    const leftCorrect = selectedLeft === current - 1;
-
-    const rightCorrect = selectedRight === current + 1;
-
-    if(leftCorrect) {
-
-        $("leftBox").className = "answer-box correct";
-
-    } else {
-
-        $("leftBox").className = "answer-box wrong";
-
+function check() {
+    const okL = selL === current - 1, okR = selR === current + 1;
+    setBox('left', selL, okL ? 'ok' : 'bad'); setBox('right', selR, okR ? 'ok' : 'bad');
+    if (okL && okR) {
+        locked = true; const pts = hintUsed ? 5 : mistakes === 0 ? TOP : 7; score += pts; if (pts === TOP) perfect++; $('score').textContent = score;
+        msg('Excelent! Ai găsit amândoi vecinii! ⭐', 'ok'); $('prompt').textContent = ''; $('options').innerHTML = ''; round++; renderProg();
+        timer = setTimeout(nextQuestion, 1400); return;
     }
-
-    if(rightCorrect) {
-
-        $("rightBox").className = "answer-box correct";
-
-    } else {
-
-        $("rightBox").className = "answer-box wrong";
-
-    }
-
-    // AMBELE CORECTE
-
-    if(leftCorrect && rightCorrect) {
-
-        locked = true;
-
-        score += hintUsed ? 5 : 10;
-
-        $("score").textContent = score;
-
-        $("feedback").textContent =
-            "Excelent! Ai găsit ambii vecini! ⭐";
-
-        $("feedback").className =
-            "feedback success";
-
-        $("options").innerHTML = "";
-
-        $("optionsTitle").textContent =
-            "Foarte bine!";
-
-        $("progressBar").style.width =
-            ((round + 1) / TOTAL * 100) + "%";
-
-        round++;
-
-        advanceTimer = setTimeout(() => {
-
-            nextQuestion();
-
-        }, 1300);
-
-        return;
-
-    }
-
-    // EXISTĂ UN RĂSPUNS GREȘIT
-
-    $("feedback").textContent =
-        "Aproape! Mai încearcă o dată. 💜";
-
-    $("feedback").className =
-        "feedback error";
-
-    if(!leftCorrect) {
-
-        activeSide = "left";
-
-        $("optionsTitle").textContent =
-            "Corectează vecinul din stânga.";
-
-    } else {
-
-        activeSide = "right";
-
-        $("optionsTitle").textContent =
-            "Corectează vecinul din dreapta.";
-
-    }
-
-    renderOptions();
-
+    mistakes++; $('card').classList.add('shake'); setTimeout(() => $('card').classList.remove('shake'), 400);
+    msg(!okL && !okR ? 'Aproape! Încearcă din nou amândoi vecinii. 💜' : 'Aproape! Mai încearcă ' + (okL ? 'vecinul din dreapta' : 'vecinul din stânga') + '. 💜', 'bad');
+    side = okL ? 'right' : 'left'; if (!okL) selL = null; if (!okR) selR = null;
+    setBox(side === 'left' ? 'left' : 'right', '?', 'ask'); renderOptions();
 }
-
-
-// ===============================
-// LINIA NUMERELOR
-// ===============================
-
-function renderLine() {
-
-    const line = $("numberLine");
-
-    line.innerHTML = "";
-
-    const start = Math.max(0, current - 3);
-
-    const end = Math.min(maxNumber, current + 3);
-
-    for(let n = start; n <= end; n++) {
-
-        const item = document.createElement("div");
-
-        item.className = "line-number";
-
-        if(n === current) {
-            item.classList.add("highlight");
-        }
-
-        item.textContent = n;
-
-        line.appendChild(item);
-
-    }
-
+function showLine() {
+    if (locked) return; hintUsed = true; const nl = $('nl'); nl.innerHTML = '';
+    for (let n = Math.max(0, current - 3); n <= Math.min(maxN, current + 3); n++) { const d = document.createElement('div'); d.textContent = n; if (n === current) d.className = 'me'; nl.appendChild(d); }
+    $('line').classList.add('show'); $('hintBtn').disabled = true; msg('Pe linie, vecinul din stânga e înainte, iar cel din dreapta e după număr.');
 }
-
-
-// ===============================
-// INDICIU
-// ===============================
-
-function showHint() {
-
-    if(locked) return;
-
-    hintUsed = true;
-
-    $("lineArea").classList.remove("hidden");
-
-    $("feedback").textContent =
-        "Privește linia numerelor și găsește vecinii!";
-
-    $("feedback").className = "feedback";
-
+function finish() {
+    const pct = score / (TOTAL * TOP), stars = pct >= .85 ? 3 : pct >= .6 ? 2 : 1;
+    $('ovStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars); $('ovEmoji').textContent = stars === 3 ? '🏆' : '🎉';
+    $('ovText').textContent = 'Ai strâns ' + score + ' puncte din ' + (TOTAL * TOP) + '. Fără nicio greșeală sau ajutor: ' + perfect + ' din ' + TOTAL + ' exerciții.'; $('overlay').hidden = false;
 }
-
-
-// ===============================
-// FINAL JOC
-// ===============================
-
-function finishGame() {
-
-    clearTimeout(advanceTimer);
-
-    $("gameArea").style.display = "none";
-
-    $("result").style.display = "block";
-
-    $("resultText").innerHTML =
-        "Ai obținut <strong>" + score +
-        " puncte</strong> din maximum " +
-        (TOTAL * 10) +
-        "!<br><br>Felicitări pentru efortul tău!";
-
-}
-
-
-// ===============================
-// SCHIMBARE NIVEL
-// ===============================
-
-document.querySelectorAll(".level-btn").forEach(button => {
-
-    button.addEventListener("click", () => {
-
-        document.querySelectorAll(".level-btn")
-            .forEach(b => b.classList.remove("active"));
-
-        button.classList.add("active");
-
-        maxNumber = Number(button.dataset.max);
-
-        startGame();
-
-    });
-
-});
-
-
-// ===============================
-// BUTOANE
-// ===============================
-
-$("hintBtn").addEventListener("click", showHint);
-
-$("restartBtn").addEventListener("click", startGame);
-
-
-// Permite copilului să selecteze din nou
-// o căsuță pentru corectarea răspunsului.
-
-$("leftBox").addEventListener("click", () => {
-
-    if(locked) return;
-
-    if(selectedLeft !== null && selectedRight !== null) {
-
-        activeSide = "left";
-
-        $("optionsTitle").textContent =
-            "Alege din nou vecinul din stânga.";
-
-        renderOptions();
-
-    }
-
-});
-
-
-$("rightBox").addEventListener("click", () => {
-
-    if(locked) return;
-
-    if(selectedLeft !== null && selectedRight !== null) {
-
-        activeSide = "right";
-
-        $("optionsTitle").textContent =
-            "Alege din nou vecinul din dreapta.";
-
-        renderOptions();
-
-    }
-
-});
-
-
-// ===============================
-// START
-// ===============================
-
+document.querySelectorAll('.lv').forEach(b => b.addEventListener('click', () => { document.querySelectorAll('.lv').forEach(x => x.classList.remove('on')); b.classList.add('on'); maxN = Number(b.dataset.max); startGame(); }));
+$('hintBtn').addEventListener('click', showLine); $('ovAgain').addEventListener('click', startGame);
 startGame();
-
 </script>
-
+<script src="joc.js"></script>
 </body>
 </html>
