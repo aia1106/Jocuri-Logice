@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="joc-inapoi" content="clasa1.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="icon" href="LOGO.png">
+<link rel="stylesheet" href="joc.css">
+<title>Balanța cu necunoscută – Jocuri Logice</title>
+<style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body { background: #F8F7FB; color: #231B33; min-height: 100dvh; padding: 62px 12px 30px; text-align: center; overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+    main { max-width: 540px; margin: 0 auto; }
+    h1 { margin: 0; font-size: clamp(1.9rem, 8vw, 2.6rem); color: #4A2370; line-height: 1.1; }
+    .sub { margin: 6px auto 10px; max-width: 40ch; font: 600 1rem/1.4 var(--j-font-text); color: #5B5270; }
+    .chips { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .ch { min-height: 40px; padding: 0 13px; border: 2px solid #E6E2EE; border-radius: 999px; background: #fff; color: #5B5270; font: 700 .88rem var(--j-font); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .ch small { display: block; font: 700 .64rem var(--j-font-text); opacity: .8; }
+    .ch.on { background: #4A2370; border-color: #4A2370; color: #fff; }
+    .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0 8px; }
+    .prog { display: inline-flex; gap: 5px; } .prog i { width: 12px; height: 12px; border-radius: 50%; background: #E6E2EE; } .prog i.on { background: #1FBF9A; } .prog i.cur { background: #FFB81C; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #fff; border: 2px solid #E6E2EE; font: 700 1rem var(--j-font); color: #4A2370; }
+    #card { background: #fff; border: 2px solid #E6E2EE; border-radius: 28px; padding: 12px 8px 16px; box-shadow: 0 14px 30px -20px rgba(35,27,51,.5); }
+    #card.shake { animation: shake .35s; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    #task { margin: 2px 6px 6px; font: 700 clamp(1.02rem, 4.4vw, 1.22rem)/1.35 var(--j-font); color: #4A2370; min-height: 2.6em; }
+    #task b { color: #E23B6B; }
+    #status { display: inline-block; padding: 5px 14px; border-radius: 999px; background: #F8F7FB; border: 2px solid #E6E2EE; font: 800 .85rem var(--j-font-text); color: #5B5270; }
+    #status.good { background: #DDF5EE; border-color: #1FBF9A; color: #0E6B58; }
+    #bal { display: block; width: 100%; max-width: 440px; height: min(40dvh, 310px); margin: 2px auto 4px; touch-action: none; }
+    @media (max-height: 820px) { body { padding-top: 54px; padding-bottom: 14px; } h1 { font-size: 1.5rem; } .sub { display: none; } .ch { min-height: 34px; padding: 0 10px; font-size: .8rem; } .ch small { display: none; } #task { font-size: .98rem; min-height: 2.4em; margin: 0 4px 4px; } .bar { margin: 4px 0; } #card { padding: 8px 6px 12px; } #bal { height: min(33dvh, 260px); } #trayBox p { display: none; } #trayBox { padding: 6px; } .tb { height: 52px; } #msg { min-height: 1.3em; margin-top: 6px; font-size: .92rem; } .btnrow { margin-top: 6px; } }
+    .it { cursor: grab; }
+    #trayBox { padding: 8px 6px 4px; border-radius: 20px; background: #F8F7FB; border: 2px dashed #D9CCEB; }
+    #trayBox p { margin: 0 0 6px; font: 800 .8rem var(--j-font-text); color: #5B5270; }
+    #tray { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .tb { min-width: 58px; height: 58px; padding: 0 8px; border: 0; border-radius: 16px; background: #fff; box-shadow: 0 4px 0 #E6E2EE, inset 0 0 0 2px #E6E2EE; font: 700 1.7rem var(--j-font); color: #fff; cursor: grab; touch-action: none; -webkit-tap-highlight-color: transparent; }
+    .tb.b5 { background: #8E5BD6; box-shadow: 0 4px 0 #6A3BA0; } .tb.b10 { background: #E8541F; box-shadow: 0 4px 0 #A33A12; }
+    .tb.o { font-size: 2rem; }
+    .ghost { position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -60%) scale(1.15); min-width: 52px; height: 52px; padding: 0 8px; display: grid; place-items: center; border-radius: 15px; background: #fff; box-shadow: 0 10px 26px rgba(45,25,80,.4); font: 700 1.6rem var(--j-font); color: #fff; }
+    .ghost.b5 { background: #8E5BD6; } .ghost.b10 { background: #E8541F; } .ghost.o { font-size: 1.9rem; }
+    .btnrow { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+    .go { min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: #E23B6B; color: #fff; font: 700 1.02rem var(--j-font); cursor: pointer; box-shadow: 0 5px 0 #B82A53; }
+    .go.soft { background: #EFE9F7; color: #4A2370; box-shadow: 0 5px 0 #D9CCEB; }
+    .go:active { transform: translateY(3px); } .go:disabled { opacity: .45; }
+    .opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+    .opt { min-height: 62px; border: 0; border-radius: 18px; font: 700 1.6rem var(--j-font); color: #fff; cursor: pointer; box-shadow: 0 5px 0 rgba(35,27,51,.28); }
+    .opt:nth-child(1) { background: #6A3BA0; } .opt:nth-child(2) { background: #E8541F; } .opt:nth-child(3) { background: #8E5BD6; } .opt:nth-child(4) { background: #D9356A; }
+    .opt.ok { background: #1FBF9A !important; color: #231B33; } .opt.no { background: #9A8FB0 !important; } .opt:disabled { cursor: default; }
+    #msg { min-height: 1.6em; margin: 10px 4px 0; font: 800 1rem/1.4 var(--j-font-text); color: #5B5270; }
+    #msg.ok { color: #14937A; } #msg.bad { color: #B82A53; }
+    @media (max-height: 610px) { #task { font-size: .9rem; min-height: 2.1em; } #bal { height: min(27dvh, 190px); } .tb { height: 46px; min-width: 52px; } .chips { margin-bottom: 4px; } h1 { font-size: 1.3rem; } body { padding-top: 50px; } }
+    [hidden] { display: none !important; }
+    .jg-overlay { position: fixed; } .stars { font-size: 2.4rem; letter-spacing: 4px; margin: 0; }
+</style>
+</head>
+<body class="jg">
+<main>
+    <h1>Balanța cu necunoscută</h1>
+    <p class="sub">Un sac ascunde câteva obiecte. Echilibrează balanța și află câte sunt în sac!</p>
+    <div class="chips" id="modeChips"></div>
+    <div class="chips" id="levelChips"></div>
+    <div class="bar"><div class="prog" id="prog"></div><span class="pill">⭐ <span id="score">0</span></span></div>
+    <section id="card">
+        <div id="task"></div>
+        <span id="status">⚖️</span>
+        <svg id="bal" viewBox="0 0 380 270" role="img" aria-label="Balanță cu două talere"></svg>
+        <div id="trayBox"><p>Trage obiectele pe talerul din dreapta, sau atinge-le</p><div id="tray"></div></div>
+        <div class="btnrow" id="rowA"><button class="go soft" id="undoBtn" type="button">↶ Elimină ultimul</button><button class="go" id="stepBtn" type="button" hidden></button></div>
+        <div class="opts" id="opts" hidden></div>
+        <p id="msg" role="status" aria-live="polite"></p>
+    </section>
+</main>
+<div class="jg-overlay" id="overlay" hidden>
+    <div class="jg-emoji">⚖️</div>
+    <h1 class="jg-title">Echilibru perfect!</h1>
+    <p class="stars" id="ovStars"></p>
+    <p class="jg-text" id="ovText"></p>
+    <button class="jg-btn" id="ovBtn" type="button">Joacă din nou</button>
+</div>
+<script>
+const CLS = 1;
+const $ = (id) => document.getElementById(id);
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a, pick = (a) => a[Math.floor(Math.random() * a.length)], shuffle = (a) => [...a].sort(() => Math.random() - .5);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const EMO = ['🍎', '⭐', '🧸', '🍐', '🍓', '🐟', '🎈', '🍪'], N = 8;
+let mode = 'balance', maxN = CLS === 0 ? 5 : 10, ex = 0, stars = 0, E = null, theta = 0, raf = 0, locked = false, doneTimer = 0, drag = null, lblL = '', lblR = '0';
+
+/* ---------- configurare ---------- */
+const MODES = [['balance', 'Echilibrează', 'dreapta goală'], ['missing', 'Câte lipsesc?', 'completezi'], ['add', 'Adunare', 'a + b']];
+const LEVELS = CLS === 0 ? [[5, 'Începător', '1–5'], [10, 'Explorator', '1–10'], [20, 'Campion', '1–20']] : [[10, 'Începător', 'până la 10'], [20, 'Explorator', 'până la 20'], [31, 'Campion', 'până la 31']];
+function chips(box, list, cur, onPick) { box.innerHTML = ''; list.forEach(([k, n, s]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'ch' + (k === cur ? ' on' : ''); b.innerHTML = n + '<small>' + s + '</small>'; b.addEventListener('click', () => { onPick(k); }); box.appendChild(b); }); }
+function buildChips() { if (CLS === 0) chips($('modeChips'), MODES, mode, (k) => { mode = k; buildChips(); startGame(); }); chips($('levelChips'), LEVELS, maxN, (k) => { maxN = k; buildChips(); startGame(); }); }
+
+/* ---------- exerciții ---------- */
+const weight = (items) => items.reduce((s, it) => s + (it.k === 's' ? E.x : it.v), 0);
+const obj = (e) => ({ k: 'o', v: 1, e });
+function trayValues() { return CLS === 0 ? [1] : maxN <= 10 ? [1] : maxN <= 20 ? [1, 5] : [1, 5, 10]; }
+function canonical(x) { const vals = trayValues().sort((a, b) => b - a), out = []; vals.forEach(v => { while (x >= v) { out.push(v === 1 ? obj(E.emoji) : { k: 'b', v, e: E.emoji }); x -= v; } }); return out; }
+function makeEx() {
+    const emoji = pick(EMO); let emoji2 = pick(EMO.filter(e => e !== emoji));
+    E = { emoji, emoji2, left: [], right: [], x: 0, a: 0, L: 0, pen: 0, stage: 0 };
+    if (CLS === 0) {
+        if (mode === 'balance') { const L = rnd(1, maxN); E.left = Array.from({ length: L }, () => obj(emoji)); E.task = 'Pe talerul stâng sunt <b>' + L + '</b> obiecte. Pune în dreapta tot atâtea, ca balanța să se echilibreze!'; }
+        else if (mode === 'missing') { const L = rnd(2, maxN), r = rnd(1, L - 1); E.left = Array.from({ length: L }, () => obj(emoji)); E.right = Array.from({ length: r }, () => obj(emoji)); E.task = 'În stânga sunt <b>' + L + '</b> obiecte, iar în dreapta sunt deja <b>' + r + '</b>. Câte mai trebuie în dreapta? Adaugă-le!'; }
+        else { const a = rnd(1, Math.max(1, Math.floor(maxN / 2))), b = rnd(1, Math.max(1, maxN - a)); E.left = [...Array.from({ length: a }, () => obj(emoji)), ...Array.from({ length: b }, () => obj(emoji2))]; E.a = a; E.b = b; E.task = '<b>' + a + ' + ' + b + ' = ?</b> Pune în dreapta tot atâtea obiecte câte face adunarea!'; }
+    } else {
+        const x = rnd(1, maxN - 1), a = rnd(1, maxN - x); E.x = x; E.a = a; E.left = [{ k: 's', v: 0 }, ...canonical(a)];
+        E.task = 'Pe talerul stâng sunt un <b>sac cu ? obiecte</b> și <b>' + a + '</b> obiecte. Pune obiecte în dreapta, până când balanța se echilibrează!';
+    }
+    E.L = weight(E.left);
+}
+function startGame() { ex = 0; stars = 0; $('score').textContent = '0'; $('overlay').hidden = true; loadEx(); }
+function loadEx() {
+    clearTimeout(doneTimer); locked = false; makeEx(); $('opts').hidden = true; $('stepBtn').hidden = true; $('trayBox').hidden = false; $('undoBtn').hidden = false; msg('');
+    $('task').innerHTML = E.task; $('prog').innerHTML = Array.from({ length: N }, (_, i) => '<i class="' + (i < ex ? 'on' : i === ex ? 'cur' : '') + '"></i>').join('');
+    buildTray(); theta = tiltFor(); update(true);
+}
+function msg(t, c) { $('msg').textContent = t; $('msg').className = c || ''; }
+const shake = () => { $('card').classList.add('shake'); setTimeout(() => $('card').classList.remove('shake'), 400); };
+
+/* ---------- desen ---------- */
+const PX = 190, PY = 74, ARM = 124, DROP = 92, PW = 138;
+const tiltFor = () => clamp((weight(E.right) - weight(E.left)) * 2.6, -14, 14);
+function sizeFor(n) { return n <= 4 ? 34 : n <= 6 ? 28 : n <= 9 ? 26 : n <= 14 ? 24 : n <= 20 ? 21 : 19; }
+function layout(items, cx, py) {
+    const s = sizeFor(items.length), maxW = PW - 10, rows = [[]]; let w = 0;
+    items.forEach((it, i) => { const iw = it.k === 'o' ? s : it.k === 'b' ? s * 1.9 : 46, ih = it.k === 's' ? 42 : s; if (w + iw > maxW && rows[rows.length - 1].length) { rows.push([]); w = 0; } rows[rows.length - 1].push({ it, i, iw, ih }); w += iw; });
+    const out = []; let yb = py - 4;
+    rows.forEach(r => { const rw = r.reduce((a, o) => a + o.iw, 0), rh = Math.max(...r.map(o => o.ih)); let x = cx - rw / 2; r.forEach(o => { out.push({ ...o, x, y: yb - o.ih }); x += o.iw; }); yb -= rh; });
+    return out;
+}
+function itemSVG(o, side) {
+    const { it, x, y, iw, ih, i } = o; let g = '<g' + (side === 'R' ? ' class="it" data-ri="' + i + '"' : '') + '><rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + iw.toFixed(1) + '" height="' + ih.toFixed(1) + '" fill="rgba(0,0,0,0)"/>';
+    if (it.k === 'o') g += '<text x="' + (x + iw / 2).toFixed(1) + '" y="' + (y + ih * .84).toFixed(1) + '" font-size="' + (ih * .86).toFixed(1) + '" text-anchor="middle">' + it.e + '</text>';
+    else if (it.k === 'b') g += '<rect x="' + (x + 2).toFixed(1) + '" y="' + (y + 2).toFixed(1) + '" width="' + (iw - 4).toFixed(1) + '" height="' + (ih - 4).toFixed(1) + '" rx="7" fill="' + (it.v === 10 ? '#E8541F' : '#8E5BD6') + '" stroke="rgba(35,27,51,.25)" stroke-width="2"/><text x="' + (x + iw / 2).toFixed(1) + '" y="' + (y + ih * .72).toFixed(1) + '" font-size="' + (ih * .6).toFixed(1) + '" font-weight="700" font-family="Fredoka,sans-serif" fill="#fff" text-anchor="middle">' + it.v + '</text>';
+    else g += '<path d="M' + (x + 14) + ' ' + (y + 8) + ' Q' + (x + 23) + ' ' + (y - 2) + ' ' + (x + 32) + ' ' + (y + 8) + ' Z" fill="#A9712A"/><ellipse cx="' + (x + 23) + '" cy="' + (y + 26) + '" rx="20" ry="16" fill="#C98A3B" stroke="#8A5A1E" stroke-width="2"/><text x="' + (x + 23) + '" y="' + (y + 34) + '" font-size="22" font-weight="700" font-family="Fredoka,sans-serif" fill="#fff" text-anchor="middle">?</text>';
+    return g + '</g>';
+}
+function draw() {
+    const rad = theta * Math.PI / 180, c = Math.cos(rad), s = Math.sin(rad), lx = PX - ARM * c, ly = PY - ARM * s, rx = PX + ARM * c, ry = PY + ARM * s;
+    let g = '<path d="M190 74 L166 246 L214 246 Z" fill="#D9CCEB"/><rect x="128" y="242" width="124" height="15" rx="7.5" fill="#4A2370"/>';
+    g += '<line x1="' + lx.toFixed(1) + '" y1="' + ly.toFixed(1) + '" x2="' + rx.toFixed(1) + '" y2="' + ry.toFixed(1) + '" stroke="#4A2370" stroke-width="9" stroke-linecap="round"/>';
+    [['L', lx, ly, E.left], ['R', rx, ry, E.right]].forEach(([side, x, y, items]) => {
+        const py = y + DROP;
+        g += '<path d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' L' + (x - PW / 2 + 4).toFixed(1) + ' ' + py.toFixed(1) + ' M' + x.toFixed(1) + ' ' + y.toFixed(1) + ' L' + (x + PW / 2 - 4).toFixed(1) + ' ' + py.toFixed(1) + '" stroke="#8E7BD6" stroke-width="3" fill="none"/>';
+        g += '<rect class="dz" data-side="' + side + '" x="' + (x - PW / 2).toFixed(1) + '" y="' + (py - 118).toFixed(1) + '" width="' + PW + '" height="146" rx="14" fill="rgba(31,191,154,0)"/>';
+        g += '<path d="M' + (x - PW / 2).toFixed(1) + ' ' + py.toFixed(1) + ' Q' + x.toFixed(1) + ' ' + (py + 28).toFixed(1) + ' ' + (x + PW / 2).toFixed(1) + ' ' + py.toFixed(1) + ' Z" fill="#6A3BA0"/>';
+        g += '<text x="' + x.toFixed(1) + '" y="' + (py + 46).toFixed(1) + '" font-size="24" font-weight="700" font-family="Fredoka,sans-serif" fill="#4A2370" text-anchor="middle">' + (side === 'L' ? lblL : lblR) + '</text>';
+        layout(items, x, py).forEach(o => { g += itemSVG(o, side); });
+    });
+    g += '<circle cx="190" cy="74" r="12" fill="#FFB81C" stroke="#4A2370" stroke-width="4"/>'; $('bal').innerHTML = g;
+}
+function tiltTo(target, ms) {
+    cancelAnimationFrame(raf); const from = theta, t0 = performance.now(), dur = ms || 450;
+    (function step(now) { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); theta = from + (target - from) * e; if (!drag) draw(); if (p < 1) raf = requestAnimationFrame(step); else { theta = target; if (!drag) draw(); } })(t0);
+}
+function update(instant) {
+    const wL = weight(E.left), wR = weight(E.right), st = $('status');
+    lblL = CLS === 0 ? String(wL) : (E.stage === 2 ? '?' : '? + ' + E.a); lblR = String(wR);
+    st.className = ''; st.id = 'status';
+    if (wR === wL) { st.textContent = '⚖️ Echilibru!'; st.classList.add('good'); } else st.textContent = wL > wR ? '⬅️ Stânga e mai grea' : '➡️ Dreapta e mai grea';
+    if (instant) { theta = tiltFor(); draw(); } else tiltTo(tiltFor());
+    clearTimeout(doneTimer);
+    if (!locked && wR === wL && E.stage === 0) {
+        if (CLS === 0) doneTimer = setTimeout(finishEx, 900);
+        else { msg('Echilibru! Pe talerul din dreapta sunt ' + wR + ' obiecte.', 'ok'); $('stepBtn').textContent = 'Scoatem câte ' + E.a + ' de pe fiecare taler'; $('stepBtn').hidden = false; }
+    } else if (CLS === 1) $('stepBtn').hidden = true;
+}
+
+/* ---------- tava cu obiecte ---------- */
+function buildTray() {
+    const box = $('tray'); box.innerHTML = '';
+    const defs = CLS === 0 && mode === 'add' ? [{ k: 'o', v: 1, e: E.emoji }, { k: 'o', v: 1, e: E.emoji2 }] : trayValues().map(v => v === 1 ? obj(E.emoji) : { k: 'b', v, e: E.emoji });
+    defs.forEach(it => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tb ' + (it.k === 'o' ? 'o' : 'b' + it.v); b.textContent = it.k === 'o' ? it.e : it.v; b.addEventListener('pointerdown', (e) => startDrag(e, { from: 'tray', item: it })); box.appendChild(b); });
+}
+$('bal').addEventListener('pointerdown', (e) => { const g = e.target.closest('[data-ri]'); if (g && !locked && E.stage === 0) startDrag(e, { from: 'pan', idx: Number(g.dataset.ri) }); });
+
+/* ---------- tragere (deget sau mouse) ---------- */
+function startDrag(e, src) {
+    if (locked || E.stage !== 0) return; e.preventDefault();
+    const it = src.from === 'tray' ? src.item : E.right[src.idx], gh = document.createElement('div'); gh.className = 'ghost ' + (it.k === 'o' ? 'o' : 'b' + it.v); gh.textContent = it.k === 'o' ? it.e : it.v; document.body.appendChild(gh);
+    drag = { src, gh, sx: e.clientX, sy: e.clientY, moved: false }; mvGhost(e); window.addEventListener('pointermove', onMove); window.addEventListener('pointerup', onUp); window.addEventListener('pointercancel', onCancel);
+}
+function mvGhost(e) { drag.gh.style.left = e.clientX + 'px'; drag.gh.style.top = e.clientY + 'px'; }
+function overPan(e) { for (const el of document.querySelectorAll('#bal .dz')) { const r = el.getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) return el.dataset.side; } return null; }
+function onMove(e) { if (!drag) return; e.preventDefault(); mvGhost(e); if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 8) drag.moved = true; const s = overPan(e); document.querySelectorAll('#bal .dz').forEach(z => z.setAttribute('fill', z.dataset.side === 'R' && s === 'R' ? 'rgba(31,191,154,.22)' : 'rgba(31,191,154,0)')); }
+function endDrag() { if (!drag) return; drag.gh.remove(); window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onCancel); const d = drag; drag = null; return d; }
+function onCancel() { endDrag(); draw(); }
+function onUp(e) {
+    const d = endDrag(); if (!d) return; const side = overPan(e), src = d.src;
+    if (!d.moved) { if (src.from === 'tray') addRight(src.item); else removeRight(src.idx); return; }
+    if (side === 'R') { if (src.from === 'tray') addRight(src.item); else draw(); }
+    else if (side === 'L') { msg('Pe talerul stâng sunt obiectele date. Pune-le pe cel din dreapta!', 'bad'); draw(); }
+    else if (src.from === 'pan') removeRight(src.idx); else draw();
+}
+function addRight(it) {
+    if (locked || E.right.length >= 40) return; E.right.push({ ...it }); const over = weight(E.right) > weight(E.left); if (over) { E.pen++; msg('Ai pus prea multe! Scoate unul: trage-l din taler sau atinge-l.', 'bad'); } else msg(''); update();
+}
+function removeRight(i) { if (locked) return; E.right.splice(i, 1); msg(''); update(); }
+$('undoBtn').addEventListener('click', () => { if (E.right.length && E.stage === 0 && !locked) removeRight(E.right.length - 1); });
+
+/* ---------- finalul exercițiului ---------- */
+function finishEx() {
+    if (locked) return; locked = true; const st = E.pen === 0 ? 3 : E.pen === 1 ? 2 : 1; stars += st; $('score').textContent = stars;
+    msg('Bravo! Balanța e în echilibru! ' + '⭐'.repeat(st), 'ok'); ex++; $('prog').innerHTML = Array.from({ length: N }, (_, i) => '<i class="' + (i < ex ? 'on' : i === ex ? 'cur' : '') + '"></i>').join('');
+    doneTimer = setTimeout(() => { if (ex >= N) endGame(); else loadEx(); }, 1500);
+}
+function endGame() { const r = stars / (N * 3), s = r >= .85 ? 3 : r >= .6 ? 2 : 1; $('ovStars').textContent = '⭐'.repeat(s) + '☆'.repeat(3 - s); $('ovText').textContent = 'Ai strâns ' + stars + ' stele din ' + (N * 3) + '. Ai echilibrat ' + N + ' balanțe!'; $('overlay').hidden = false; }
+$('ovBtn').addEventListener('click', startGame);
+
+/* ---------- clasa I: scoatem câte a de pe fiecare taler, apoi aflăm necunoscuta ---------- */
+$('stepBtn').addEventListener('click', () => {
+    if (locked || E.stage !== 0) return; E.stage = 1; $('stepBtn').hidden = true; $('trayBox').hidden = true; $('undoBtn').hidden = true;
+    E.left = [{ k: 's', v: 0 }]; E.right = canonical(E.x); update(); E.stage = 2; update();
+    $('task').innerHTML = 'Am scos câte <b>' + E.a + '</b> obiecte de pe fiecare taler, iar balanța a rămas în echilibru. Câte obiecte sunt în sac?';
+    msg('? + ' + E.a + ' = ' + E.L + ', deci ? = ' + E.L + ' − ' + E.a + '.', 'ok'); showOpts();
+});
+function showOpts() {
+    const set = new Set([E.x]); [1, -1, 2, -2, E.a, -E.a, 3, -3].sort(() => Math.random() - .5).forEach(d => { if (set.size < 4 && E.x + d >= 1) set.add(E.x + d); });
+    const box = $('opts'); box.hidden = false; box.innerHTML = '';
+    shuffle([...set]).forEach(v => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt'; b.textContent = v; b.addEventListener('click', () => {
+        if (locked) return; if (v === E.x) { b.classList.add('ok'); document.querySelectorAll('#opts .opt').forEach(x => x.disabled = true); finishEx(); }
+        else { E.pen++; b.classList.add('no'); b.disabled = true; shake(); msg('Numără obiectele de pe talerul din dreapta: ele sunt tot atâtea câte sunt în sac!', 'bad'); } }); box.appendChild(b); });
+}
+buildChips(); startGame();
+</script>
+<script src="joc.js"></script>
+</body>
+</html>
