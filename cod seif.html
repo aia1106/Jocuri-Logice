@@ -1,893 +1,309 @@
-```html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#101a35">
-<title>Codul Secret – Jocuri Logice</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Codul Secret: un joc de logică în care descoperi combinația seifului.">
+<meta name="theme-color" content="#d9dfe1">
+<title>Codul Secret – Jocuri logice</title>
 <style>
-*{box-sizing:border-box}
 :root{
-  --bg:#101a35;
-  --panel:#192747;
-  --panel2:#223456;
-  --gold:#ffd166;
-  --cyan:#65d9ff;
-  --text:#f4f7ff;
-  --muted:#a8b6d3;
+  --bg:#d9dfe1; --safe:#1f3a37; --safe-hi:#2d504b; --slot:#142926; --line:#47706a;
+  --brass:#d0a24a; --ink:#12201e; --light:#eef4f2; --muted:#a9c2bd;
+  --red:#e5484d; --blue:#2f6fe4; --green:#2fa866; --yellow:#f2c230;
+  --display:Rockwell,"Roboto Slab","Rockwell Nova",Georgia,serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:"Trebuchet MS",Arial,sans-serif;
-  color:var(--text);
-  background:
-    radial-gradient(ellipse at 50% 0%,#2b4776 0%,transparent 50%),
-    linear-gradient(145deg,#0c142b,#152342 55%,#101a35);
-}
-button{font-family:inherit}
-.page{
-  width:min(1100px,100%);
-  margin:auto;
-  padding:24px 18px 35px;
-}
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:15px;
-  margin-bottom:25px;
-}
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.brand-icon{
-  width:53px;height:53px;
-  display:grid;place-items:center;
-  border-radius:16px;
-  background:linear-gradient(145deg,#ffe29a,#ffb83e);
-  box-shadow:0 6px 20px #ffbd4540;
-  font-size:27px;
-}
-.brand h1{
-  font-size:clamp(22px,4vw,32px);
-  margin:0;
-  letter-spacing:.3px;
-}
-.brand p{
-  margin:4px 0 0;
-  color:var(--muted);
-  font-size:13px;
-}
-.counter{
-  background:#ffffff10;
-  border:1px solid #ffffff20;
-  padding:10px 16px;
-  border-radius:15px;
-  font-weight:bold;
-  color:var(--gold);
-  white-space:nowrap;
-}
-.layout{
-  display:grid;
-  grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
-  gap:22px;
-  align-items:start;
-}
-.panel{
-  background:linear-gradient(160deg,#1c2d4d,#162441);
-  border:1px solid #ffffff12;
-  border-radius:25px;
-  box-shadow:0 15px 40px #00000025;
-  padding:22px;
-}
-.game-panel{
-  overflow:hidden;
-  position:relative;
-}
-.game-panel:before{
-  content:"";
-  position:absolute;
-  width:300px;height:300px;
-  background:#57cfff0b;
-  border-radius:50%;
-  top:-150px;left:50%;
-  transform:translateX(-50%);
-}
-.game-label{
-  text-align:center;
-  text-transform:uppercase;
-  letter-spacing:3px;
-  color:var(--gold);
-  font-size:12px;
-  font-weight:bold;
-  margin-bottom:18px;
-}
+*{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);display:grid;justify-items:center;align-content:start;padding:20px 14px 32px}
+:focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 5px var(--ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* SEIF */
+.safe{width:min(440px,100%);padding:14px;border-radius:22px;color:var(--light);
+  background:linear-gradient(160deg,var(--safe-hi),var(--safe) 40%);
+  box-shadow:inset 0 2px 0 #ffffff30,0 18px 40px #12201e40}
+.door{border:2px solid var(--line);border-radius:14px;padding:16px 14px 12px}
 
-.vault{
-  width:min(390px,100%);
-  margin:0 auto 24px;
-  padding:12px;
-  border-radius:28px;
-  background:linear-gradient(145deg,#a9c1d6,#506e8d 35%,#324967 65%,#9db6ce);
-  box-shadow:
-    0 18px 30px #00000040,
-    inset 0 2px 3px #ffffff80;
-  position:relative;
-}
-.vault-frame{
-  background:linear-gradient(145deg,#233c59,#172941);
-  border:5px solid #6d91b3;
-  border-radius:23px;
-  padding:22px 16px 20px;
-  box-shadow:inset 0 0 18px #00000050;
-}
-.vault-bolts{
-  position:absolute;
-  inset:22px;
-  pointer-events:none;
-  display:flex;
-  justify-content:space-between;
-}
-.bolt-column{
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-}
-.bolt{
-  width:12px;height:12px;
-  border-radius:50%;
-  background:linear-gradient(145deg,#e1efff,#6888a8);
-  box-shadow:0 2px 4px #00000050;
-  border:1px solid #506d8a;
-}
-.dial{
-  width:160px;height:160px;
-  margin:0 auto 24px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle,#243e60 0 39%,#90b3d0 40% 43%,#324d6a 44% 53%,#afc8df 54% 59%,#527394 60% 68%,#d3e4f2 69% 73%,#43607e 74% 100%);
-  border:5px solid #b6d0e5;
-  box-shadow:
-    0 8px 18px #00000050,
-    inset 0 3px 8px #ffffff50;
-  position:relative;
-  display:grid;
-  place-items:center;
-  transition:transform .6s ease;
-}
-.dial.open{
-  transform:rotate(65deg);
-}
-.dial:before{
-  content:"";
-  position:absolute;
-  width:115px;height:115px;
-  border-radius:50%;
-  border:3px dashed #d4e7f6;
-  opacity:.5;
-}
-.dial:after{
-  content:"";
-  position:absolute;
-  width:18px;height:18px;
-  border-radius:50%;
-  background:linear-gradient(145deg,#ffe39a,#d18c2e);
-  box-shadow:0 2px 5px #00000050;
-}
-.dial-center{
-  position:relative;
-  z-index:1;
-  width:65px;height:65px;
-  border-radius:50%;
-  display:grid;place-items:center;
-  font-size:27px;
-  background:linear-gradient(145deg,#345779,#162c48);
-  border:3px solid #8fb5d3;
-  box-shadow:inset 0 3px 8px #00000050;
-}
-.slots{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin-bottom:20px;
-}
-.slot{
-  width:75px;height:75px;
-  border-radius:18px;
-  border:3px solid #6685a5;
-  background:#10213a;
-  display:grid;
-  place-items:center;
-  transition:.2s;
-}
-.slot.active{
-  border-color:var(--gold);
-  box-shadow:0 0 15px #ffd16655;
-}
-.slot-dot{
-  width:43px;height:43px;
-  border-radius:50%;
-  box-shadow:
-    inset 0 4px 8px #ffffff40,
-    0 3px 6px #00000030;
-}
-.palette{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:18px;
-}
-.color-btn{
-  height:66px;
-  border:none;
-  border-radius:17px;
-  cursor:pointer;
-  position:relative;
-  box-shadow:
-    inset 0 3px 5px #ffffff50,
-    0 5px 9px #00000030;
-  transition:transform .15s,box-shadow .15s;
-}
-.color-btn:after{
-  content:"";
-  position:absolute;
-  top:9px;left:13px;
-  width:30%;height:15%;
-  border-radius:50%;
-  background:#ffffff50;
-  filter:blur(1px);
-}
-.color-btn:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 15px #00000040,inset 0 3px 5px #ffffff50;
-}
-.color-btn:active{transform:scale(.94)}
-.color-btn:focus-visible{
-  outline:3px solid white;
-  outline-offset:3px;
-}
-.color-btn.disabled{
-  opacity:.35;
-  filter:grayscale(.5);
-  cursor:not-allowed;
-  transform:none;
-}
-.actions{
-  display:flex;
-  gap:10px;
-}
-.btn{
-  border:none;
-  border-radius:14px;
-  padding:13px 15px;
-  font-weight:bold;
-  font-size:15px;
-  cursor:pointer;
-  transition:.2s;
-}
-.btn:hover{transform:translateY(-2px)}
-.btn:active{transform:scale(.97)}
-.clear{
-  background:#344c6d;
-  color:white;
-  flex:1;
-}
-.hint{
-  background:linear-gradient(135deg,#ffe49a,#ffbf48);
-  color:#382a13;
-  flex:1;
-}
-.restart{
-  background:linear-gradient(135deg,#61e6b0,#26c58b);
-  color:#10352b;
-  width:100%;
-  margin-top:14px;
-  padding:15px;
-}
-.status{
-  text-align:center;
-  min-height:25px;
-  color:var(--cyan);
-  font-size:14px;
-  font-weight:bold;
-  margin:12px 0 0;
-}
+.head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.dial{flex:none;width:58px;height:58px;filter:drop-shadow(0 3px 4px #0006);transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.dial .face{fill:var(--brass);transition:fill .4s}
+.won .dial .face{fill:var(--green)}
+.lost .dial .face{fill:var(--red)}
+h1{margin:0;font:800 28px/1.05 var(--display)}
+.head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.meta{margin:0 0 8px;font-size:14px;color:var(--muted)}
 
-/* ISTORIC */
+.board{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;padding:4px 10px;border-radius:12px;background:var(--slot);border:2px solid transparent}
+.row.now{border-color:var(--brass)}
+.n{font-size:13px;color:var(--muted);text-align:center}
+.pegs{display:flex;gap:10px}
+.peg{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px;line-height:1;border:0;padding:0;font-family:inherit;box-shadow:inset 0 2px 3px #ffffff55,0 2px 3px #0006}
+.peg.empty{background:transparent;border:2px dashed var(--line);box-shadow:none}
+button.peg{cursor:pointer}
+.c0,.c1,.c2{color:#fff}
+.c0{background:var(--red)}
+.c1{background:var(--blue)}
+.c2{background:var(--green)}
+.c3{background:var(--yellow);color:var(--ink)}
 
-.history-panel{
-  min-height:500px;
-}
-.history-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:18px;
-}
-.history-header h2{
-  margin:0;
-  font-size:21px;
-}
-.history-icon{
-  width:42px;height:42px;
-  display:grid;place-items:center;
-  border-radius:13px;
-  background:#65d9ff15;
-  font-size:22px;
-}
-.history{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  max-height:560px;
-  overflow-y:auto;
-  padding-right:4px;
-}
-.empty{
-  padding:45px 15px;
-  text-align:center;
-  color:var(--muted);
-}
-.empty-icon{
-  font-size:42px;
-  margin-bottom:12px;
-}
-.history-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:12px;
-  border-radius:17px;
-  background:#0e1b33;
-  border:1px solid #ffffff0c;
-  animation:appear .3s ease;
-}
-@keyframes appear{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
-}
-.row-left{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.attempt-label{
-  font-size:11px;
-  color:#8fa4c6;
-  font-weight:bold;
-  letter-spacing:1px;
-  text-transform:uppercase;
-}
-.history-colors{
-  display:flex;
-  gap:7px;
-}
-.history-dot{
-  width:33px;height:33px;
-  border-radius:50%;
-  box-shadow:inset 0 3px 5px #ffffff40,0 2px 4px #00000030;
-}
-.feedback{
-  display:flex;
-  gap:9px;
-  flex-wrap:wrap;
-  justify-content:center;
-  align-items:center;
-  max-width:160px;
-}
-.feedback-ball{
-  width:42px;height:42px;
-  border-radius:50%;
-  box-shadow:
-    inset 0 4px 7px #ffffff20,
-    0 3px 5px #00000040;
-}
-.feedback-ball.black{
-  background:radial-gradient(circle at 30% 25%,#64748b,#111827 55%,#020617);
-  border:3px solid #77869b;
-}
-.feedback-ball.white{
-  background:radial-gradient(circle at 30% 25%,#ffffff,#e2e8f0 70%,#b6c3d4);
-  border:3px solid #dce5f0;
-}
+.fb{display:flex;gap:5px}
+.fb i,.legend i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line)}
+i.ok{background:var(--brass);border-color:var(--brass)}
+i.near{border-color:var(--light)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 0 0;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
 
-/* MODAL */
+.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 12px}
+.pick{height:58px;border:0;border-radius:14px;font-size:24px;cursor:pointer;box-shadow:inset 0 2px 3px #ffffff55,0 4px 0 #0007}
+.pick:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 2px 3px #ffffff55,0 1px 0 #0007}
+.pick:disabled{opacity:.3;cursor:not-allowed}
 
-.modal{
-  position:fixed;
-  inset:0;
-  background:#050b19c9;
-  backdrop-filter:blur(7px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:100;
-  padding:20px;
-}
-.modal.show{display:flex}
-.modal-box{
-  width:min(420px,100%);
-  padding:30px 25px;
-  border-radius:27px;
-  background:linear-gradient(145deg,#23385b,#152541);
-  border:1px solid #ffffff20;
-  text-align:center;
-  box-shadow:0 25px 70px #00000060;
-  animation:modalIn .4s ease;
-}
-@keyframes modalIn{
-  from{transform:scale(.8);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-.modal-icon{
-  font-size:60px;
-  margin-bottom:10px;
-}
-.modal-box h2{
-  color:var(--gold);
-  font-size:29px;
-  margin:10px 0;
-}
-.modal-box p{
-  color:#c9d6ec;
-  font-size:17px;
-  line-height:1.5;
-}
-.secret-reveal{
-  display:flex;
-  justify-content:center;
-  gap:12px;
-  margin:20px 0;
-}
-.secret-dot{
-  width:53px;height:53px;
-  border-radius:50%;
-  box-shadow:inset 0 4px 8px #ffffff40,0 4px 8px #00000040;
-}
-.modal-btn{
-  width:100%;
-  background:linear-gradient(135deg,#61e6b0,#26c58b);
-  color:#10352b;
-  margin-top:12px;
-}
+.actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+.btn{min-height:46px;padding:0 8px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--light);font:600 15px var(--body);cursor:pointer}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink);font-weight:800}
+.status{min-height:22px;margin:12px 0 0;text-align:center;font-size:14px}
+.hints{min-height:20px;margin:4px 0 0;text-align:center;font-size:14px;color:var(--brass)}
+.again{display:block;margin:6px auto 0;padding:10px 14px;background:none;border:0;color:var(--muted);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
 
-/* CONFETTI */
+dialog{width:min(380px,calc(100% - 28px));padding:26px 24px;border:0;border-radius:18px;background:var(--safe);color:var(--light);text-align:center;box-shadow:0 20px 60px #0009}
+dialog::backdrop{background:#12201ecc}
+dialog h2{margin:0 0 6px;font:800 26px var(--display)}
+dialog p{margin:0;color:var(--muted)}
+dialog .btn{width:100%}
+.reveal{display:flex;justify-content:center;gap:10px;margin:18px 0}
+.reveal .peg{width:48px;height:48px;font-size:22px}
 
-.confetti{
-  position:fixed;
-  top:-15px;
-  width:10px;height:14px;
-  z-index:200;
-  pointer-events:none;
-  animation:fall linear forwards;
+@media (max-width:400px){
+  .door{padding:14px 10px 10px}
+  .pegs{gap:8px}
+  .head p{font-size:13px}
 }
-@keyframes fall{
-  to{
-    transform:translateY(110vh) rotate(720deg);
-    opacity:.2;
-  }
-}
-
-@media(max-width:800px){
-  .layout{grid-template-columns:1fr}
-  .history-panel{min-height:auto}
-  .history{max-height:400px}
-}
-@media(max-width:480px){
-  .page{padding:16px 12px 25px}
-  .topbar{margin-bottom:18px}
-  .brand-icon{width:45px;height:45px;font-size:23px}
-  .brand h1{font-size:23px}
-  .brand p{font-size:12px}
-  .counter{padding:9px 11px;font-size:13px}
-  .panel{padding:15px;border-radius:22px}
-  .vault{padding:9px}
-  .vault-frame{padding:18px 12px}
-  .dial{width:140px;height:140px}
-  .dial:before{width:100px;height:100px}
-  .slot{width:67px;height:67px}
-  .slot-dot{width:39px;height:39px}
-  .palette{gap:9px}
-  .color-btn{height:59px;border-radius:14px}
-  .feedback-ball{width:34px;height:34px}
-  .history-dot{width:29px;height:29px}
-  .history-row{padding:10px}
-  .history-colors{gap:5px}
-  .feedback{gap:6px;max-width:110px}
-}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
-
 <body>
 
-<div class="page">
-
-  <div class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🔐</div>
+<main class="safe" id="safe">
+  <div class="door">
+    <header class="head">
+      <svg class="dial" id="dial" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="31" fill="#c9d3d1"/>
+        <circle cx="32" cy="32" r="26" fill="none" stroke="#12201e" stroke-width="4" stroke-dasharray="1.5 4.3"/>
+        <circle class="face" cx="32" cy="32" r="17"/>
+        <path d="M32 17v15" stroke="#12201e" stroke-width="4" stroke-linecap="round"/>
+      </svg>
       <div>
         <h1>Codul Secret</h1>
-        <p>O misiune de logică!</p>
+        <p>Găsește cele 3 culori ascunse, în ordinea corectă. Nicio culoare nu se repetă.</p>
       </div>
+    </header>
+
+    <p class="meta" id="counter"></p>
+    <ol class="board" id="board" aria-label="Încercările tale"></ol>
+    <p class="legend">
+      <span><i class="ok"></i>culoare și loc corecte</span>
+      <span><i class="near"></i>culoare corectă, loc greșit</span>
+    </p>
+
+    <div class="palette" id="palette" role="group" aria-label="Alege o culoare"></div>
+    <div class="actions">
+      <button class="btn" id="undo" type="button">Șterge</button>
+      <button class="btn" id="hint" type="button">Indiciu</button>
+      <button class="btn primary" id="check" type="button">Verifică</button>
     </div>
-    <div class="counter" id="counter">0 / 10</div>
+    <p class="status" id="status" role="status"></p>
+    <p class="hints" id="hints"></p>
   </div>
+  <button class="again" id="newGame" type="button">Joc nou</button>
+</main>
 
-  <div class="layout">
-
-    <section class="panel game-panel">
-
-      <div class="game-label">Descoperă combinația</div>
-
-      <div class="vault" id="vault">
-        <div class="vault-bolts">
-          <div class="bolt-column">
-            <div class="bolt"></div>
-            <div class="bolt"></div>
-          </div>
-          <div class="bolt-column">
-            <div class="bolt"></div>
-            <div class="bolt"></div>
-          </div>
-        </div>
-
-        <div class="vault-frame">
-
-          <div class="dial" id="dial">
-            <div class="dial-center">🔒</div>
-          </div>
-
-          <div class="slots" id="slots"></div>
-
-          <div class="palette" id="palette"></div>
-
-          <div class="actions">
-            <button class="btn clear" onclick="clearGuess()">↩ Șterge</button>
-            <button class="btn hint" onclick="showHint()">💡 Indiciu</button>
-          </div>
-
-          <div class="status" id="status"></div>
-
-        </div>
-      </div>
-
-      <button class="btn restart" onclick="newGame()">⟳ Joc nou</button>
-
-    </section>
-
-    <section class="panel history-panel">
-
-      <div class="history-header">
-        <h2>Încercările</h2>
-        <div class="history-icon">🧩</div>
-      </div>
-
-      <div class="history" id="history">
-        <div class="empty">
-          <div class="empty-icon">🎨</div>
-          Alege 3 culori pentru a începe!
-        </div>
-      </div>
-
-    </section>
-
-  </div>
-</div>
-
-<div class="modal" id="modal">
-  <div class="modal-box">
-    <div class="modal-icon" id="modalIcon">🎉</div>
-    <h2 id="modalTitle"></h2>
-    <p id="modalText"></p>
-    <div class="secret-reveal" id="secretReveal"></div>
-    <button class="btn modal-btn" onclick="newGame()">⟳ Joacă din nou</button>
-  </div>
-</div>
+<dialog id="end" aria-labelledby="endTitle">
+  <h2 id="endTitle"></h2>
+  <p id="endText"></p>
+  <div class="reveal" id="reveal"></div>
+  <button class="btn primary" id="playAgain" type="button">Joc nou</button>
+</dialog>
 
 <script>
-const palette=[
-  {name:"Roșu",color:"#ef4444"},
-  {name:"Albastru",color:"#3b82f6"},
-  {name:"Verde",color:"#22c55e"},
-  {name:"Galben",color:"#facc15"}
+// Setări: poți schimba aici culorile, lungimea codului și numărul de încercări.
+const COLORS=[
+  {name:"Roșu",sym:"▲",cls:"c0"},
+  {name:"Albastru",sym:"■",cls:"c1"},
+  {name:"Verde",sym:"◆",cls:"c2"},
+  {name:"Galben",sym:"★",cls:"c3"}
 ];
+const LEN=3, MAX=10, MAX_HINTS=2;
 
-const CODE_LENGTH=3;
-const MAX_ATTEMPTS=10;
+const $=id=>document.getElementById(id);
+const safe=$("safe"),dial=$("dial"),board=$("board"),palette=$("palette"),
+      statusEl=$("status"),hintsEl=$("hints"),counter=$("counter"),
+      undoBtn=$("undo"),hintBtn=$("hint"),checkBtn=$("check"),end=$("end");
 
-let secret=[];
-let currentGuess=[];
-let attempts=0;
-let gameOver=false;
+let secret,guess,tries,over,hintsLeft,revealed;
 
-const slotsEl=document.getElementById("slots");
-const paletteEl=document.getElementById("palette");
-const historyEl=document.getElementById("history");
-const counterEl=document.getElementById("counter");
-const statusEl=document.getElementById("status");
-
-function randomSecret(){
-  const shuffled=[...Array(palette.length).keys()]
-    .sort(()=>Math.random()-0.5);
-  return shuffled.slice(0,CODE_LENGTH);
+function el(tag,cls,text){
+  const e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(text!=null)e.textContent=text;
+  return e;
+}
+function peg(i,tag){
+  return el(tag||"span","peg "+(i==null?"empty":COLORS[i].cls),i==null?"":COLORS[i].sym);
 }
 
-function renderSlots(){
-  slotsEl.innerHTML="";
-
-  for(let i=0;i<CODE_LENGTH;i++){
-    const slot=document.createElement("div");
-    slot.className="slot";
-
-    if(currentGuess[i]!==undefined){
-      slot.classList.add("active");
-      const dot=document.createElement("div");
-      dot.className="slot-dot";
-      dot.style.background=palette[currentGuess[i]].color;
-      slot.appendChild(dot);
-    }
-
-    slotsEl.appendChild(slot);
+// Amestec Fisher-Yates (sort(()=>Math.random()-.5) nu e uniform).
+function makeSecret(){
+  const a=COLORS.map((_,i)=>i);
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
   }
+  return a.slice(0,LEN);
 }
 
-function renderPalette(){
-  paletteEl.innerHTML="";
-
-  palette.forEach((c,index)=>{
-    const btn=document.createElement("button");
-    btn.className="color-btn";
-    btn.style.background=c.color;
-    btn.title=c.name;
-    btn.setAttribute("aria-label",c.name);
-
-    // Culorile deja alese nu mai pot fi selectate.
-    if(currentGuess.includes(index)){
-      btn.classList.add("disabled");
-      btn.disabled=true;
-    }else{
-      btn.onclick=()=>selectColor(index);
-    }
-
-    paletteEl.appendChild(btn);
-  });
-}
-
-function selectColor(index){
-  if(gameOver)return;
-  if(currentGuess.length>=CODE_LENGTH)return;
-
-  // Nu permitem culori duplicate în încercare.
-  if(currentGuess.includes(index))return;
-
-  currentGuess.push(index);
-
-  renderSlots();
-  renderPalette();
-
-  if(currentGuess.length===CODE_LENGTH){
-    statusEl.textContent="🔍 Verificăm...";
-    setTimeout(submitGuess,350);
-  }
-}
-
-function clearGuess(){
-  if(gameOver)return;
-  currentGuess=[];
-  statusEl.textContent="";
-  renderSlots();
-  renderPalette();
-}
-
-function evaluateGuess(guess,code){
-  let black=0;
-  let white=0;
-  const remainingGuess=[];
-  const remainingCode=[];
-
-  for(let i=0;i<CODE_LENGTH;i++){
-    if(guess[i]===code[i]){
-      black++;
-    }else{
-      remainingGuess.push(guess[i]);
-      remainingCode.push(code[i]);
-    }
-  }
-
-  const counts={};
-
-  remainingCode.forEach(c=>{
-    counts[c]=(counts[c]||0)+1;
-  });
-
-  remainingGuess.forEach(c=>{
-    if(counts[c]>0){
-      white++;
-      counts[c]--;
-    }
-  });
-
+// Culorile sunt unice și în cod, și în încercare, deci scorul e simplu.
+function score(g,s){
+  const black=g.filter((c,i)=>c===s[i]).length;
+  const white=g.filter(c=>s.includes(c)).length-black;
   return {black,white};
 }
 
-function renderFeedback(black,white){
-  const feedback=document.createElement("div");
-  feedback.className="feedback";
+function render(){
+  board.replaceChildren();
+  for(let r=0;r<MAX;r++){
+    const t=tries[r];
+    const now=!t&&r===tries.length&&!over;
+    const li=el("li","row"+(now?" now":""));
+    const pegs=el("span","pegs");
+    const fb=el("span","fb");
+    fb.setAttribute("aria-hidden","true");
 
-  const types=[
-    ...Array(black).fill("black"),
-    ...Array(white).fill("white")
-  ];
+    for(let k=0;k<LEN;k++){
+      if(t){
+        pegs.appendChild(peg(t.guess[k]));
+      }else if(now&&guess[k]!=null){
+        const b=peg(guess[k],"button");
+        b.type="button";
+        b.setAttribute("aria-label","Scoate "+COLORS[guess[k]].name);
+        b.onclick=()=>{guess.splice(k,1);render();};
+        pegs.appendChild(b);
+      }else{
+        pegs.appendChild(peg(null));
+      }
+      fb.appendChild(el("i",t?(k<t.black?"ok":k<t.black+t.white?"near":""):""));
+    }
 
-  // Feedback amestecat, fără indicarea pozițiilor.
-  for(let i=types.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [types[i],types[j]]=[types[j],types[i]];
+    const n=el("span","n",r+1);
+    n.setAttribute("aria-hidden","true");
+    li.append(n,pegs,fb);
+    if(t){
+      pegs.setAttribute("aria-hidden","true");
+      li.appendChild(el("span","sr",
+        `Încercarea ${r+1}: ${t.guess.map(i=>COLORS[i].name).join(", ")}. ${t.black} la locul corect, ${t.white} la loc greșit.`));
+    }
+    board.appendChild(li);
   }
 
-  types.forEach(type=>{
-    const ball=document.createElement("div");
-    ball.className="feedback-ball "+type;
-    feedback.appendChild(ball);
+  [...palette.children].forEach((b,i)=>{
+    b.disabled=over||guess.includes(i)||guess.length>=LEN;
   });
-
-  return feedback;
+  undoBtn.disabled=over||!guess.length;
+  checkBtn.disabled=over||guess.length!==LEN;
+  hintBtn.disabled=over||hintsLeft<1;
+  hintBtn.textContent=`Indiciu (${hintsLeft})`;
+  counter.textContent=over?`${tries.length} din ${MAX} încercări folosite`:`Încercarea ${tries.length+1} din ${MAX}`;
+  hintsEl.textContent=revealed.length
+    ?"Indicii: "+[...revealed].sort().map(k=>`poziția ${k+1} este ${COLORS[secret[k]].sym} ${COLORS[secret[k]].name}`).join("; ")
+    :"";
 }
 
-function submitGuess(){
-  if(gameOver||currentGuess.length!==CODE_LENGTH)return;
+function pick(i){
+  if(over||guess.length>=LEN||guess.includes(i))return;
+  guess.push(i);
+  statusEl.textContent=guess.length===LEN?"Apasă Verifică.":"";
+  render();
+}
 
-  attempts++;
-  const guess=[...currentGuess];
-  const result=evaluateGuess(guess,secret);
+function check(){
+  if(over||guess.length!==LEN)return;
+  const g=[...guess],res=score(g,secret);
+  tries.push({guess:g,...res});
+  guess=[];
+  dial.style.transform=`rotate(${tries.length*55}deg)`;
 
-  addHistory(guess,result);
-  counterEl.textContent=attempts+" / "+MAX_ATTEMPTS;
-
-  if(result.black===CODE_LENGTH){
-    gameOver=true;
-    statusEl.textContent="🔓 Seif deschis!";
-    document.getElementById("dial").classList.add("open");
-
-    setTimeout(()=>{
-      showModal("🎉","Bravo!","Ai descoperit codul secret!");
-      confetti();
-    },600);
-    return;
+  if(res.black===LEN){
+    over=true;
+    safe.classList.add("won");
+    statusEl.textContent="Seif deschis!";
+    setTimeout(()=>finish(true),700);
+  }else if(tries.length>=MAX){
+    over=true;
+    safe.classList.add("lost");
+    statusEl.textContent="Nu mai ai încercări.";
+    setTimeout(()=>finish(false),500);
+  }else{
+    statusEl.textContent=`Încercarea ${tries.length}: ${res.black} la locul corect, ${res.white} la loc greșit.`;
   }
-
-  if(attempts>=MAX_ATTEMPTS){
-    gameOver=true;
-    statusEl.textContent="Misiune încheiată!";
-
-    setTimeout(()=>{
-      showModal("🔐","Mai încearcă!","Codul secret era:");
-    },400);
-    return;
-  }
-
-  currentGuess=[];
-  statusEl.textContent="";
-  renderSlots();
-  renderPalette();
+  render();
 }
 
-function addHistory(guess,result){
-  if(attempts===1)historyEl.innerHTML="";
-
-  const row=document.createElement("div");
-  row.className="history-row";
-
-  const left=document.createElement("div");
-  left.className="row-left";
-
-  const label=document.createElement("div");
-  label.className="attempt-label";
-  label.textContent="Încercarea "+attempts;
-
-  const colors=document.createElement("div");
-  colors.className="history-colors";
-
-  guess.forEach(c=>{
-    const dot=document.createElement("div");
-    dot.className="history-dot";
-    dot.style.background=palette[c].color;
-    colors.appendChild(dot);
-  });
-
-  left.appendChild(label);
-  left.appendChild(colors);
-
-  row.appendChild(left);
-  row.appendChild(renderFeedback(result.black,result.white));
-
-  historyEl.prepend(row);
+function hint(){
+  const free=[...Array(LEN).keys()].filter(k=>!revealed.includes(k));
+  if(over||hintsLeft<1||!free.length)return;
+  const k=free[Math.floor(Math.random()*free.length)];
+  revealed.push(k);
+  hintsLeft--;
+  statusEl.textContent=`Indiciu: pe poziția ${k+1} este ${COLORS[secret[k]].name}.`;
+  render();
 }
 
-function showHint(){
-  if(gameOver)return;
-
-  const hints=[
-    "Codul are 3 culori diferite.",
-    "În codul secret nu se repetă nicio culoare.",
-    "Analizează feedback-ul fiecărei încercări.",
-    "Bilele negre și albe te ajută să deduci codul."
-  ];
-
-  const hint=hints[Math.floor(Math.random()*hints.length)];
-
-  showModal("💡","Indiciu",hint);
+function finish(won){
+  const n=tries.length;
+  $("endTitle").textContent=won?"Seif deschis!":"Seiful a rămas închis";
+  $("endText").textContent=won
+    ?`Ai găsit codul în ${n} ${n===1?"încercare":"încercări"}.`
+    :"Codul secret era:";
+  $("reveal").replaceChildren(...secret.map(i=>peg(i)));
+  if(typeof end.showModal==="function")end.showModal();
+  else end.setAttribute("open","");
 }
 
-function showModal(icon,title,text){
-  document.getElementById("modalIcon").textContent=icon;
-  document.getElementById("modalTitle").textContent=title;
-  document.getElementById("modalText").textContent=text;
-
-  const reveal=document.getElementById("secretReveal");
-  reveal.innerHTML="";
-
-  if(gameOver&&attempts>=MAX_ATTEMPTS&&title==="Mai încearcă!"){
-    secret.forEach(c=>{
-      const dot=document.createElement("div");
-      dot.className="secret-dot";
-      dot.style.background=palette[c].color;
-      reveal.appendChild(dot);
-    });
-  }
-
-  document.getElementById("modal").classList.add("show");
+function closeEnd(){
+  if(typeof end.close==="function")end.close();
+  else end.removeAttribute("open");
 }
 
-function confetti(){
-  const colors=["#ffd166","#65d9ff","#ef4444","#22c55e","#a78bfa","#ffffff"];
-
-  for(let i=0;i<90;i++){
-    const piece=document.createElement("div");
-    piece.className="confetti";
-    piece.style.left=Math.random()*100+"vw";
-    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
-    piece.style.animationDuration=(2+Math.random()*3)+"s";
-    piece.style.animationDelay=Math.random()*1.5+"s";
-    piece.style.width=(6+Math.random()*8)+"px";
-    piece.style.height=(8+Math.random()*10)+"px";
-    document.body.appendChild(piece);
-
-    setTimeout(()=>piece.remove(),6000);
-  }
+function start(){
+  secret=makeSecret();
+  guess=[];tries=[];over=false;
+  hintsLeft=MAX_HINTS;revealed=[];
+  safe.classList.remove("won","lost");
+  dial.style.transform="";
+  statusEl.textContent=`Alege ${LEN} culori diferite.`;
+  render();
 }
 
-function newGame(){
-  secret=randomSecret();
-  currentGuess=[];
-  attempts=0;
-  gameOver=false;
+COLORS.forEach((c,i)=>{
+  const b=el("button","pick "+c.cls,c.sym);
+  b.type="button";
+  b.title=c.name;
+  b.setAttribute("aria-label",c.name);
+  b.onclick=()=>pick(i);
+  palette.appendChild(b);
+});
 
-  counterEl.textContent="0 / 10";
-  statusEl.textContent="";
-  historyEl.innerHTML=`
-    <div class="empty">
-      <div class="empty-icon">🎨</div>
-      Alege 3 culori pentru a începe!
-    </div>`;
+undoBtn.onclick=()=>{if(!over){guess.pop();statusEl.textContent="";render();}};
+hintBtn.onclick=hint;
+checkBtn.onclick=check;
+$("playAgain").onclick=()=>{closeEnd();start();};
+$("newGame").onclick=()=>{
+  if(tries.length&&!over&&!confirm("Începi un joc nou? Încercările de acum se pierd."))return;
+  start();
+};
 
-  document.getElementById("modal").classList.remove("show");
-  document.getElementById("dial").classList.remove("open");
-
-  renderSlots();
-  renderPalette();
-}
-
-newGame();
+start();
 </script>
 </body>
 </html>
-```
