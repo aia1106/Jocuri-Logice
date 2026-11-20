@@ -13,32 +13,44 @@
   --red:#e5484d; --blue:#2f6fe4; --green:#2fa866; --yellow:#f2c230;
   --display:Rockwell,"Roboto Slab","Rockwell Nova",Georgia,serif;
   --body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --pad:20px;
 }
 *{box-sizing:border-box}
-body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);display:grid;justify-items:center;align-content:start;padding:20px 14px 32px}
+body{margin:0;min-height:100dvh;padding:var(--pad) 14px;background:var(--bg);color:var(--ink);font:16px/1.4 var(--body);display:grid;justify-items:center;align-content:start}
 :focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 5px var(--ink)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-.safe{width:min(440px,100%);padding:14px;border-radius:22px;color:var(--light);
+/* Seiful ocupă tot ecranul disponibil, deci nu mai e nevoie de scroll. */
+.safe{width:min(440px,100%);height:calc(100dvh - 2*var(--pad));min-height:600px;max-height:780px;
+  display:flex;flex-direction:column;padding:12px;border-radius:22px;color:var(--light);
   background:linear-gradient(160deg,var(--safe-hi),var(--safe) 40%);
   box-shadow:inset 0 2px 0 #ffffff30,0 18px 40px #12201e40}
-.door{border:2px solid var(--line);border-radius:14px;padding:16px 14px 12px}
+.door{flex:1;min-height:0;display:flex;flex-direction:column;border:2px solid var(--line);border-radius:14px;padding:12px}
 
-.head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.dial{flex:none;width:58px;height:58px;filter:drop-shadow(0 3px 4px #0006);transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.head{flex:none;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.dial{flex:none;width:50px;height:50px;filter:drop-shadow(0 3px 4px #0006);transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
 .dial .face{fill:var(--brass);transition:fill .4s}
 .won .dial .face{fill:var(--green)}
 .lost .dial .face{fill:var(--red)}
-h1{margin:0;font:800 28px/1.05 var(--display)}
-.head p{margin:4px 0 0;color:var(--muted);font-size:14px}
-.meta{margin:0 0 8px;font-size:14px;color:var(--muted)}
+h1{margin:0 0 4px;font:800 24px/1.05 var(--display)}
+.code{display:flex;gap:6px}
+.code .peg{width:24px;height:24px;font-size:12px}
+.code .peg.empty{color:var(--muted)}
 
-.board{list-style:none;margin:0;padding:0;display:grid;gap:5px}
-.row{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;padding:4px 10px;border-radius:12px;background:var(--slot);border:2px solid transparent}
+.meta{flex:none;display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;font-size:14px;color:var(--muted)}
+.link{padding:4px 0 4px 10px;background:none;border:0;color:var(--muted);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
+
+.board{flex:1;min-height:0;list-style:none;margin:0;padding:0;display:grid;grid-template-rows:repeat(var(--rows,10),minmax(0,1fr));gap:4px}
+.row{--p:28px;min-height:0;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;padding:0 10px;border-radius:12px;background:var(--slot);border:2px solid transparent}
 .row.now{border-color:var(--brass)}
+/* Mărimea bilelor se adaptează la înălțimea tablei. */
+@supports (height:1cqh){
+  .board{container-type:size}
+  .row{--p:clamp(18px,calc((100cqh - (var(--rows,10) - 1)*4px)/var(--rows,10) - 6px),36px)}
+}
 .n{font-size:13px;color:var(--muted);text-align:center}
 .pegs{display:flex;gap:10px}
-.peg{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px;line-height:1;border:0;padding:0;font-family:inherit;box-shadow:inset 0 2px 3px #ffffff55,0 2px 3px #0006}
+.peg{width:var(--p);height:var(--p);font-size:calc(var(--p)*.5);border-radius:50%;display:grid;place-items:center;line-height:1;border:0;padding:0;font-family:inherit;box-shadow:inset 0 2px 3px #ffffff55,0 2px 3px #0006}
 .peg.empty{background:transparent;border:2px dashed var(--line);box-shadow:none}
 button.peg{cursor:pointer}
 .c0,.c1,.c2{color:#fff}
@@ -47,25 +59,25 @@ button.peg{cursor:pointer}
 .c2{background:var(--green)}
 .c3{background:var(--yellow);color:var(--ink)}
 
-.fb{display:flex;gap:5px}
-.fb i,.legend i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line)}
+.fb{display:flex;gap:4px}
+.fb i,.legend i{border-radius:50%;border:2px solid var(--line)}
+.fb i{width:max(9px,calc(var(--p)*.36));height:max(9px,calc(var(--p)*.36))}
 i.ok{background:var(--brass);border-color:var(--brass)}
 i.near{border-color:var(--light)}
-.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 0 0;font-size:13px;color:var(--muted)}
+.legend{flex:none;display:flex;flex-wrap:wrap;gap:2px 14px;margin:8px 0 0;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px}
 
-.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0 12px}
-.pick{height:58px;border:0;border-radius:14px;font-size:24px;cursor:pointer;box-shadow:inset 0 2px 3px #ffffff55,0 4px 0 #0007}
+.palette{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 8px}
+.pick{height:clamp(40px,7dvh,58px);border:0;border-radius:14px;font-size:22px;cursor:pointer;box-shadow:inset 0 2px 3px #ffffff55,0 4px 0 #0007}
 .pick:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 2px 3px #ffffff55,0 1px 0 #0007}
 .pick:disabled{opacity:.3;cursor:not-allowed}
 
-.actions{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
-.btn{min-height:46px;padding:0 8px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--light);font:600 15px var(--body);cursor:pointer}
+.actions{flex:none;display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+.btn{min-height:42px;padding:0 8px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--light);font:600 15px var(--body);cursor:pointer}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink);font-weight:800}
-.status{min-height:22px;margin:12px 0 0;text-align:center;font-size:14px}
-.hints{min-height:20px;margin:4px 0 0;text-align:center;font-size:14px;color:var(--brass)}
-.again{display:block;margin:6px auto 0;padding:10px 14px;background:none;border:0;color:var(--muted);font:600 14px var(--body);text-decoration:underline;cursor:pointer}
+.status{flex:none;min-height:20px;margin:8px 0 0;text-align:center;font-size:14px}
 
 dialog{width:min(380px,calc(100% - 28px));padding:26px 24px;border:0;border-radius:18px;background:var(--safe);color:var(--light);text-align:center;box-shadow:0 20px 60px #0009}
 dialog::backdrop{background:#12201ecc}
@@ -75,10 +87,12 @@ dialog .btn{width:100%}
 .reveal{display:flex;justify-content:center;gap:10px;margin:18px 0}
 .reveal .peg{width:48px;height:48px;font-size:22px}
 
-@media (max-width:400px){
-  .door{padding:14px 10px 10px}
+@media (max-width:480px){
+  :root{--pad:6px}
+  body{padding-inline:6px}
+  .safe{padding:8px;border-radius:16px}
+  .door{padding:10px 10px 8px}
   .pegs{gap:8px}
-  .head p{font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -96,15 +110,19 @@ dialog .btn{width:100%}
       </svg>
       <div>
         <h1>Codul Secret</h1>
-        <p>Găsește cele 3 culori ascunse, în ordinea corectă. Nicio culoare nu se repetă.</p>
+        <div class="code" id="code" aria-hidden="true"></div>
       </div>
     </header>
 
-    <p class="meta" id="counter"></p>
+    <div class="meta">
+      <span id="counter"></span>
+      <button class="link" id="newGame" type="button">Joc nou</button>
+    </div>
+
     <ol class="board" id="board" aria-label="Încercările tale"></ol>
     <p class="legend">
       <span><i class="ok"></i>culoare și loc corecte</span>
-      <span><i class="near"></i>culoare corectă, loc greșit</span>
+      <span><i class="near"></i>doar culoarea</span>
     </p>
 
     <div class="palette" id="palette" role="group" aria-label="Alege o culoare"></div>
@@ -114,9 +132,7 @@ dialog .btn{width:100%}
       <button class="btn primary" id="check" type="button">Verifică</button>
     </div>
     <p class="status" id="status" role="status"></p>
-    <p class="hints" id="hints"></p>
   </div>
-  <button class="again" id="newGame" type="button">Joc nou</button>
 </main>
 
 <dialog id="end" aria-labelledby="endTitle">
@@ -137,8 +153,8 @@ const COLORS=[
 const LEN=3, MAX=10, MAX_HINTS=2;
 
 const $=id=>document.getElementById(id);
-const safe=$("safe"),dial=$("dial"),board=$("board"),palette=$("palette"),
-      statusEl=$("status"),hintsEl=$("hints"),counter=$("counter"),
+const safe=$("safe"),dial=$("dial"),board=$("board"),palette=$("palette"),codeEl=$("code"),
+      statusEl=$("status"),counter=$("counter"),
       undoBtn=$("undo"),hintBtn=$("hint"),checkBtn=$("check"),end=$("end");
 
 let secret,guess,tries,over,hintsLeft,revealed;
@@ -201,10 +217,14 @@ function render(){
     if(t){
       pegs.setAttribute("aria-hidden","true");
       li.appendChild(el("span","sr",
-        `Încercarea ${r+1}: ${t.guess.map(i=>COLORS[i].name).join(", ")}. ${t.black} la locul corect, ${t.white} la loc greșit.`));
+        `Încercarea ${r+1}: ${t.guess.map(i=>COLORS[i].name).join(", ")}. ${t.black} la loc corect, ${t.white} la loc greșit.`));
     }
     board.appendChild(li);
   }
+
+  // Codul din antet: „?” până când primești un indiciu sau jocul se termină.
+  codeEl.replaceChildren(...secret.map((c,k)=>
+    revealed.includes(k)||over?peg(c):el("span","peg empty","?")));
 
   [...palette.children].forEach((b,i)=>{
     b.disabled=over||guess.includes(i)||guess.length>=LEN;
@@ -213,10 +233,7 @@ function render(){
   checkBtn.disabled=over||guess.length!==LEN;
   hintBtn.disabled=over||hintsLeft<1;
   hintBtn.textContent=`Indiciu (${hintsLeft})`;
-  counter.textContent=over?`${tries.length} din ${MAX} încercări folosite`:`Încercarea ${tries.length+1} din ${MAX}`;
-  hintsEl.textContent=revealed.length
-    ?"Indicii: "+[...revealed].sort().map(k=>`poziția ${k+1} este ${COLORS[secret[k]].sym} ${COLORS[secret[k]].name}`).join("; ")
-    :"";
+  counter.textContent=over?`${tries.length} din ${MAX} încercări`:`Încercarea ${tries.length+1} din ${MAX}`;
 }
 
 function pick(i){
@@ -244,7 +261,7 @@ function check(){
     statusEl.textContent="Nu mai ai încercări.";
     setTimeout(()=>finish(false),500);
   }else{
-    statusEl.textContent=`Încercarea ${tries.length}: ${res.black} la locul corect, ${res.white} la loc greșit.`;
+    statusEl.textContent=`${res.black} la loc corect, ${res.white} la loc greșit.`;
   }
   render();
 }
@@ -255,7 +272,7 @@ function hint(){
   const k=free[Math.floor(Math.random()*free.length)];
   revealed.push(k);
   hintsLeft--;
-  statusEl.textContent=`Indiciu: pe poziția ${k+1} este ${COLORS[secret[k]].name}.`;
+  statusEl.textContent=`Poziția ${k+1} este ${COLORS[secret[k]].name}.`;
   render();
 }
 
@@ -284,6 +301,8 @@ function start(){
   statusEl.textContent=`Alege ${LEN} culori diferite.`;
   render();
 }
+
+board.style.setProperty("--rows",MAX);
 
 COLORS.forEach((c,i)=>{
   const b=el("button","pick "+c.cls,c.sym);
