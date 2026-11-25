@@ -34,9 +34,9 @@ h2{font-size:1.05rem;margin:16px 0 8px;display:flex;justify-content:space-betwee
 .cell.w{background:var(--tree)}.st{transition:.3s}.st.got{opacity:0;transform:scale(2)}
 #bot{position:absolute;width:16.6667%;aspect-ratio:1;display:grid;place-items:center;line-height:1;transition:left var(--t,.38s),top var(--t,.38s)}
 #bot span{font-size:.9em;z-index:1}
-#dir{position:absolute;inset:0;transition:transform var(--t,.3s)}#dir i{position:absolute;top:1%;left:50%;transform:translateX(-50%);font-size:.38em;font-style:normal;color:var(--orange)}
+#dir{position:absolute;inset:0;transition:transform var(--t,.3s)}#dir i{position:absolute;top:-4%;left:50%;transform:translateX(-50%);font-size:.55em;font-style:normal;color:#e8590c;text-shadow:0 0 3px var(--card)}
 #bot.bump{animation:shake .4s}
-.mapwrap{min-width:0}button{touch-action:manipulation}.nv,#cm{display:none}.b.tn{font-size:1.2rem;padding:4px 14px}
+.mapwrap{min-width:0}button{touch-action:manipulation}.nv,#cm{display:none}.tl{background:#0f8f9b}.tr{background:#c2417d}.b{display:inline-flex;align-items:center;gap:4px}.b svg{width:26px;height:26px}.b.tl,.b.tr{padding:4px 12px}.n.tl{border-left-color:#0f8f9b}.n.tr{border-left-color:#c2417d}.n.p svg{width:20px;height:20px;vertical-align:middle}.n.mv svg{stroke:#3f73dd}.n.tl svg{stroke:#0f8f9b}.n.tr svg{stroke:#c2417d}.b,.dg{touch-action:none;-webkit-user-select:none;user-select:none}.dg{cursor:grab}#ghost{position:fixed;z-index:60;pointer-events:none;padding:6px 12px;border-radius:12px;background:var(--purple);color:#fff;font-weight:900;box-shadow:0 8px 20px #0005;transform:translate(-50%,-130%)}#mark{position:fixed;z-index:59;pointer-events:none;background:var(--blue);border-radius:3px}#mark.wr{background:var(--purple)}.n.gh{opacity:.35}.n.wrapme{outline:3px dashed var(--purple);outline-offset:1px}#pal.del{outline:3px dashed var(--red);border-radius:12px}body.dragging{cursor:grabbing}
 .lvs{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative}
 .lv{background:var(--soft);color:var(--ink);border-radius:11px;padding:8px 13px;font-weight:900}.lv.cur{background:var(--blue);color:#fff}.lv:disabled{opacity:.4;cursor:not-allowed}
 .grp{margin-bottom:9px}.grp small{display:block;color:var(--mut);font-weight:800;font-size:.8rem;margin-bottom:4px}
@@ -79,7 +79,7 @@ main{flex:1;min-height:0;width:100%;margin:4px 0 0;padding:0 6px 6px;display:fle
 .lv{flex:none;padding:4px 10px}
 h2{font-size:.8rem;margin:0 0 4px}h2:nth-of-type(2){display:none}
 #pal{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px}.grp,.blk{display:contents}.grp small{display:none}
-.b{padding:6px 9px;font-size:.78rem;border-radius:10px;box-shadow:0 2px 0 #0003}
+.b{padding:6px 9px;font-size:.78rem;border-radius:10px;box-shadow:0 2px 0 #0003}.b svg{width:22px;height:22px}
 #prog{flex:1;min-height:72px;overflow-y:auto;padding:4px}
 .slot{flex-direction:row;flex-wrap:wrap;align-content:flex-start;align-items:center;gap:4px;min-height:34px;padding:3px}.slot[data-l]::before{flex:1 1 100%}.empty{flex:1 1 100%;padding:4px}.n{padding:3px 5px}.n.p{flex:none}.n.gR,.n.gI{flex:1 1 100%}.h{font-size:.8rem;gap:5px}.x{padding:1px 6px;font-size:.72rem}.s{padding:1px 8px}
 .ctl{margin-top:6px;gap:5px}.btn{padding:6px 9px;font-size:.78rem;border-radius:10px}.lb{display:none}
@@ -114,7 +114,8 @@ main{flex:1;min-height:0;width:100%;margin:8px auto;align-items:stretch}
 const $=id=>document.getElementById(id),D=[[-1,0],[0,1],[1,0],[0,-1]],N=6,E="......";
 const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
-const B={f:["⬆️ Înainte","mv"],l:["↶","tn"],r:["↷","tn"],R:["🔁 FOR","lp"],I:["❓ IF","dc"]};
+const B={f:["⬆️ Înainte","mv"],l:["↶","tl"],r:["↷","tr"],R:["🔁 FOR","lp"],I:["❓ IF","dc"]};
+const sv=d=>`<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`,IC={f:sv('<path d="M24 42V12"/><path d="M12 22 24 10l12 12"/>'),l:sv('<path d="M32 42V28a8 8 0 0 0-8-8H12"/><path d="M20 10 10 20l10 10"/>'),r:sv('<path d="M16 42V28a8 8 0 0 1 8-8h12"/><path d="M28 10l10 10-10 10"/>')};
 const L=[
 {n:"Primii pași",w:"Insula Instrucțiunilor",c:"Secvențe",a:"fl",max:8,best:6,d:1,m:[E,E,"...*..",E,"S.....",E],
  t:"Un program e o listă de comenzi făcute pe rând. LOGI privește spre dreapta ➡️. Du-l la stea!",h:"Înainte de 3 ori, rotește la stânga, apoi încă 2 pași înainte."},
@@ -139,7 +140,13 @@ const L=[
 {n:"Dreptunghiul",w:"Castelul Algoritmilor",c:"Bucle în bucle",a:"flrR",max:7,best:7,d:1,m:[E,".S***.",".*..*.",".****.",E,E],
  t:"Un dreptunghi are două laturi diferite: una de 3 pași și una de 2 pași. Ai doar 7 blocuri, deci ai nevoie de FOR în FOR.",h:"FOR de 2 ori: (FOR 3 × Înainte), Dreapta, (FOR 2 × Înainte), Dreapta."},
 {n:"Spirala",w:"Castelul Algoritmilor",c:"Algoritm complet",a:"flrRI",max:4,best:4,d:1,m:["S..*..","#####.","....#.",".#*.#.",".####.","..*..."],
- t:"LOGI intră tot mai adânc în labirint. Aceeași regulă ca la cerc, dar drumul e foarte lung. Câte repetări îți trebuie?",h:"IF obstacol în față → Dreapta, ALTFEL → Înainte. FOR de cel puțin 29 de ori!"}
+ t:"LOGI intră tot mai adânc în labirint. Aceeași regulă ca la cerc, dar drumul e foarte lung. Câte repetări îți trebuie?",h:"IF obstacol în față → Dreapta, ALTFEL → Înainte. FOR de cel puțin 29 de ori!"},
+{n:"Capăt înfundat",w:"Castelul Algoritmilor",c:"IF în coridor",a:"flrRI",max:5,best:4,d:1,m:["#*...*","#.####","#.S.*#","######","######","######"],
+ t:"Coridorul se termină într-un capăt înfundat! Poate aceeași decizie să-l scoată pe LOGI de acolo și să-l ducă mai departe până la ultima stea?",h:"FOR (cel puțin 15 ori): IF obstacol în față → Dreapta, ALTFEL → Înainte."},
+{n:"Întoarcerea în U",w:"Castelul Algoritmilor",c:"IF cu mai multe comenzi",a:"flrRI",max:6,best:6,d:1,m:["S.*..*","*....*","######","######","######","######"],
+ t:"La capătul rândului LOGI trebuie să facă o întoarcere în „U”: dreapta, un pas, dreapta. În interiorul unui IF poți pune mai multe comenzi!",h:"FOR (cel puțin 11 ori): IF obstacol în față → Dreapta, Înainte, Dreapta; ALTFEL → Înainte."},
+{n:"Colțuri stânga și dreapta",w:"Castelul Algoritmilor",c:"IF în IF",a:"flrRI",max:7,best:7,d:1,m:["######","####.*","####.#","##*.*#","##.###","S.*###"],
+ t:"Drumul are colțuri și la stânga, și la dreapta! Încearcă întâi la stânga. Dacă și acolo e obstacol, LOGI trebuie să se răsucească în partea cealaltă. Pune un IF în interiorul altui IF.",h:"FOR (cel puțin 13 ori): IF obstacol în față → Stânga, apoi IF obstacol în față → Dreapta, Dreapta; ALTFEL → Înainte."}
 ];
 let cur=0,prog=[],sel=prog,done=new Set(),running=false,tok=0,bot={},left=new Set(),cells=[],fast=false;
 const count=l=>l.reduce((s,n)=>s+1+[n.body,n.a,n.b].reduce((q,x)=>q+(x?count(x):0),0),0);
@@ -152,20 +159,20 @@ function load(i){cur=i;const v=L[i];tok++;running=false;prog=[];sel=prog;cells=[
  v.m.forEach(row=>[...row].forEach(ch=>{const x=el('div','cell'+(ch==='#'?' w':''));if(ch==='#')x.textContent='🌲';if(ch==='*')x.append(el('span','st','⭐'));$('cells').append(x);cells.push(x)}));
  place();$('lt').textContent=`Nivelul ${i+1}: ${v.n}`;$('ls').textContent=v.w;$('cn').textContent=v.c;$('cm').textContent='✨ '+v.c;$('tip').textContent=v.t;$('next').hidden=true;fb('');pal();draw();lvs()}
 function lvs(){const V=$('lvs');V.innerHTML='';L.forEach((_,i)=>{const b=el('button','lv'+(i===cur?' cur':''),(done.has(i)?'⭐ ':'')+(i+1));b.disabled=i>0&&!done.has(i-1);b.onclick=()=>load(i);V.append(b)});$('pv').disabled=cur===0;$('nv').disabled=cur>=L.length-1||!done.has(cur);const c=V.children[cur];if(c)V.scrollLeft=c.offsetLeft-(V.clientWidth-c.offsetWidth)/2;$('stars').textContent=`⭐ ${done.size} / ${L.length}`}
-function pal(){const P=$('pal');P.innerHTML='';[['Mișcare','flr'],['Repetiții','R'],['Decizii','I']].forEach(([t,k])=>{const ks=[...k].filter(x=>L[cur].a.includes(x));if(!ks.length)return;const g=el('div','grp'),r=el('div','blk');g.append(el('small','',t),r);ks.forEach(x=>{const b=el('button','b '+B[x][1],B[x][0]);if(x==='l'||x==='r')b.setAttribute('aria-label',x==='l'?'Rotește la stânga':'Rotește la dreapta');b.onclick=()=>add(x);r.append(b)});P.append(g)})}
-function slot(list,label){const s=el('div','slot'+(list===sel?' sel':''));if(label)s.dataset.l=label;
- if(!list.length)s.append(el('div','empty',list===sel?'Alege un bloc de mai sus — apare aici':'Apasă aici ca să adaugi blocuri în acest loc'));
+function pal(){const P=$('pal');P.innerHTML='';[['Mișcare','flr'],['Repetiții','R'],['Decizii','I']].forEach(([t,k])=>{const ks=[...k].filter(x=>L[cur].a.includes(x));if(!ks.length)return;const g=el('div','grp'),r=el('div','blk');g.append(el('small','',t),r);ks.forEach(x=>{const b=el('button','b '+B[x][1],B[x][0]);if(IC[x])b.innerHTML=IC[x]+(x==='f'?'<span>Înainte</span>':'');if(x==='l'||x==='r')b.setAttribute('aria-label',x==='l'?'Rotește la stânga':'Rotește la dreapta');b.onclick=()=>add(x);b.addEventListener('pointerdown',ev=>arm(ev,null,null,null,B[x][0],x));r.append(b)});P.append(g)})}
+function slot(list,label){const s=el('div','slot'+(list===sel?' sel':''));s._list=list;if(label)s.dataset.l=label;
+ if(!list.length)s.append(el('div','empty',list===sel?'Atinge sau trage un bloc aici':'Apasă aici ca să adaugi blocuri în acest loc'));
  list.forEach(n=>s.append(node(n,list)));const a=el('button','add'+(list===sel?' on':''),list===sel?'＋ aici':'＋');a.setAttribute('aria-label','Adaugă blocuri aici');a.onclick=e=>{e.stopPropagation();if(!running){sel=list;draw()}};s.append(a);
  s.onclick=e=>{if(running)return;if(e.target===s||e.target.className==='empty'){e.stopPropagation();sel=list;draw()}};return s}
-function node(n,list){const w=el('div','n '+(n.t==='R'?'gR':n.t==='I'?'gI':'p '+B[n.t][1])),h=el('div','h'),x=el('button','x','✕');n._el=w;
+function node(n,list){const w=el('div','n '+(n.t==='R'?'gR':n.t==='I'?'gI':'p '+B[n.t][1])),h=el('div','h'),x=el('button','x','✕');n._el=w;w._node=n;
  x.onclick=()=>{if(running)return;list.splice(list.indexOf(n),1);if(!reach(prog,sel))sel=prog;draw()};
  if(n.t==='R'){const m=el('button','s','−'),p=el('button','s','+');n._v=el('b','v',n.n);
   m.onclick=()=>{if(!running&&n.n>2){n.n--;draw()}};p.onclick=()=>{if(!running&&n.n<40){n.n++;draw()}};
-  h.onclick=e=>{if(!running&&(e.target===h||e.target.tagName==='SPAN')){sel=n.body;draw()}};h.append(el('span','','🔁 FOR'),m,n._v,p,el('span','','ori'),x);w.append(h,slot(n.body))}
+  h.onclick=e=>{if(!running&&(e.target===h||e.target.tagName==='SPAN')){sel=n.body;draw()}};h.classList.add('dg');h.addEventListener('pointerdown',ev=>{if(!ev.target.closest('button'))arm(ev,n,list,w,'🔁 FOR',n.t)});h.append(el('span','','🔁 FOR'),m,n._v,p,el('span','','ori'),x);w.append(h,slot(n.body))}
  else if(n.t==='I'){const c=el('button','s',n.c==='wall'?'🌲 obstacol în față':'✅ drum liber');
   c.onclick=()=>{if(!running){n.c=n.c==='wall'?'free':'wall';draw()}};
-  h.onclick=e=>{if(!running&&(e.target===h||e.target.tagName==='SPAN')){sel=n.a;draw()}};h.append(el('span','','❓ IF'),c,x);w.append(h,slot(n.a,'atunci'),slot(n.b,'altfel'))}
- else{const [ic,...wd]=B[n.t][0].split(' '),s=el('span','',ic);if(wd.length)s.append(el('span','lb',' '+wd.join(' ')));h.append(s,x);w.append(h)}
+  h.onclick=e=>{if(!running&&(e.target===h||e.target.tagName==='SPAN')){sel=n.a;draw()}};h.classList.add('dg');h.addEventListener('pointerdown',ev=>{if(!ev.target.closest('button'))arm(ev,n,list,w,'❓ IF',n.t)});h.append(el('span','','❓ IF'),c,x);w.append(h,slot(n.a,'atunci'),slot(n.b,'altfel'))}
+ else{const [ic,...wd]=B[n.t][0].split(' '),s=el('span','',ic);if(IC[n.t])s.innerHTML=IC[n.t];if(wd.length)s.append(el('span','lb',' '+wd.join(' ')));h.append(s,x);w.append(h);w.classList.add('dg');w.addEventListener('pointerdown',ev=>{if(!ev.target.closest('.x'))arm(ev,n,list,w,ic,n.t)})}
  return w}
 function draw(){const P=$('prog');P.innerHTML='';P.append(slot(prog));const u=count(prog),m=L[cur].max;$('cnt').textContent=`Blocuri: ${u}/${m}`;$('cnt').className='cnt'+(u>=m?' full':'');$('out').hidden=sel===prog}
 function add(x){if(running)return;if(count(prog)>=L[cur].max){fb('Ai folosit toate blocurile! Încearcă un program mai scurt: folosește 🔁 sau ❓.');return}
@@ -189,6 +196,43 @@ async function run(){if(running)return;if(!prog.length){fb('Adaugă mai întâi 
  try{await ex(prog,t);if(left.size)fb(`Programul s-a terminat, dar mai sunt ${left.size} stele. Ce ai putea schimba?`)}
  catch(e){if(e==='win')win();else if(e==='bump')fb('💥 Ups! LOGI a dat de un copac sau de marginea hărții. Ce decizie l-ar fi ajutat?');else if(e!=='stop')console.error(e)}
  if(t===tok){running=false;draw()}}
+let dr=null,pend=null,noclick=false;
+const mk=x=>x==='R'?{t:x,n:3,body:[]}:x==='I'?{t:x,c:'wall',a:[],b:[]}:{t:x};
+const wrapOk=g=>(g.t==='R'&&!(g.body||[]).length)||(g.t==='I'&&!(g.a||[]).length);
+const GH=el('div'),MK=el('div');GH.id='ghost';MK.id='mark';GH.hidden=MK.hidden=true;document.body.append(GH,MK);
+document.addEventListener('click',e=>{if(noclick){e.stopPropagation();e.preventDefault()}},true);
+function arm(e,node,from,src,label,kind){if(running||e.button>0)return;pend={node,from,src,label,kind,x:e.clientX,y:e.clientY};addEventListener('pointermove',dmove);addEventListener('pointerup',dend);addEventListener('pointercancel',dend)}
+function dmove(e){if(!pend)return;
+ if(!dr){if(Math.hypot(e.clientX-pend.x,e.clientY-pend.y)<8)return;dr=pend;GH.innerHTML=IC[dr.kind]||dr.label;GH.hidden=false;if(dr.src)dr.src.classList.add('gh');document.body.classList.add('dragging');if(wrapOk(dr.node||{t:dr.kind}))fb('📦 Lasă blocul înaintea unor comenzi ca să le includă în interior.')}
+ GH.style.left=e.clientX+'px';GH.style.top=e.clientY+'px';
+ const X=e.clientX,Y=e.clientY,inR=r=>X>=r.left&&X<=r.right&&Y>=r.top&&Y<=r.bottom,P=$('prog'),pr=P.getBoundingClientRect();
+ if(Y<pr.top+22)P.scrollTop-=10;else if(Y>pr.bottom-22)P.scrollTop+=10;
+ dr.tgt=null;dr.del=false;document.querySelectorAll('.wrapme').forEach(x=>x.classList.remove('wrapme'));MK.hidden=true;
+ const over=inR($('pal').getBoundingClientRect());$('pal').classList.toggle('del',over&&!!dr.node);
+ if(over){dr.del=!!dr.node;return}
+ let best=null,ba=1e9;
+ document.querySelectorAll('#prog .slot').forEach(s=>{if(dr.src&&dr.src.contains(s))return;const r=s.getBoundingClientRect(),a=r.width*r.height;if(inR(r)&&a<ba){ba=a;best=s}});
+ if(!best&&inR(pr))best=P.firstChild;if(!best)return;
+ const kids=[...best.children].filter(c=>c._node&&c!==dr.src),sr=best.getBoundingClientRect(),g=dr.node||{t:dr.kind};
+ let idx=kids.length;
+ if(kids.length){let d=1e9,c=null;kids.forEach((k,i)=>{const r=k.getBoundingClientRect(),dx=Math.max(r.left-X,0,X-r.right),dy=Math.max(r.top-Y,0,Y-r.bottom),q=dx*dx+dy*dy;if(q<d){d=q;c=k;idx=i}});
+  const r=c.getBoundingClientRect(),full=r.width>sr.width*.8,mid=r.top+r.height/2,bf=(full||Math.abs(Y-mid)>=r.height/2)?Y<mid:X<r.left+r.width/2;
+  if(!bf)idx++;
+  MK.style.cssText=full?`left:${r.left}px;top:${bf?r.top-3:r.bottom+1}px;width:${r.width}px;height:4px`:`left:${bf?r.left-4:r.right+1}px;top:${r.top}px;width:4px;height:${r.height}px`}
+ else MK.style.cssText=`left:${sr.left+6}px;top:${sr.top+sr.height/2-2}px;width:${sr.width-12}px;height:4px`;
+ const w=wrapOk(g)&&idx<kids.length;MK.className=w?'wr':'';if(w)kids.slice(idx).forEach(k=>k.classList.add('wrapme'));MK.hidden=false;dr.tgt={list:best._list,idx}}
+function dend(e){removeEventListener('pointermove',dmove);removeEventListener('pointerup',dend);removeEventListener('pointercancel',dend);
+ const d=dr;dr=null;pend=null;GH.hidden=true;MK.hidden=true;$('pal').classList.remove('del');document.body.classList.remove('dragging');document.querySelectorAll('.wrapme,.gh').forEach(x=>x.classList.remove('wrapme','gh'));
+ if(!d)return;noclick=true;setTimeout(()=>noclick=false,60);if(e.type==='pointercancel'){fb('');return}
+ if(d.del){d.from.splice(d.from.indexOf(d.node),1);if(!reach(prog,sel))sel=prog;draw();fb('');return}
+ const t=d.tgt;if(!t){fb('');return}
+ let n=d.node;
+ if(n)d.from.splice(d.from.indexOf(n),1);
+ else{if(count(prog)>=L[cur].max){fb('Ai folosit toate blocurile! Încearcă un program mai scurt: folosește 🔁 sau ❓.');return}n=mk(d.kind)}
+ if(wrapOk(n)){const moved=t.list.splice(t.idx);(n.t==='R'?n.body:n.a).push(...moved)}
+ t.list.splice(t.idx,0,n);
+ if(n.t==='R'||n.t==='I')sel=n.t==='R'?n.body:n.a;
+ if(!reach(prog,sel))sel=prog;draw();fb('')}
 $('run').onclick=run;
 $('undo').onclick=()=>{if(running)return;(sel.length?sel:prog).pop();if(!reach(prog,sel))sel=prog;draw()};
 $('clear').onclick=()=>{if(running)return;prog.length=0;sel=prog;place();draw();fb('')};
