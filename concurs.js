@@ -1,13 +1,15 @@
 /* Concurs Sudoku – Cercul de Jocuri Logice */
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwNWT1H5acOAAff0vTNqmF9y3-D2iiNkRIpuOEkKl5eSgX89bccVFzNM96n74v0AmEA/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwJlaFjeai108A5Er37Y-9WMIEDYo0KF4JibWf9zZ_vsX4HDL2G2r92-va_AYBJ1Zuk/exec";
+// ⚠ Dacă ai creat un deployment NOU în Apps Script, înlocuiește linkul de mai sus cu cel nou.
 
 const levelSequence = [3, 3, 4, 5];
 const levelTime = { 3: 30, 4: 60, 5: 120 };
 
 let solution = [], size = 3, timerInterval = null, timeLeft = 0;
-let totalStartTime = 0, currentLevelIndex = 0, started = false, busy = false;
+let elapsedMs = 0, levelStart = 0, currentLevelIndex = 0, started = false, busy = false;
 
 const $ = (id) => document.getElementById(id);
+const val = (id) => { const el = $(id); return el ? el.value.trim() : ""; };
 
 /* ---------- generare ---------- */
 function generateLatinSquare(n) {
@@ -145,10 +147,16 @@ function startContest() {
         $("username").focus();
         return;
     }
+    if ($("clasa") && !val("clasa")) {
+        setMessage("Scrie clasa înainte de start.", "warn");
+        $("clasa").focus();
+        return;
+    }
     started = true;
     currentLevelIndex = 0;
-    totalStartTime = Date.now();
+    elapsedMs = 0;
     $("username").disabled = true;
+    ["clasa", "scoala"].forEach(id => { if ($(id)) $(id).disabled = true; });
     $("start-area").hidden = true;
     $("play-area").hidden = false;
     nextLevel();
@@ -161,6 +169,7 @@ function nextLevel() {
     setMessage("");
     updateProgress();
     startTimer();
+    levelStart = Date.now();
     busy = false;
 }
 
@@ -182,6 +191,7 @@ function checkSolution() {
         }
     }
     busy = true;
+    elapsedMs += Date.now() - levelStart;   // doar timpul de rezolvare, fără pauzele dintre niveluri
     clearInterval(timerInterval);
     setMessage(`Bravo! Ai rezolvat nivelul ${currentLevelIndex + 1}.`, "ok");
     currentLevelIndex++;
@@ -205,33 +215,80 @@ function formatTime(sec) {
 
 function finishContest() {
     clearInterval(timerInterval);
-    const total = formatTime(Math.floor((Date.now() - totalStartTime) / 1000));
+    const seconds = Math.round(elapsedMs / 1000);
+    const total = formatTime(seconds);
     $("play-area").hidden = true;
     $("end-area").hidden = false;
     setMessage("");
     $("final-time").textContent = total;
     $("final-name").textContent = $("username").value.trim();
     updateProgress();
-    sendFinalTime(total);
+    sendFinalTime({
+        name: $("username").value.trim(),
+        clasa: val("clasa"),
+        scoala: val("scoala"),
+        seconds: seconds,
+        time: total,
+        attemptId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+                   : Date.now() + "-" + Math.random().toString(36).slice(2)
+    });
 }
 
-function sendFinalTime(formattedTime) {
-    const name = $("username").value.trim();
-    const status = $("send-status");
-    status.textContent = "Se trimite rezultatul…";
-    fetch(GOOGLE_SHEET_URL, {
+/* ---------- trimitere rezultat către Google Sheet ---------- */
+const PENDING_KEY = "concurs_rezultate_netrimise";
+
+function getPending() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { return []; }
+}
+function setPending(list) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function sendPending() {
+    getPending().forEach(r => postResult(r).catch(() => {}));
+}
+
+function postResult(result) {
+    return fetch(GOOGLE_SHEET_URL, {
         method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ name: name, time: formattedTime })
-    }).then(() => {
-        status.textContent = "Rezultatul a fost trimis.";
+        headers: { "Content-Type": "text/plain;charset=utf-8" },   // cerere „simplă": fără preflight, răspunsul se poate citi
+        body: JSON.stringify(result)
+    }).then(r => r.json()).then(j => {
+        if (!j.ok) throw new Error(j.error || "eroare");
+        setPending(getPending().filter(p => p.attemptId !== result.attemptId));
+        return j;
+    });
+}
+
+function sendFinalTime(result, attempt = 1) {
+    const status = $("send-status");
+    if (!getPending().some(p => p.attemptId === result.attemptId)) setPending(getPending().concat(result));
+    status.textContent = "Se trimite rezultatul…";
+    postResult(result).then(() => {
+        status.textContent = "Rezultatul a fost salvat. ✔";
+        const old = $("retry-btn");
+        if (old) old.remove();
     }).catch(() => {
-        status.textContent = "Nu s-a putut trimite rezultatul. Verifică internetul și anunță profesorul.";
+        if (attempt < 3) {
+            setTimeout(() => sendFinalTime(result, attempt + 1), 2000 * attempt);
+            return;
+        }
+        status.textContent = `Nu s-a putut salva rezultatul. Notează timpul (${result.time}) și apasă „Retrimite”.`;
+        if (!$("retry-btn")) {
+            const b = document.createElement("button");
+            b.id = "retry-btn";
+            b.type = "button";
+            b.className = "btn btn-ghost";
+            b.textContent = "Retrimite";
+            b.addEventListener("click", () => sendFinalTime(result, 1));
+            status.after(b);
+        }
     });
 }
 
 /* ---------- evenimente ---------- */
 document.addEventListener("DOMContentLoaded", () => {
+    sendPending();   // retrimite rezultatele rămase netrimise din sesiuni anterioare
+
     $("start-btn").addEventListener("click", startContest);
     $("check-btn").addEventListener("click", checkSolution);
     $("clear-btn").addEventListener("click", clearMistakes);
