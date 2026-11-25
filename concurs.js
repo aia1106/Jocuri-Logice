@@ -1,7 +1,7 @@
 /* Concurs – Cod Secret + Sudoku – Cercul de Jocuri Logice
    Ordinea: 1) Codul Secret (până deschide seiful)  2) Sudoku (4 niveluri).
    Cronometrul total pornește când începe Codul Secret. */
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwNWT1H5acOAAff0vTNqmF9y3-D2iiNkRIpuOEkKl5eSgX89bccVFzNM96n74v0AmEA/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby-Ky5XJKH8NP69lex25aINe2DXWvN6XxbNbG5WdAEUipkxZUnXJAZZhLU9Ck9z48oH/exec";
 // ⚠ Dacă ai un deployment NOU în Apps Script, înlocuiește linkul de mai sus.
 
 /* ---------- setări ---------- */
