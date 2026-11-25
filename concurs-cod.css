@@ -1,0 +1,69 @@
+/* Codul Secret în pagina de concurs.
+   Tot ce e aici e limitat la .cs-safe, ca să nu atingă stil.css. */
+.cs-safe{--safe:#1f3a37;--safe-hi:#2d504b;--slot:#142926;--line:#47706a;--brass:#d0a24a;--ink:#12201e;--light:#eef4f2;--muted:#a9c2bd;
+  --red:#e5484d;--blue:#2f6fe4;--green:#2fa866;--yellow:#f2c230;--display:Rockwell,"Roboto Slab",Georgia,serif;
+  width:min(440px,100%);height:clamp(560px,86dvh,720px);margin:0 auto;display:flex;flex-direction:column;padding:12px;
+  border-radius:22px;color:var(--light);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:linear-gradient(160deg,var(--safe-hi),var(--safe) 40%);box-shadow:inset 0 2px 0 #ffffff30,0 18px 40px #12201e40}
+.cs-safe *{box-sizing:border-box}
+.cs-safe :focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 5px var(--ink)}
+.cs-door{flex:1;min-height:0;display:flex;flex-direction:column;border:2px solid var(--line);border-radius:14px;padding:12px}
+
+.cs-head{flex:none;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.cs-dial{flex:none;width:50px;height:50px;filter:drop-shadow(0 3px 4px #0006);transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.cs-dial .face{fill:var(--brass);transition:fill .4s}
+.cs-safe.won .cs-dial .face{fill:var(--green)}
+.cs-safe.lost .cs-dial .face{fill:var(--red)}
+.cs-safe .cs-title{margin:0 0 4px;font:800 24px/1.05 var(--display);color:var(--light)}
+.cs-code{display:flex;gap:6px}
+.cs-code .cs-peg{width:24px;height:24px;font-size:12px}
+.cs-code .cs-peg.empty{color:var(--muted)}
+.cs-meta{flex:none;display:flex;justify-content:space-between;align-items:center;margin:0 0 6px;font-size:14px;color:var(--muted)}
+
+.cs-board{flex:1;min-height:0;list-style:none;margin:0;padding:0;display:grid;grid-template-rows:repeat(var(--rows,10),minmax(0,1fr));gap:4px}
+.cs-row{--p:28px;min-height:0;margin:0;display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:10px;padding:0 10px;
+  border-radius:12px;background:var(--slot);border:2px solid transparent}
+.cs-row.now{border-color:var(--brass)}
+@supports (height:1cqh){
+  .cs-board{container-type:size}
+  .cs-row{--p:clamp(18px,calc((100cqh - (var(--rows,10) - 1)*4px)/var(--rows,10) - 6px),36px)}
+}
+.cs-n{font-size:13px;color:var(--muted);text-align:center}
+.cs-pegs{display:flex;gap:10px}
+.cs-peg{width:var(--p);height:var(--p);font-size:calc(var(--p)*.5);border-radius:50%;display:grid;place-items:center;line-height:1;
+  border:0;padding:0;font-family:inherit;box-shadow:inset 0 2px 3px #ffffff55,0 2px 3px #0006}
+.cs-peg.empty{background:transparent;border:2px dashed var(--line);box-shadow:none}
+button.cs-peg{cursor:pointer}
+.cs-c0,.cs-c1,.cs-c2{color:#fff}
+.cs-c0{background:var(--red)}
+.cs-c1{background:var(--blue)}
+.cs-c2{background:var(--green)}
+.cs-c3{background:var(--yellow);color:var(--ink)}
+
+.cs-fb{display:flex;gap:4px}
+.cs-fb i,.cs-legend i{display:inline-block;border-radius:50%;border:2px solid var(--line)}
+.cs-fb i{width:max(9px,calc(var(--p)*.36));height:max(9px,calc(var(--p)*.36))}
+.cs-safe i.ok{background:var(--brass);border-color:var(--brass)}
+.cs-safe i.near{border-color:var(--light)}
+.cs-legend{flex:none;display:flex;flex-wrap:wrap;gap:2px 14px;margin:8px 0 0;font-size:12px;color:var(--muted)}
+.cs-legend span{display:inline-flex;align-items:center;gap:6px}
+.cs-legend i{width:11px;height:11px}
+
+.cs-palette{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0 8px}
+.cs-pick{height:clamp(40px,7dvh,58px);border:0;border-radius:14px;font-size:22px;cursor:pointer;box-shadow:inset 0 2px 3px #ffffff55,0 4px 0 #0007}
+.cs-pick:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 2px 3px #ffffff55,0 1px 0 #0007}
+.cs-pick:disabled{opacity:.3;cursor:not-allowed}
+
+.cs-actions{flex:none;display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:8px}
+.cs-btn{min-height:42px;padding:0 8px;border-radius:12px;border:2px solid var(--line);background:transparent;color:var(--light);
+  font:600 15px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;cursor:pointer}
+.cs-btn:disabled{opacity:.4;cursor:not-allowed}
+.cs-btn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink);font-weight:800}
+.cs-status{flex:none;min-height:20px;margin:8px 0 0;text-align:center;font-size:14px;color:var(--light)}
+
+@media (max-width:480px){
+  .cs-safe{padding:8px;border-radius:16px}
+  .cs-door{padding:10px 10px 8px}
+  .cs-pegs{gap:8px}
+}
+@media (prefers-reduced-motion:reduce){.cs-dial{transition:none}}

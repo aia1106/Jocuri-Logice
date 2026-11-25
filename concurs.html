@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="Concurs de Sudoku pentru elevi, cu clasament pe timp.">
+    <meta name="description" content="Concurs de logică pentru elevi: Codul Secret și Sudoku, cu clasament pe timp.">
     <meta name="theme-color" content="#FFFFFF">
-    <title>Concurs Sudoku – Jocuri Logice</title>
+    <title>Concurs Cod Secret și Sudoku – Jocuri Logice</title>
     <link rel="icon" href="LOGO.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="stil.css">
+    <link rel="stylesheet" href="concurs-cod.css">
 </head>
 <body>
 <a class="skip-link" href="#continut">Sari la conținut</a>
@@ -27,17 +28,17 @@
 <main id="continut">
     <section class="page-hero">
         <div class="page-badge dark" style="--c:#FFB81C" aria-hidden="true">🏆</div>
-        <div><h1>Concurs Sudoku</h1><p>Rezolvă patru tabele cât mai repede. Timpul tău total ajunge în clasament.</p></div>
+        <div><h1>Concurs: Cod Secret și Sudoku</h1><p>Deschide seiful, apoi rezolvă patru tabele Sudoku cât mai repede. Timpul tău total ajunge în clasament.</p></div>
     </section>
 
     <div class="contest-grid">
         <section class="panel contest-rules" aria-labelledby="reguli">
             <h3 id="reguli">Cum se joacă</h3>
             <ul class="rules-list">
-                <li>Completează căsuțele goale cu cifre.</li>
-                <li>Pe fiecare rând și pe fiecare coloană, o cifră apare <strong>o singură dată</strong>.</li>
-                <li>Sunt <strong>4 niveluri</strong>: 3×3, 3×3, 4×4 și 5×5.</li>
-                <li>Apasă <strong>Verifică</strong> când ai terminat. Dacă e corect, treci la nivelul următor.</li>
+                <li><strong>Pasul 1 – Codul Secret.</strong> Descoperă combinația seifului: <strong>3 culori diferite</strong>. Ai 10 încercări pe seif. Dacă nu reușești, primești un seif nou.</li>
+                <li><strong>Pasul 2 – Sudoku.</strong> Ajungi aici doar după ce deschizi seiful. Sunt <strong>4 niveluri</strong>: 3×3, 3×3, 4×4 și 5×5.</li>
+                <li>La Sudoku, pe fiecare rând și pe fiecare coloană, o cifră apare <strong>o singură dată</strong>. Apasă <strong>Verifică</strong> când ai terminat.</li>
+                <li>Cronometrul pornește când apeși <strong>Începe concursul</strong> și se oprește la finalul ultimului tabel.</li>
             </ul>
         </section>
 
@@ -45,13 +46,50 @@
             <h3 id="joc-titlu" class="sr-only">Jocul</h3>
             <label class="field-label" for="username">Numele concurentului</label>
             <input type="text" id="username" class="field" placeholder="Nume și prenume" autocomplete="off" maxlength="60">
-<label class="field-label" for="clasa">Clasa</label>
-<input type="text" id="clasa" class="field" placeholder="ex. a III-a B" maxlength="20" autocomplete="off">
-<label class="field-label" for="scoala">Școala</label>
-<input type="text" id="scoala" class="field" placeholder="Școala" maxlength="80" autocomplete="off">
-           
+            <label class="field-label" for="clasa">Clasa</label>
+            <input type="text" id="clasa" class="field" placeholder="ex. a III-a B" autocomplete="off" maxlength="20">
+            <label class="field-label" for="scoala">Școala</label>
+            <input type="text" id="scoala" class="field" placeholder="Școala" autocomplete="off" maxlength="80">
+
             <div id="start-area" class="btn-row"><button type="button" id="start-btn" class="btn btn-berry">Începe concursul</button></div>
 
+            <div id="total-wrap" class="timer-wrap" hidden><span class="timer-label">Timp total</span><span id="total-timer" class="timer">00:00</span></div>
+
+            <!-- PASUL 1: Codul Secret -->
+            <div id="code-area" hidden>
+                <p class="level-info">Pasul 1 din 2 · Codul Secret · deschide seiful ca să ajungi la Sudoku</p>
+                <div class="cs-safe" id="cs-safe">
+                    <div class="cs-door">
+                        <header class="cs-head">
+                            <svg class="cs-dial" id="cs-dial" viewBox="0 0 64 64" aria-hidden="true">
+                                <circle cx="32" cy="32" r="31" fill="#c9d3d1"/>
+                                <circle cx="32" cy="32" r="26" fill="none" stroke="#12201e" stroke-width="4" stroke-dasharray="1.5 4.3"/>
+                                <circle class="face" cx="32" cy="32" r="17"/>
+                                <path d="M32 17v15" stroke="#12201e" stroke-width="4" stroke-linecap="round"/>
+                            </svg>
+                            <div>
+                                <h3 class="cs-title">Codul Secret</h3>
+                                <div class="cs-code" id="cs-code" aria-hidden="true"></div>
+                            </div>
+                        </header>
+                        <div class="cs-meta"><span id="cs-counter"></span><span id="cs-round"></span></div>
+                        <ol class="cs-board" id="cs-board" aria-label="Încercările tale"></ol>
+                        <p class="cs-legend">
+                            <span><i class="ok"></i>culoare și loc corecte</span>
+                            <span><i class="near"></i>doar culoarea</span>
+                        </p>
+                        <div class="cs-palette" id="cs-palette" role="group" aria-label="Alege o culoare"></div>
+                        <div class="cs-actions">
+                            <button class="cs-btn" id="cs-undo" type="button">Șterge</button>
+                            <button class="cs-btn" id="cs-hint" type="button">Indiciu</button>
+                            <button class="cs-btn primary" id="cs-check" type="button">Verifică</button>
+                        </div>
+                        <p class="cs-status" id="cs-status" role="status"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASUL 2: Sudoku -->
             <div id="play-area" hidden>
                 <ol id="progress" class="progress" aria-label="Progres"><li>1</li><li>2</li><li>3</li><li>4</li></ol>
                 <p id="level-info" class="level-info"></p>

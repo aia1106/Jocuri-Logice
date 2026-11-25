@@ -1,17 +1,185 @@
-/* Concurs Sudoku – Cercul de Jocuri Logice */
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby-Ky5XJKH8NP69lex25aINe2DXWvN6XxbNbG5WdAEUipkxZUnXJAZZhLU9Ck9z48oH/exec";
-// ⚠ Dacă ai creat un deployment NOU în Apps Script, înlocuiește linkul de mai sus cu cel nou.
+/* Concurs – Cod Secret + Sudoku – Cercul de Jocuri Logice
+   Ordinea: 1) Codul Secret (până deschide seiful)  2) Sudoku (4 niveluri).
+   Cronometrul total pornește când începe Codul Secret. */
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwNWT1H5acOAAff0vTNqmF9y3-D2iiNkRIpuOEkKl5eSgX89bccVFzNM96n74v0AmEA/exec";
+// ⚠ Dacă ai un deployment NOU în Apps Script, înlocuiește linkul de mai sus.
+
+/* ---------- setări ---------- */
+const COD_COLORS = [
+    { name: "Roșu", sym: "▲", cls: "cs-c0" },
+    { name: "Albastru", sym: "■", cls: "cs-c1" },
+    { name: "Verde", sym: "◆", cls: "cs-c2" },
+    { name: "Galben", sym: "★", cls: "cs-c3" }
+];
+const COD_LEN = 3;      // câte culori are codul
+const COD_MAX = 10;     // încercări pe seif
+const COD_HINTS = 2;    // indicii pe seif (0 = fără indicii)
 
 const levelSequence = [3, 3, 4, 5];
 const levelTime = { 3: 30, 4: 60, 5: 120 };
 
+/* ---------- stare ---------- */
 let solution = [], size = 3, timerInterval = null, timeLeft = 0;
-let elapsedMs = 0, levelStart = 0, currentLevelIndex = 0, started = false, busy = false;
+let currentLevelIndex = 0, started = false, busy = false;
+let elapsedMs = 0, phaseStart = 0, running = false, totalInterval = null;
+let csSecret = [], csGuess = [], csTries = [], csOver = false, csHints = 0, csRevealed = [];
+let csRound = 0, codIncercari = 0;
 
 const $ = (id) => document.getElementById(id);
-const val = (id) => { const el = $(id); return el ? el.value.trim() : ""; };
+const val = (id) => { const e = $(id); return e ? e.value.trim() : ""; };
+function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+}
 
-/* ---------- generare ---------- */
+/* ---------- cronometru total (se oprește între faze) ---------- */
+function phaseBegin() { phaseStart = Date.now(); running = true; }
+function phaseEnd() { if (running) { elapsedMs += Date.now() - phaseStart; running = false; } }
+function totalSeconds() { return Math.floor((elapsedMs + (running ? Date.now() - phaseStart : 0)) / 1000); }
+function tickTotal() { $("total-timer").textContent = formatTime(totalSeconds()); }
+
+function formatTime(sec) {
+    return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+}
+
+function setMessage(text, kind) {
+    const m = $("message");
+    m.textContent = text;
+    m.className = "contest-message" + (kind ? " " + kind : "");
+}
+
+/* =====================================================================
+   PASUL 1 – CODUL SECRET
+   ===================================================================== */
+function csPeg(i, tag) {
+    return el(tag || "span", "cs-peg " + (i == null ? "empty" : COD_COLORS[i].cls), i == null ? "" : COD_COLORS[i].sym);
+}
+
+function csMakeSecret() {                       // amestec Fisher-Yates
+    const a = COD_COLORS.map((_, i) => i);
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, COD_LEN);
+}
+
+function csScore(g, s) {                        // culorile sunt unice, deci scorul e simplu
+    const black = g.filter((c, i) => c === s[i]).length;
+    const white = g.filter(c => s.includes(c)).length - black;
+    return { black, white };
+}
+
+function csRender() {
+    const board = $("cs-board");
+    board.replaceChildren();
+    for (let r = 0; r < COD_MAX; r++) {
+        const t = csTries[r];
+        const now = !t && r === csTries.length && !csOver;
+        const li = el("li", "cs-row" + (now ? " now" : ""));
+        const pegs = el("span", "cs-pegs");
+        const fb = el("span", "cs-fb");
+        fb.setAttribute("aria-hidden", "true");
+        for (let k = 0; k < COD_LEN; k++) {
+            if (t) {
+                pegs.appendChild(csPeg(t.guess[k]));
+            } else if (now && csGuess[k] != null) {
+                const b = csPeg(csGuess[k], "button");
+                b.type = "button";
+                b.setAttribute("aria-label", "Scoate " + COD_COLORS[csGuess[k]].name);
+                b.onclick = () => { csGuess.splice(k, 1); csRender(); };
+                pegs.appendChild(b);
+            } else {
+                pegs.appendChild(csPeg(null));
+            }
+            fb.appendChild(el("i", t ? (k < t.black ? "ok" : k < t.black + t.white ? "near" : "") : ""));
+        }
+        const n = el("span", "cs-n", r + 1);
+        n.setAttribute("aria-hidden", "true");
+        li.append(n, pegs, fb);
+        if (t) {
+            pegs.setAttribute("aria-hidden", "true");
+            li.appendChild(el("span", "sr-only",
+                `Încercarea ${r + 1}: ${t.guess.map(i => COD_COLORS[i].name).join(", ")}. ${t.black} la loc corect, ${t.white} la loc greșit.`));
+        }
+        board.appendChild(li);
+    }
+
+    $("cs-code").replaceChildren(...csSecret.map((c, k) =>
+        csRevealed.includes(k) || csOver ? csPeg(c) : el("span", "cs-peg empty", "?")));
+
+    [...$("cs-palette").children].forEach((b, i) => {
+        b.disabled = csOver || csGuess.includes(i) || csGuess.length >= COD_LEN;
+    });
+    $("cs-undo").disabled = csOver || !csGuess.length;
+    $("cs-check").disabled = csOver || csGuess.length !== COD_LEN;
+    $("cs-hint").disabled = csOver || csHints < 1;
+    $("cs-hint").textContent = `Indiciu (${csHints})`;
+    $("cs-counter").textContent = csOver
+        ? `${csTries.length} din ${COD_MAX} încercări`
+        : `Încercarea ${csTries.length + 1} din ${COD_MAX}`;
+    $("cs-round").textContent = `Seiful ${csRound}`;
+}
+
+function csPick(i) {
+    if (csOver || csGuess.length >= COD_LEN || csGuess.includes(i)) return;
+    csGuess.push(i);
+    $("cs-status").textContent = csGuess.length === COD_LEN ? "Apasă Verifică." : "";
+    csRender();
+}
+
+function csCheck() {
+    if (csOver || csGuess.length !== COD_LEN) return;
+    const g = [...csGuess], res = csScore(g, csSecret);
+    csTries.push({ guess: g, ...res });
+    csGuess = [];
+    $("cs-dial").style.transform = `rotate(${csTries.length * 55}deg)`;
+    const st = $("cs-status"), safe = $("cs-safe");
+
+    if (res.black === COD_LEN) {
+        csOver = true;
+        phaseEnd();                              // timpul se oprește la deschiderea seifului
+        codIncercari = csTries.length;
+        safe.classList.add("won");
+        st.textContent = "Seif deschis! Urmează Sudoku…";
+        setTimeout(startSudoku, 1500);
+    } else if (csTries.length >= COD_MAX) {
+        csOver = true;                           // timpul NU se oprește: urmează un seif nou
+        safe.classList.add("lost");
+        st.textContent = "Seiful a rămas închis. Încearcă un seif nou…";
+        setTimeout(csStart, 2500);
+    } else {
+        st.textContent = `${res.black} la loc corect, ${res.white} la loc greșit.`;
+    }
+    csRender();
+}
+
+function csHint() {
+    const free = [...Array(COD_LEN).keys()].filter(k => !csRevealed.includes(k));
+    if (csOver || csHints < 1 || !free.length) return;
+    const k = free[Math.floor(Math.random() * free.length)];
+    csRevealed.push(k);
+    csHints--;
+    $("cs-status").textContent = `Poziția ${k + 1} este ${COD_COLORS[csSecret[k]].name}.`;
+    csRender();
+}
+
+function csStart() {
+    csRound++;
+    csSecret = csMakeSecret();
+    csGuess = []; csTries = []; csOver = false;
+    csHints = COD_HINTS; csRevealed = [];
+    $("cs-safe").classList.remove("won", "lost");
+    $("cs-dial").style.transform = "";
+    $("cs-status").textContent = `Alege ${COD_LEN} culori diferite.`;
+    csRender();
+}
+
+/* =====================================================================
+   PASUL 2 – SUDOKU
+   ===================================================================== */
 function generateLatinSquare(n) {
     const grid = Array.from({ length: n }, () => Array(n).fill(0));
     function canPlace(r, c, num) {
@@ -35,7 +203,7 @@ function generateLatinSquare(n) {
     return grid;
 }
 
-/* numără soluțiile (maxim 2) ca să fim siguri că problema are un singur răspuns */
+/* numără soluțiile (maxim 2) ca problema să aibă un singur răspuns */
 function countSolutions(puzzle, limit = 2) {
     const n = puzzle.length;
     const g = puzzle.map(r => [...r]);
@@ -76,13 +244,12 @@ function generatePuzzle(n) {
     return puzzle;
 }
 
-/* ---------- afișare ---------- */
 function renderBoard(puzzle) {
     const board = $("board");
     board.innerHTML = "";
     board.style.setProperty("--n", puzzle.length);
     puzzle.forEach((row, r) => {
-        row.forEach((val, c) => {
+        row.forEach((v, c) => {
             const input = document.createElement("input");
             input.type = "text";
             input.maxLength = 1;
@@ -92,7 +259,7 @@ function renderBoard(puzzle) {
             input.inputMode = "numeric";
             input.autocomplete = "off";
             input.setAttribute("aria-label", `Rândul ${r + 1}, coloana ${c + 1}`);
-            if (val !== 0) { input.value = val; input.disabled = true; input.classList.add("given"); }
+            if (v !== 0) { input.value = v; input.disabled = true; input.classList.add("given"); }
             board.appendChild(input);
         });
     });
@@ -100,25 +267,17 @@ function renderBoard(puzzle) {
     if (first) first.focus();
 }
 
-function setMessage(text, kind) {
-    const m = $("message");
-    m.textContent = text;
-    m.className = "contest-message" + (kind ? " " + kind : "");
-}
-
 function updateProgress() {
     document.querySelectorAll("#progress li").forEach((li, i) => {
         li.classList.toggle("done", i < currentLevelIndex);
         li.classList.toggle("current", i === currentLevelIndex && started);
     });
-    const info = $("level-info");
-    info.textContent = currentLevelIndex < levelSequence.length
-        ? `Nivelul ${currentLevelIndex + 1} din ${levelSequence.length} · tabel ${size}×${size} · cifre de la 1 la ${size}`
+    $("level-info").textContent = currentLevelIndex < levelSequence.length
+        ? `Pasul 2 din 2 · Sudoku · nivelul ${currentLevelIndex + 1} din ${levelSequence.length} · tabel ${size}×${size} · cifre de la 1 la ${size}`
         : "";
 }
 
-/* ---------- cronometru ---------- */
-function startTimer() {
+function startTimer() {                          // numărătoarea inversă a nivelului
     clearInterval(timerInterval);
     timeLeft = levelTime[size];
     updateTimer();
@@ -133,32 +292,15 @@ function startTimer() {
 }
 function updateTimer() {
     const t = Math.max(timeLeft, 0);
-    const min = Math.floor(t / 60), sec = t % 60;
-    const el = $("timer");
-    el.textContent = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-    el.classList.toggle("low", t <= 10);
+    const e = $("timer");
+    e.textContent = formatTime(t);
+    e.classList.toggle("low", t <= 10);
 }
 
-/* ---------- desfășurare ---------- */
-function startContest() {
-    const name = $("username").value.trim();
-    if (!name) {
-        setMessage("Scrie numele concurentului înainte de start.", "warn");
-        $("username").focus();
-        return;
-    }
-    if ($("clasa") && !val("clasa")) {
-        setMessage("Scrie clasa înainte de start.", "warn");
-        $("clasa").focus();
-        return;
-    }
-    started = true;
-    currentLevelIndex = 0;
-    elapsedMs = 0;
-    $("username").disabled = true;
-    ["clasa", "scoala"].forEach(id => { if ($(id)) $(id).disabled = true; });
-    $("start-area").hidden = true;
+function startSudoku() {
+    $("code-area").hidden = true;
     $("play-area").hidden = false;
+    currentLevelIndex = 0;
     nextLevel();
 }
 
@@ -169,7 +311,7 @@ function nextLevel() {
     setMessage("");
     updateProgress();
     startTimer();
-    levelStart = Date.now();
+    phaseBegin();
     busy = false;
 }
 
@@ -182,7 +324,7 @@ function readGrid() {
 }
 
 function checkSolution() {
-    if (busy || !started) return;
+    if (busy || !started || $("play-area").hidden) return;
     const g = readGrid();
     for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
         if (g[r][c] !== solution[r][c]) {
@@ -191,7 +333,7 @@ function checkSolution() {
         }
     }
     busy = true;
-    elapsedMs += Date.now() - levelStart;   // doar timpul de rezolvare, fără pauzele dintre niveluri
+    phaseEnd();                                  // doar timpul de rezolvare, fără pauzele dintre niveluri
     clearInterval(timerInterval);
     setMessage(`Bravo! Ai rezolvat nivelul ${currentLevelIndex + 1}.`, "ok");
     currentLevelIndex++;
@@ -209,15 +351,43 @@ function clearMistakes() {
     setMessage("Am șters cifrele greșite.");
 }
 
-function formatTime(sec) {
-    return `${String(Math.floor(sec / 60)).padStart(2, "0")}:${String(sec % 60).padStart(2, "0")}`;
+/* =====================================================================
+   DESFĂȘURARE GENERALĂ
+   ===================================================================== */
+function startContest() {
+    const name = $("username").value.trim();
+    if (!name) {
+        setMessage("Scrie numele concurentului înainte de start.", "warn");
+        $("username").focus();
+        return;
+    }
+    if ($("clasa") && !val("clasa")) {
+        setMessage("Scrie clasa înainte de start.", "warn");
+        $("clasa").focus();
+        return;
+    }
+    started = true;
+    elapsedMs = 0; csRound = 0; codIncercari = 0;
+    $("username").disabled = true;
+    ["clasa", "scoala"].forEach(id => { if ($(id)) $(id).disabled = true; });
+    $("start-area").hidden = true;
+    $("code-area").hidden = false;
+    $("total-wrap").hidden = false;
+    setMessage("");
+    phaseBegin();                                // timpul începe cu Codul Secret
+    tickTotal();
+    totalInterval = setInterval(tickTotal, 500);
+    csStart();
 }
 
 function finishContest() {
     clearInterval(timerInterval);
+    clearInterval(totalInterval);
+    phaseEnd();
     const seconds = Math.round(elapsedMs / 1000);
     const total = formatTime(seconds);
     $("play-area").hidden = true;
+    $("total-wrap").hidden = true;
     $("end-area").hidden = false;
     setMessage("");
     $("final-time").textContent = total;
@@ -229,6 +399,8 @@ function finishContest() {
         scoala: val("scoala"),
         seconds: seconds,
         time: total,
+        codRunde: csRound,
+        codIncercari: codIncercari,
         attemptId: (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
                    : Date.now() + "-" + Math.random().toString(36).slice(2)
     });
@@ -250,7 +422,7 @@ function sendPending() {
 function postResult(result) {
     return fetch(GOOGLE_SHEET_URL, {
         method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },   // cerere „simplă": fără preflight, răspunsul se poate citi
+        headers: { "Content-Type": "text/plain;charset=utf-8" },   // cerere „simplă": răspunsul se poate citi
         body: JSON.stringify(result)
     }).then(r => r.json()).then(j => {
         if (!j.ok) throw new Error(j.error || "eroare");
@@ -274,11 +446,9 @@ function sendFinalTime(result, attempt = 1) {
         }
         status.textContent = `Nu s-a putut salva rezultatul. Notează timpul (${result.time}) și apasă „Retrimite”.`;
         if (!$("retry-btn")) {
-            const b = document.createElement("button");
+            const b = el("button", "btn btn-ghost", "Retrimite");
             b.id = "retry-btn";
             b.type = "button";
-            b.className = "btn btn-ghost";
-            b.textContent = "Retrimite";
             b.addEventListener("click", () => sendFinalTime(result, 1));
             status.after(b);
         }
@@ -287,8 +457,23 @@ function sendFinalTime(result, attempt = 1) {
 
 /* ---------- evenimente ---------- */
 document.addEventListener("DOMContentLoaded", () => {
-    sendPending();   // retrimite rezultatele rămase netrimise din sesiuni anterioare
+    sendPending();                               // retrimite rezultatele rămase netrimise
 
+    // Cod Secret
+    COD_COLORS.forEach((c, i) => {
+        const b = el("button", "cs-pick " + c.cls, c.sym);
+        b.type = "button";
+        b.title = c.name;
+        b.setAttribute("aria-label", c.name);
+        b.onclick = () => csPick(i);
+        $("cs-palette").appendChild(b);
+    });
+    $("cs-board").style.setProperty("--rows", COD_MAX);
+    $("cs-undo").onclick = () => { if (!csOver) { csGuess.pop(); $("cs-status").textContent = ""; csRender(); } };
+    $("cs-hint").onclick = csHint;
+    $("cs-check").onclick = csCheck;
+
+    // Concurs + Sudoku
     $("start-btn").addEventListener("click", startContest);
     $("check-btn").addEventListener("click", checkSolution);
     $("clear-btn").addEventListener("click", clearMistakes);
