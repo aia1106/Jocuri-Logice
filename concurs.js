@@ -1,5 +1,5 @@
 /* Concurs Sudoku – Cercul de Jocuri Logice */
-const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz58I98JY4JBTVmI-Z-tiLu92AsXKHqpWzSwmuNR5rLUw0WQtyr86fWq5jLACQoVQ_O/exec";
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbz56wvwJSHGeS9_9icUQZTYvtHbVwxtk86bg6YT6LFOf6ICU6hfItmW3W_s2WXImtA0/exec";
 // ⚠ Dacă ai creat un deployment NOU în Apps Script, înlocuiește linkul de mai sus cu cel nou.
 
 const levelSequence = [3, 3, 4, 5];
